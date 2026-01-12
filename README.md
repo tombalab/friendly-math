@@ -50,7 +50,8 @@ Aplikacja składa się z:
 - modułu generowania grafiki,
 - modułu składu i eksportu PDF.
 
-![Architektura Friendly Math v1](Friendly_Math_Architecture_v1.png)
+
+![Friendly Math v1 – Architecture Diagram](docs/architecture/Friendly_Math_Architecture_v1.png)
 
 ---
 
