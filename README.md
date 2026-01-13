@@ -80,3 +80,60 @@ Kolejne wersje mogą obejmować:
 - analizę błędów,
 - adaptacyjny poziom trudności.
 
+---
+
+🛠️ Setup lokalny (Conda)
+
+Projekt Friendly Math używa Minicondy wyłącznie do zarządzania Pythonem.
+Biblioteki instalowane są przez pip (pip-first approach).
+
+Wymagania
+
+Miniconda lub Anaconda
+
+Python 3.11
+
+Git
+
+1️⃣ Klonowanie repozytorium
+git clone https://github.com/<twoj-user>/friendly-math.git
+cd friendly-math
+
+2️⃣ Utworzenie środowiska Conda
+conda create -n friendly-math python=3.11
+
+
+Aktywacja:
+
+conda activate friendly-math
+
+
+Po aktywacji w terminalu powinno być widoczne:
+
+(friendly-math)
+
+3️⃣ Instalacja zależności (pip)
+
+Upewnij się, że pip należy do środowiska Conda:
+
+which python
+which pip
+
+
+Następnie:
+
+pip install -r requirements.txt
+
+4️⃣ Uruchomienie aplikacji Streamlit
+streamlit run app/ui.py
+
+
+Aplikacja będzie dostępna pod adresem:
+
+http://localhost:8501
+
+5️⃣ Zmienne środowiskowe
+
+Skopiuj plik .env.example:
+
+cp .env.example .env

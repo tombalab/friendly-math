@@ -1,0 +1,103 @@
+#--------------------------------------------------
+# FRIENDLY MATH - v1
+# Generator kart pracy matematyki dla uczniów szkoły podstawowej
+#--------------------------------------------------
+#
+# Autor: Tomasz Balabuch
+# Data: 2026-01-13
+# Wersja: 1.0.0
+#
+#--------------------------------------------------
+# --------------------------------------------------
+
+import streamlit as st
+
+# --------------------------------------------------
+# Konfiguracja strony
+# --------------------------------------------------
+st.set_page_config(
+    page_title="Friendly Math",
+    layout="centered"
+)
+
+# --------------------------------------------------
+# Nagłówek
+# --------------------------------------------------
+st.title("🧮 Friendly Math")
+st.subheader("Generator kart pracy (MVP)")
+
+st.write(
+    "Wypełnij formularz i wygeneruj JSON request, "
+    "który w kolejnym etapie zostanie wysłany do AI."
+)
+
+# --------------------------------------------------
+# Formularz
+# --------------------------------------------------
+with st.form("worksheet_form"):
+
+    grade = st.selectbox(
+        "Klasa",
+        options=["1", "2", "3", "4", "5", "6", "7", "8"],
+        help="Wybierz klasę ucznia"
+    )
+
+    topic = st.selectbox(
+        "Zakres materiału",
+        options=[
+            "dodawanie",
+            "odejmowanie",
+            "mnożenie",
+            "dzielenie",
+            "ułamki",
+            "równania"
+        ],
+        help="Zakres tematyczny karty pracy"
+    )
+
+    number_of_tasks = st.number_input(
+        "Liczba zadań",
+        min_value=1,
+        max_value=30,
+        value=10,
+        step=1,
+        help="Ile zadań ma zawierać karta pracy"
+    )
+
+    student_profile = st.selectbox(
+        "Profil ucznia",
+        options=[
+            "standardowy",
+            "dysleksja",
+            "zdolny",
+            "trudności w nauce",
+            "ADHD"
+        ],
+        help="Profil wpływa na styl i trudność zadań"
+    )
+
+    submitted = st.form_submit_button("🧠 Generuj kartę")
+
+# --------------------------------------------------
+# Logika po wysłaniu formularza
+# --------------------------------------------------
+if submitted:
+
+    # Prosta walidacja biznesowa
+    if int(grade) <= 3 and number_of_tasks > 15:
+        st.error("Dla klas 1–3 maksymalna liczba zadań to 15.")
+    else:
+        request_payload = {
+            "grade": int(grade),
+            "topic": topic,
+            "number_of_tasks": number_of_tasks,
+            "student_profile": student_profile
+        }
+
+        st.success("✅ JSON request wygenerowany")
+        st.json(request_payload)
+
+        st.info(
+            "Ten JSON będzie w kolejnym kroku wysyłany do API "
+            "generującego zadania."
+        )
