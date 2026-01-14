@@ -1,20 +1,19 @@
-# Friendly Math v1 🧮
+# Friendly Math 🧮
 
-**Friendly Math v1** to inteligentny generator i trener matematyki,
-zaprojektowany z myślą o uczniach szkoły podstawowej,
-ze szczególnym uwzględnieniem uczniów z opiniami i orzeczeniami PPP
-(np. dyskalkulia, ADHD, trudności w koncentracji).
+**Friendly Math** to inteligentna aplikacja wspierająca naukę matematyki
+uczniów szkoły podstawowej, ze szczególnym uwzględnieniem uczniów
+z opiniami i orzeczeniami PPP (np. dyskalkulia, ADHD, trudności w koncentracji).
 
-Projekt koncentruje się na tworzeniu **czytelnych, niskobodziecowych kart pracy PDF**
-oraz wspieraniu procesu uczenia się matematyki w sposób przyjazny i zrozumiały.
+Aplikacja umożliwia szybkie generowanie **czytelnych, niskobodziecowych kart pracy (PDF)**,
+dostosowanych do indywidualnych potrzeb ucznia.
 
 ---
 
-## 🎯 Cel v1
+## 🎯 Cel projektu (v1)
 
 - wspieranie uczniów z trudnościami w nauce matematyki,
 - ułatwienie pracy nauczycielom i terapeutom,
-- szybkie generowanie kart pracy dopasowanych do potrzeb ucznia,
+- generowanie kart pracy dopasowanych do profilu ucznia,
 - tworzenie materiałów edukacyjnych gotowych do druku (PDF A4).
 
 ---
@@ -23,15 +22,28 @@ oraz wspieraniu procesu uczenia się matematyki w sposób przyjazny i zrozumiał
 
 Użytkownik (nauczyciel / terapeuta) może:
 - wybrać klasę i zakres materiału,
-- określić liczbę zadań,
-- wybrać typ zadań (np. rachunki, zadania tekstowe),
-- określić profil ucznia (funkcjonalny, bez danych osobowych),
+- określić liczbę i typ zadań,
+- wybrać **profil ucznia** (funkcjonalny, bez danych osobowych),
 - wygenerować kartę pracy w formacie PDF (A4),
 - opcjonalnie wygenerować wersję z odpowiedziami.
 
 ---
 
-## 🧠 Jak to działa (v1)
+## 🧠 Profile uczniów (PPP)
+
+Friendly Math wykorzystuje **profile uczniów (Pupil Profile Presets)**,
+które wpływają na sposób tłumaczenia i konstruowania zadań.
+
+Przykładowe profile:
+- dyskalkulia,
+- ADHD.
+
+Profile **nie przechowują danych osobowych** i służą wyłącznie
+do dostosowania stylu dydaktycznego.
+
+---
+
+## 🏗️ Jak to działa (v1)
 
 1. Użytkownik wprowadza parametry karty pracy.
 2. System:
@@ -42,22 +54,36 @@ Użytkownik (nauczyciel / terapeuta) może:
 
 ---
 
-## 🏗️ Architektura v1
+# EN Technical Overview
 
-Aplikacja składa się z:
-- interfejsu webowego (Streamlit),
-- logiki generowania treści (AI),
-- modułu generowania grafiki,
-- modułu składu i eksportu PDF.
+## Architecture
 
+The application consists of:
+- Streamlit-based web UI,
+- backend prompt and task generation logic,
+- image generation utilities,
+- PDF layout and export module.
 
-![Friendly Math v1 – Architecture Diagram](docs/architecture/Friendly_Math_Architecture_v1.png)
+![Friendly Math – Architecture Diagram](docs/architecture/Friendly_Math_Architecture_v1.png)
 
 ---
 
-## 🛠️ Technologie (v1)
+## Student Profiles (PPP – Technical)
 
-- Python
+Student profiles are implemented as **prompt-level presets** that dynamically
+modify the system prompt and teaching behavior of the AI.
+
+Profiles currently supported:
+- Dyskalkulia
+- ADHD
+
+Profiles are implemented as modular Python classes and can be extended easily.
+
+---
+
+## Tech Stack
+
+- Python 3.11
 - Streamlit
 - OpenAI API
 - Pillow
@@ -65,75 +91,52 @@ Aplikacja składa się z:
 
 ---
 
-## 🚧 Status projektu
+## Project Status
 
-Projekt w fazie **v1 / MVP**  
-Celem jest walidacja pomysłu i jakości generowanych materiałów edukacyjnych.
+**v1 / MVP**
 
----
-
-## 🔮 Kierunek rozwoju (zarys)
-
-Kolejne wersje mogą obejmować:
-- interaktywną pracę ucznia online,
-- podpowiedzi krok po kroku,
-- analizę błędów,
-- adaptacyjny poziom trudności.
+The current focus is on validating:
+- pedagogical assumptions,
+- usability for teachers and therapists,
+- quality of generated worksheets.
 
 ---
 
-🛠️ Setup lokalny (Conda)
+## Roadmap (high-level)
 
-Projekt Friendly Math używa Minicondy wyłącznie do zarządzania Pythonem.
-Biblioteki instalowane są przez pip (pip-first approach).
+Future versions may include:
+- interactive student mode,
+- step-by-step hints,
+- error analysis,
+- adaptive difficulty levels.
 
-Wymagania
+---
 
-Miniconda lub Anaconda
+## Local Development Setup
 
-Python 3.11
+### Requirements
+- Miniconda or Anaconda
+- Python 3.11
+- Git
 
-Git
-
-1️⃣ Klonowanie repozytorium
-git clone https://github.com/<twoj-user>/friendly-math.git
+### Clone repository
+git clone https://github.com/tombalab/friendly-math.git
 cd friendly-math
 
-2️⃣ Utworzenie środowiska Conda
+### Create Conda environment
 conda create -n friendly-math python=3.11
-
-
-Aktywacja:
-
 conda activate friendly-math
 
-
-Po aktywacji w terminalu powinno być widoczne:
-
-(friendly-math)
-
-3️⃣ Instalacja zależności (pip)
-
-Upewnij się, że pip należy do środowiska Conda:
-
-which python
-which pip
-
-
-Następnie:
-
+### Install dependencies
 pip install -r requirements.txt
 
-4️⃣ Uruchomienie aplikacji Streamlit
-streamlit run app/ui.py
+### Environment variables
+cp .env.example .env
+
+### Run Streamlit app
+streamlit run app/ui/app.py
 
 
-Aplikacja będzie dostępna pod adresem:
+### App will be available at:
 
 http://localhost:8501
-
-5️⃣ Zmienne środowiskowe
-
-Skopiuj plik .env.example:
-
-cp .env.example .env
