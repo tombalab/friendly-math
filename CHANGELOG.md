@@ -1,68 +1,74 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/)
-and this project follows [Semantic Versioning](https://semver.org/).
+The format follows [Keep a Changelog](https://keepachangelog.com/)
+and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
 ## [Unreleased]
+
 ### Added
-### Changed
-### Planned
-
 - AI-powered task generation
-- Export to PDF/DOCX
-- Deployment to Streamlit Cloud
+- Export to PDF and DOCX formats
 
+### Changed
+- —
+
+### Planned
+- Deployment to Streamlit Cloud
 
 ---
 
 ## [0.3.0] – Student Profiles (PPP)
+
 ### Added
 - Pupil Profile Presets (PPP) architecture
 - Student profiles: Dyskalkulia, ADHD
-- Dynamic system prompt modification based on student profile
-- Profile prompt preview test script (no UI required)
+- Dynamic system prompt adaptation based on selected student profile
+- Profile prompt preview script (no UI or LLM required)
 
 ### Changed
-- Prompt system extended with pedagogical constraints
+- System prompt extended with pedagogical constraints
 
 ### Fixed
-- Profile rules formatting issues
+- Formatting issues in student profile rules
 
 ---
 
 ## [0.2.0] – Core App Structure & Prompt Foundations
+
 ### Added
 - Initial Streamlit UI structure
 - Core application layout (UI / backend / generators)
 - Prompt handling foundation for math task generation
 - Basic task and image generator modules
-- Example data and worksheet samples
+- Example datasets and worksheet samples
 
 ### Changed
 - Project structure reorganized for scalability
-- Separation of UI, backend logic, and content generators
+- Clear separation of UI, backend logic, and content generators
 
 ### Notes
-- This version establishes the technical foundation for further personalization
-- No student profiles or adaptive behavior yet
-
+- This release establishes the technical foundation for future personalization
+- No student profiles or adaptive behavior introduced yet
 
 ---
+
 ## [0.1.0] – Initial Streamlit UI & Input Flow
+
 ### Added
-- Initial Streamlit UI
-- Input form (grade, topic, number of tasks, student profile)
-- JSON request generation
-- Basic validation for grades 1–3
+- First functional Streamlit user interface
+- Input form for grade, topic, number of tasks, and student profile
+- JSON-based request generation
+- Basic input validation for grades 1–3
 
 ---
 
-## [0.0.1] - Project Initialization & Environment Setup
+## [0.0.1] – Project Initialization & Environment Setup
 
 ### Added
-- Project structure
-- README
-- Local environment setup (Conda + pip)
+- Initial project structure
+- README documentation
+- Local development environment setup (Conda + pip)
