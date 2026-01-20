@@ -10,7 +10,23 @@
 #--------------------------------------------------
 # --------------------------------------------------
 
+# --------------------------------------------------
+# Importy
+# --------------------------------------------------
+
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+
 import streamlit as st
+
+
+from app.ai.text_generator import generate_tasks
+
 
 # --------------------------------------------------
 # Konfiguracja strony
@@ -20,7 +36,6 @@ st.set_page_config(
     layout="centered"
 )
 
-# --------------------------------------------------
 # Nagłówek
 # --------------------------------------------------
 st.title("🧮 Friendly Math")
@@ -101,3 +116,16 @@ if submitted:
             "Ten JSON będzie w kolejnym kroku wysyłany do API "
             "generującego zadania."
         )
+        
+        st.divider()
+        st.subheader("📘 Wygenerowane zadania (MVP)")
+
+        result = generate_tasks(
+            profile=student_profile,
+            grade=grade,
+            topic=topic,
+            n=number_of_tasks
+        )
+
+        for i, task in enumerate(result["tasks"], start=1):
+            st.write(f"{i}. {task}")
