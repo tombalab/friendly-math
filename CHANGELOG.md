@@ -20,6 +20,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Deployment to Streamlit Cloud
 
 ---
+## [0.4.0] – First public MVP
+
+### Added
+- First public MVP of Friendly Math
+- Streamlit UI with student profile selection
+- End-to-end flow: input → task generation → output
+- Placeholder task generator (text-only)
+
+### Notes
+- This version uses a simplified task generator (no real AI yet)
+- UI and architecture prepared for future AI integration
+
+---
 
 ## [0.3.0] – Student Profiles (PPP)
 

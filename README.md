@@ -1,11 +1,36 @@
+⚠️ **Status projektu: MVP v0.4.0 (public demo)**  
+  
+Aktualna wersja aplikacji prezentuje **minimalne MVP**:
+ - działający interfejs Streamlit,
+ - wybór profilu ucznia (np. ADHD),
+ - pełny flow: input → generacja → wynik,
+ - **placeholder generatora zadań (tekst, bez PDF i bez prawdziwego AI)**.
+  
+Opis funkcji oznaczonych jako **v1** dotyczy **kolejnych etapów rozwoju projektu**.
+
+
+---
+
 # Friendly Math 🧮
 
 **Friendly Math** to inteligentna aplikacja wspierająca naukę matematyki
 uczniów szkoły podstawowej, ze szczególnym uwzględnieniem uczniów
 z opiniami i orzeczeniami PPP (np. dyskalkulia, ADHD, trudności w koncentracji).
 
-Aplikacja umożliwia szybkie generowanie **czytelnych, niskobodziecowych kart pracy (PDF)**,
+Aplikacja docelowo umożliwia szybkie generowanie **czytelnych, niskobodziecowych kart pracy (PDF)**,
 dostosowanych do indywidualnych potrzeb ucznia.
+
+## ✅ Co działa w wersji v0.4.0 (MVP)
+
+W aktualnej wersji demonstracyjnej użytkownik może:
+- wybrać klasę ucznia,
+- wybrać zakres materiału,
+- wybrać **profil ucznia** (np. ADHD),
+- wygenerować **przykładowe zadania matematyczne w formie tekstowej**,
+- przejść pełny flow: formularz → generacja → wynik.
+
+⚠️ Wersja v0.4.0 **nie generuje jeszcze PDF** i **nie korzysta z docelowego AI**  
+(generator ma charakter placeholdera).
 
 ---
 
