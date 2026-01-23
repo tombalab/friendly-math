@@ -1,12 +1,14 @@
-⚠️ **Status projektu: MVP v0.4.0 (public demo)**  
+⚠️ **Status projektu: MVP v0.5.0 (PDF + AI Generation)**  
   
-Aktualna wersja aplikacji prezentuje **minimalne MVP**:
+Aktualna wersja aplikacji prezentuje **funkcjonalne MVP**:
  - działający interfejs Streamlit,
- - wybór profilu ucznia (np. ADHD),
- - pełny flow: input → generacja → wynik,
- - **placeholder generatora zadań (tekst, bez PDF i bez prawdziwego AI)**.
+ - wybór profilu ucznia (dyskalkulia, ADHD, standardowy, itd.),
+ - pełny flow: input → generacja zadań przez AI → PDF,
+ - **generowanie zadań przez OpenAI API** (dostosowane do profilu),
+ - **eksport do PDF** z polskimi znakami (DejaVu Sans),
+ - zapis PDF do pliku + przycisk pobierania.
   
-Opis funkcji oznaczonych jako **v1** dotyczy **kolejnych etapów rozwoju projektu**.
+Opis funkcji oznaczonych jako **v1** dotyczy **kolejnych etapów rozwoju projektu** (layout AI, grafiki, PDF v1).
 
 
 ---
@@ -17,20 +19,21 @@ Opis funkcji oznaczonych jako **v1** dotyczy **kolejnych etapów rozwoju projekt
 uczniów szkoły podstawowej, ze szczególnym uwzględnieniem uczniów
 z opiniami i orzeczeniami PPP (np. dyskalkulia, ADHD, trudności w koncentracji).
 
-Aplikacja docelowo umożliwia szybkie generowanie **czytelnych, niskobodziecowych kart pracy (PDF)**,
+Aplikacja umożliwia szybkie generowanie **czytelnych, niskobodziecowych kart pracy (PDF)**,
 dostosowanych do indywidualnych potrzeb ucznia.
 
-## ✅ Co działa w wersji v0.4.0 (MVP)
+## ✅ Co działa w wersji v0.5.0 (MVP)
 
-W aktualnej wersji demonstracyjnej użytkownik może:
-- wybrać klasę ucznia,
-- wybrać zakres materiału,
-- wybrać **profil ucznia** (np. ADHD),
-- wygenerować **przykładowe zadania matematyczne w formie tekstowej**,
-- przejść pełny flow: formularz → generacja → wynik.
+W aktualnej wersji użytkownik może:
+- wybrać klasę ucznia (1-8),
+- wybrać zakres materiału (dodawanie, odejmowanie, mnożenie, dzielenie, ułamki, równania),
+- wybrać **profil ucznia** (dyskalkulia, ADHD, standardowy, zdolny, trudności w nauce, dysleksja),
+- wygenerować **zadania matematyczne przez OpenAI API** (dostosowane do profilu i klasy),
+- **wygenerować i pobrać PDF** z zadaniami (A4, polskie znaki),
+- zapisać PDF automatycznie do `data/out/worksheet.pdf`.
 
-⚠️ Wersja v0.4.0 **nie generuje jeszcze PDF** i **nie korzysta z docelowego AI**  
-(generator ma charakter placeholdera).
+⚠️ Wersja v0.5.0 to **funkcjonalne MVP** z podstawowym PDF i generowaniem zadań przez AI.  
+Kolejne wersje (v0.7+) dodadzą: layout sterowany AI, grafiki, bardziej czytelny PDF.
 
 ---
 

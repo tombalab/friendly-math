@@ -5,19 +5,38 @@ All notable changes to this project will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
----
-
 ## [Unreleased]
 
 ### Added
-- AI-powered task generation
-- Export to PDF and DOCX formats
+- 
 
 ### Changed
-- —
+-
 
 ### Planned
-- Deployment to Streamlit Cloud
+- 
+
+
+---
+## [0.5.0] – PDF Export & AI Task Generation
+
+### Added
+- PDF export functionality (ReportLab)
+- Polish character support (DejaVu Sans font)
+- OpenAI API integration for task generation
+- Dynamic task generation based on student profile
+- PDF download button in Streamlit UI
+- Automatic PDF file save to `data/out/worksheet.pdf`
+
+### Changed
+- Task generator now uses OpenAI API (GPT-3.5-turbo) instead of hardcoded tasks
+- Prompts optimized for educational content (Day 6 improvements)
+- Short, focused prompts for single task type
+
+### Technical
+- Added `app/pdf/generator.py` module
+- Updated `app/ai/text_generator.py` with OpenAI integration
+- Environment variable support for API keys (`.env`)
 
 ---
 ## [0.4.0] – First public MVP

@@ -21,12 +21,9 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-
 import streamlit as st
-
-
 from app.ai.text_generator import generate_tasks
-
+from app.pdf.generator import WorksheetMeta, build_worksheet_pdf_bytes
 
 # --------------------------------------------------
 # Konfiguracja strony
@@ -83,7 +80,7 @@ with st.form("worksheet_form"):
         "Profil ucznia",
         options=[
             "standardowy",
-            "dysleksja",
+            "dyskalkulia",
             "zdolny",
             "trudności w nauce",
             "ADHD"
@@ -127,5 +124,45 @@ if submitted:
             n=number_of_tasks
         )
 
-        for i, task in enumerate(result["tasks"], start=1):
+        # Lista zadań jako zwykły tekst
+        tasks = result["tasks"]
+        for i, task in enumerate(tasks, start=1):
             st.write(f"{i}. {task}")
+
+        # ----------------------------------------------
+        # PDF v0: generowanie, zapis do pliku + download
+        # ----------------------------------------------
+        st.divider()
+        st.subheader("📄 PDF v0")
+
+        # Metadane karty pracy
+        meta = WorksheetMeta(
+            title=f"Karta pracy – klasa {grade}",
+            grade=str(grade),
+            topic_range=topic,
+            student_profile=student_profile,
+        )
+
+        # 1) Generowanie PDF jako bytes
+        pdf_bytes = build_worksheet_pdf_bytes(meta=meta, tasks=tasks)
+
+        # 2) Zapis do pliku (wariant A)
+        output_dir = ROOT_DIR / "data" / "out"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / "worksheet.pdf"
+
+        with open(output_path, "wb") as f:
+            f.write(pdf_bytes)
+
+        st.write(
+            f"📁 PDF zapisany jako: "
+            f"`{output_path.relative_to(ROOT_DIR)}`"
+        )
+
+        # 3) Przycisk pobierania (wariant B)
+        st.download_button(
+            label="⬇️ Pobierz PDF",
+            data=pdf_bytes,
+            file_name="worksheet.pdf",
+            mime="application/pdf",
+        )
