@@ -22,7 +22,9 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 import streamlit as st
+from app.ai.layout_generator import generate_layout
 from app.ai.text_generator import generate_tasks
+from app.generators.images import generate_worksheet_image
 from app.pdf.generator import WorksheetMeta, build_worksheet_pdf_bytes
 
 # --------------------------------------------------
@@ -143,8 +145,31 @@ if submitted:
             student_profile=student_profile,
         )
 
-        # 1) Generowanie PDF jako bytes
-        pdf_bytes = build_worksheet_pdf_bytes(meta=meta, tasks=tasks)
+        # Layout sterowany AI (Day 7) – font size, spacing, kolory
+        layout = None
+        try:
+            layout = generate_layout(
+                profile=student_profile,
+                grade=str(grade),
+                number_of_tasks=number_of_tasks,
+            )
+        except Exception as e:
+            st.warning(f"Layout AI niedostępny ({e}), używam domyślnego layoutu.")
+
+        # Ilustracja (Day 8) – jedna grafika low-stimuli
+        image_bytes = None
+        try:
+            image_bytes = generate_worksheet_image(topic=topic, profile=student_profile)
+        except Exception as e:
+            st.warning(f"Grafika niedostępna ({e}), PDF bez ilustracji.")
+
+        # 1) Generowanie PDF jako bytes (z layoutem i opcjonalnie ilustracją)
+        pdf_bytes = build_worksheet_pdf_bytes(
+            meta=meta,
+            tasks=tasks,
+            layout=layout,
+            image_bytes=image_bytes,
+        )
 
         # 2) Zapis do pliku (wariant A)
         output_dir = ROOT_DIR / "data" / "out"

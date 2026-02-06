@@ -18,6 +18,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 
 ---
+## [0.6.0] – Worksheet image generator (Day 8)
+
+### Added
+- Worksheet image generator (Pillow, low-stimuli style)
+- One illustration per PDF (simple shapes: circles, rectangles)
+- Topic-linked graphics (addition → groups, multiplication → 2×3 grid, fractions → half circle, etc.)
+- Optional image in PDF below metadata (before “Tasks” section)
+
+### Technical
+- Module `app/generators/images.py` – `generate_worksheet_image(topic, profile)`
+- Parameter `image_bytes` in `build_worksheet_pdf_bytes()` (ReportLab `drawImage`)
+
+---
 ## [0.5.0] – PDF Export & AI Task Generation
 
 ### Added

@@ -1,14 +1,16 @@
-⚠️ **Status projektu: MVP v0.5.0 (PDF + AI Generation)**  
+⚠️ **Status projektu: MVP v0.6.0 (PDF + AI + layout + grafika)**  
   
 Aktualna wersja aplikacji prezentuje **funkcjonalne MVP**:
  - działający interfejs Streamlit,
  - wybór profilu ucznia (dyskalkulia, ADHD, standardowy, itd.),
- - pełny flow: input → generacja zadań przez AI → PDF,
+ - pełny flow: input → generacja zadań przez AI → layout (AI) → grafika → PDF,
  - **generowanie zadań przez OpenAI API** (dostosowane do profilu),
- - **eksport do PDF** z polskimi znakami (DejaVu Sans),
+ - **layout sterowany AI** (font size, spacing) + wymuszony layout dla profili dyskalkulia/ADHD,
+ - **jedna ilustracja w PDF** (low-stimuli, związek z tematem: dodawanie, mnożenie, ułamki, itd.),
+ - eksport do PDF z polskimi znakami (DejaVu Sans),
  - zapis PDF do pliku + przycisk pobierania.
   
-Opis funkcji oznaczonych jako **v1** dotyczy **kolejnych etapów rozwoju projektu** (layout AI, grafiki, PDF v1).
+Opis funkcji oznaczonych jako **v1** dotyczy **kolejnych etapów** (np. PDF v1, klucz odpowiedzi).
 
 
 ---
@@ -22,18 +24,19 @@ z opiniami i orzeczeniami PPP (np. dyskalkulia, ADHD, trudności w koncentracji)
 Aplikacja umożliwia szybkie generowanie **czytelnych, niskobodziecowych kart pracy (PDF)**,
 dostosowanych do indywidualnych potrzeb ucznia.
 
-## ✅ Co działa w wersji v0.5.0 (MVP)
+## ✅ Co działa w wersji v0.6.0 (MVP)
 
 W aktualnej wersji użytkownik może:
-- wybrać klasę ucznia (1-8),
+- wybrać klasę ucznia (1–8),
 - wybrać zakres materiału (dodawanie, odejmowanie, mnożenie, dzielenie, ułamki, równania),
 - wybrać **profil ucznia** (dyskalkulia, ADHD, standardowy, zdolny, trudności w nauce, dysleksja),
-- wygenerować **zadania matematyczne przez OpenAI API** (dostosowane do profilu i klasy),
-- **wygenerować i pobrać PDF** z zadaniami (A4, polskie znaki),
-- zapisać PDF automatycznie do `data/out/worksheet.pdf`.
+- wygenerować **zadania przez OpenAI API** (dostosowane do profilu i klasy),
+- wygenerować **layout** (AI) z większymi fontami i odstępami dla dyskalkulia/ADHD,
+- wygenerować **ilustrację** (low-stimuli, związek z tematem),
+- **wygenerować i pobrać PDF** (A4, polskie znaki, z ilustracją),
+- zapisać PDF do `data/out/worksheet.pdf`.
 
-⚠️ Wersja v0.5.0 to **funkcjonalne MVP** z podstawowym PDF i generowaniem zadań przez AI.  
-Kolejne wersje (v0.7+) dodadzą: layout sterowany AI, grafiki, bardziej czytelny PDF.
+⚠️ Po zmianie kodu (np. w `app/generators/images.py`) **zrestartuj Streamlit**, żeby załadować nową wersję.
 
 ---
 

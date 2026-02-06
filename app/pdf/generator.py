@@ -3,9 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Optional
 
 from reportlab.lib.pagesizes import A4  # pyright: ignore[reportMissingModuleSource]
+from reportlab.lib.colors import HexColor  # pyright: ignore[reportMissingModuleSource]
+from reportlab.lib.utils import ImageReader  # pyright: ignore[reportMissingModuleSource]
 from reportlab.pdfbase import pdfmetrics  # pyright: ignore[reportMissingModuleSource]
 from reportlab.pdfbase.ttfonts import TTFont  # pyright: ignore[reportMissingModuleSource]
 from reportlab.pdfgen import canvas  # pyright: ignore[reportMissingModuleSource]
@@ -51,56 +53,125 @@ def _register_font() -> tuple[str, str]:
     return base_font, bold_font
 
 
-def build_worksheet_pdf_bytes(meta: WorksheetMeta, tasks: Iterable[str]) -> bytes:
+def _default_layout() -> dict:
+    """Domyślny layout gdy nie przekazano layoutu z AI (Day 7)."""
+    return {
+        "title_font_size": 16,
+        "metadata_font_size": 10,
+        "section_font_size": 12,
+        "task_font_size": 11,
+        "margin": 50,
+        "title_spacing": 24,
+        "metadata_spacing": 20,
+        "section_spacing": 18,
+        "task_spacing": 6,
+        "line_spacing": 14,
+        "text_color": "#000000",
+        "background_color": "#FFFFFF",
+    }
+
+
+def _profile_layout(profile: str) -> dict:
+    """Layout dla profili wymagających większych fontów i odstępów (dyskalkulia, ADHD, trudności)."""
+    return {
+        "title_font_size": 20,
+        "metadata_font_size": 12,
+        "section_font_size": 14,
+        "task_font_size": 14,
+        "margin": 60,
+        "title_spacing": 32,
+        "metadata_spacing": 26,
+        "section_spacing": 24,
+        "task_spacing": 14,
+        "line_spacing": 20,
+    }
+
+
+# Rozmiar ilustracji na stronie (pt; ~140 pt ≈ 5 cm)
+_IMAGE_WIDTH_PT = 140
+_IMAGE_HEIGHT_PT = 80
+
+
+def build_worksheet_pdf_bytes(
+    meta: WorksheetMeta,
+    tasks: Iterable[str],
+    layout: Optional[dict] = None,
+    image_bytes: Optional[bytes] = None,
+) -> bytes:
     """
     PDF v0: nagłówek + lista zadań jako tekst, A4.
+    layout: opcjonalny dict z app.ai.layout_generator (font size, spacing, kolory).
+    image_bytes: opcjonalna ilustracja PNG (Day 8) – rysowana pod metadanymi.
     Zwraca bytes (łatwe do zapisu i do Streamlit download).
     """
+    L = _default_layout()
+    if layout:
+        for k, v in layout.items():
+            if k in L:
+                L[k] = v
+    # Wymuszenie większych fontów i odstępów dla dyskalkulia/ADHD/trudności (profil ma pierwszeństwo)
+    if meta.student_profile in ["dyskalkulia", "ADHD", "trudności w nauce"]:
+        L.update(_profile_layout(meta.student_profile))
+
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
-    # Rejestr czcionki z polskimi znakami
     base_font, bold_font = _register_font()
+
+    try:
+        c.setFillColor(HexColor(L["text_color"]))
+    except Exception:
+        pass
 
     c.setTitle(meta.title)
 
-    margin = 50
+    margin = L["margin"]
     y = height - margin
 
-    # Nagłówek (używamy "bold_font", ale to będzie ta sama czcionka)
-    c.setFont(bold_font, 16)
+    # Nagłówek
+    c.setFont(bold_font, L["title_font_size"])
     c.drawString(margin, y, meta.title)
-    y -= 24
+    y -= L["title_spacing"]
 
-    # Metadane (mały font)
-    c.setFont(base_font, 10)
+    # Metadane
+    c.setFont(base_font, L["metadata_font_size"])
     c.drawString(
         margin,
         y,
         f"Klasa: {meta.grade}   Zakres: {meta.topic_range}   Profil: {meta.student_profile}",
     )
-    y -= 20
+    y -= L["metadata_spacing"]
+
+    # Ilustracja (Day 8) – jedna grafika low-stimuli pod metadanymi
+    if image_bytes:
+        try:
+            img_reader = ImageReader(BytesIO(image_bytes))
+            c.drawImage(img_reader, margin, y - _IMAGE_HEIGHT_PT, width=_IMAGE_WIDTH_PT, height=_IMAGE_HEIGHT_PT)
+            y -= _IMAGE_HEIGHT_PT + 12
+        except Exception:
+            pass
 
     # Sekcja "Zadania:"
-    c.setFont(base_font, 12)
-    c.drawString(margin, y, "Zadania: (ąęłńśćźż)?")
-    y -= 18
+    c.setFont(base_font, L["section_font_size"])
+    c.drawString(margin, y, "Zadania:")
+    y -= L["section_spacing"]
 
     # Lista zadań
-    c.setFont(base_font, 11)
+    c.setFont(base_font, L["task_font_size"])
+    line_spacing = L["line_spacing"]
+    task_spacing = L["task_spacing"]
 
     for i, task in enumerate(list(tasks), start=1):
-        # proste łamanie: tnij na linie ~95 znaków (v0)
         lines = _wrap_text(f"{i}. {task}", max_chars=95)
         for line in lines:
             if y < margin:
                 c.showPage()
                 y = height - margin
-                c.setFont(base_font, 11)
+                c.setFont(base_font, L["task_font_size"])
             c.drawString(margin, y, line)
-            y -= 14
-        y -= 6
+            y -= line_spacing
+        y -= task_spacing
 
     c.showPage()
     c.save()
