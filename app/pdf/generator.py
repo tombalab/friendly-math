@@ -84,12 +84,34 @@ def _profile_layout(profile: str) -> dict:
         "section_spacing": 24,
         "task_spacing": 14,
         "line_spacing": 20,
+        "background_color": "#fafafa",  # Bardzo jasne szare tło dla low-stimuli (Day 9)
     }
 
 
 # Rozmiar ilustracji na stronie (pt; ~140 pt ≈ 5 cm)
 _IMAGE_WIDTH_PT = 140
 _IMAGE_HEIGHT_PT = 80
+
+
+def _draw_page_background(canvas_obj, width: float, height: float, bg_color: str) -> None:
+    """Rysuje tło strony jeśli nie jest białe (Day 9)."""
+    if bg_color.upper() not in ("#FFFFFF", "WHITE", "#FFF"):
+        try:
+            canvas_obj.setFillColor(HexColor(bg_color))
+            canvas_obj.rect(0, 0, width, height, fill=1, stroke=0)
+        except Exception:
+            pass
+
+
+def _draw_footer(canvas_obj, width: float, margin: float, page_num: int, font_name: str, text_color: str) -> None:
+    """Rysuje stopkę z numerem strony na dole (Day 9)."""
+    try:
+        canvas_obj.setFillColor(HexColor(text_color))
+        canvas_obj.setFont(font_name, 8)
+        footer_text = f"Friendly Math — strona {page_num}"
+        canvas_obj.drawRightString(width - margin, 20, footer_text)
+    except Exception:
+        pass
 
 
 def build_worksheet_pdf_bytes(
@@ -99,7 +121,12 @@ def build_worksheet_pdf_bytes(
     image_bytes: Optional[bytes] = None,
 ) -> bytes:
     """
-    PDF v0: nagłówek + lista zadań jako tekst, A4.
+    PDF v1: czytelna karta pracy (Day 9).
+    - Nagłówek + metadane + ilustracja + lista zadań, A4.
+    - Tło strony (background_color z layoutu).
+    - Separator pod "Zadania:".
+    - Dynamiczne łamanie tekstu (dostosowane do szerokości strony i fontu).
+    - Stopka z numerem strony.
     layout: opcjonalny dict z app.ai.layout_generator (font size, spacing, kolory).
     image_bytes: opcjonalna ilustracja PNG (Day 8) – rysowana pod metadanymi.
     Zwraca bytes (łatwe do zapisu i do Streamlit download).
@@ -118,6 +145,10 @@ def build_worksheet_pdf_bytes(
     width, height = A4
 
     base_font, bold_font = _register_font()
+    bg_color = L.get("background_color", "#FFFFFF")
+
+    # Tło strony (Day 9) – pierwsza strona
+    _draw_page_background(c, width, height, bg_color)
 
     try:
         c.setFillColor(HexColor(L["text_color"]))
@@ -128,6 +159,7 @@ def build_worksheet_pdf_bytes(
 
     margin = L["margin"]
     y = height - margin
+    page_num = 1
 
     # Nagłówek
     c.setFont(bold_font, L["title_font_size"])
@@ -155,24 +187,50 @@ def build_worksheet_pdf_bytes(
     # Sekcja "Zadania:"
     c.setFont(base_font, L["section_font_size"])
     c.drawString(margin, y, "Zadania:")
-    y -= L["section_spacing"]
+    y -= 8  # Mały odstęp przed linią
+
+    # Separator (Day 9) – cienka linia pod "Zadania:"
+    try:
+        c.setStrokeColor(HexColor(L["text_color"]))
+        c.setLineWidth(0.5)
+        c.line(margin, y, width - margin, y)
+    except Exception:
+        pass
+    y -= L["section_spacing"] - 8  # Odstęp po linii (zachowujemy section_spacing)
 
     # Lista zadań
     c.setFont(base_font, L["task_font_size"])
     line_spacing = L["line_spacing"]
     task_spacing = L["task_spacing"]
 
+    # Łamanie tekstu (Day 9) – dostosowanie do szerokości strony i rozmiaru fontu
+    # A4 = 595 pt, margin * 2, średnio ~6-7 pt na znak (font 11pt) lub ~8-9 pt (font 14pt)
+    available_width = width - 2 * margin
+    font_size = L["task_font_size"]
+    chars_per_pt = 6.5 if font_size <= 12 else 8.0  # Przybliżenie
+    max_chars = int(available_width / chars_per_pt) - 5  # -5 dla bezpieczeństwa
+    max_chars = max(60, min(max_chars, 85))  # Ograniczenie: 60-85 znaków
+
     for i, task in enumerate(list(tasks), start=1):
-        lines = _wrap_text(f"{i}. {task}", max_chars=95)
+        lines = _wrap_text(f"{i}. {task}", max_chars=max_chars)
         for line in lines:
-            if y < margin:
+            if y < margin + 30:  # +30 dla stopki
+                _draw_footer(c, width, margin, page_num, base_font, L["text_color"])
                 c.showPage()
+                page_num += 1
+                _draw_page_background(c, width, height, bg_color)  # Tło na kolejnych stronach
+                try:
+                    c.setFillColor(HexColor(L["text_color"]))
+                except Exception:
+                    pass
                 y = height - margin
                 c.setFont(base_font, L["task_font_size"])
             c.drawString(margin, y, line)
             y -= line_spacing
         y -= task_spacing
 
+    # Stopka na ostatniej stronie
+    _draw_footer(c, width, margin, page_num, base_font, L["text_color"])
     c.showPage()
     c.save()
 

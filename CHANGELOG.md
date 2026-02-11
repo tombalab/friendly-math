@@ -18,6 +18,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 
 ---
+## [0.7.0] – PDF v1: Readable worksheet (Day 9)
+
+### Added
+- Page background color support (from layout, e.g., light gray `#fafafa` for low-stimuli profiles)
+- Visual separator line below "Tasks" section
+- Dynamic text wrapping (adjusted to page width and font size, 60–85 characters)
+- Footer with page numbers ("Friendly Math — strona X")
+
+### Changed
+- PDF generator upgraded from v0 to v1 (readable, print-ready worksheet)
+- Background color applied to all pages (including new pages when tasks overflow)
+- Text wrapping now adapts to font size (larger fonts = fewer characters per line)
+
+### Technical
+- Function `_draw_page_background()` for consistent background rendering
+- Function `_draw_footer()` for page numbering
+- Dynamic `max_chars` calculation based on available width and font size
+
+---
 ## [0.6.0] – Worksheet image generator (Day 8)
 
 ### Added
