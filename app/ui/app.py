@@ -24,7 +24,7 @@ if str(ROOT_DIR) not in sys.path:
 import streamlit as st
 from app.ai.layout_generator import generate_layout
 from app.ai.text_generator import generate_tasks
-from app.generators.images import generate_worksheet_image
+from app.generators.images import generate_worksheet_image, generate_worksheet_images_for_tasks
 from app.pdf.generator import WorksheetMeta, build_worksheet_pdf_bytes
 
 # --------------------------------------------------
@@ -88,6 +88,13 @@ with st.form("worksheet_form"):
             "ADHD"
         ],
         help="Profil wpływa na styl i trudność zadań"
+    )
+
+    # Day 11: dla standardowy/zdolny – opcja ilustracji; dla dyskalkulia/ADHD/trudności zawsze per zadanie
+    include_illustration = st.checkbox(
+        "Ilustracja w karcie",
+        value=True,
+        help="Dla profili standardowy/zdolny: jedna ilustracja u góry. Dla dyskalkulia/ADHD/trudności: ilustracja przy każdym zadaniu (zawsze włączone).",
     )
 
     submitted = st.form_submit_button("🧠 Generuj kartę")
@@ -156,19 +163,30 @@ if submitted:
         except Exception as e:
             st.warning(f"Layout AI niedostępny ({e}), używam domyślnego layoutu.")
 
-        # Ilustracja (Day 8) – jedna grafika low-stimuli
+        # Ilustracja (Day 8/11): per zadanie dla low-stimuli, opcjonalnie jedna u góry dla standardowy/zdolny
         image_bytes = None
-        try:
-            image_bytes = generate_worksheet_image(topic=topic, profile=student_profile)
-        except Exception as e:
-            st.warning(f"Grafika niedostępna ({e}), PDF bez ilustracji.")
+        task_images = None
+        low_stimuli_profiles = ["dyskalkulia", "ADHD", "trudności w nauce"]
+        if student_profile in low_stimuli_profiles:
+            try:
+                task_images = generate_worksheet_images_for_tasks(
+                    tasks=tasks, topic=topic, profile=student_profile
+                )
+            except Exception as e:
+                st.warning(f"Grafiki per zadanie niedostępne ({e}), PDF bez ilustracji przy zadaniach.")
+        elif include_illustration:
+            try:
+                image_bytes = generate_worksheet_image(topic=topic, profile=student_profile)
+            except Exception as e:
+                st.warning(f"Grafika niedostępna ({e}), PDF bez ilustracji.")
 
-        # 1) Generowanie PDF jako bytes (z layoutem i opcjonalnie ilustracją)
+        # 1) Generowanie PDF (z layoutem, opcjonalnie image_bytes lub task_images)
         pdf_bytes = build_worksheet_pdf_bytes(
             meta=meta,
             tasks=tasks,
             layout=layout,
             image_bytes=image_bytes,
+            task_images=task_images,
         )
 
         # 2) Zapis do pliku (wariant A)
