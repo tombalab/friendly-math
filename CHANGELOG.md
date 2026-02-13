@@ -18,6 +18,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 
 ---
+## [0.8.0] – Day 10 & 11: Testy, ilustracje per zadanie, ułamki szkolne
+
+### Added (Day 10 – testy ręczne)
+- Scenariusze testowe (Klasa 2 dodawanie/dyskalkulia, Klasa 5 mnożenie/standardowy, Klasa 1 dodawanie/ADHD)
+- Checklisty wizualne i funkcjonalne dla generowanego PDF
+- Dokumentacja wyników testów (potwierdzenie działania PDF v1)
+
+### Added (Day 11 – ilustracje per zadanie)
+- **Ilustracja przy każdym zadaniu** – generator `generate_worksheet_images_for_tasks(tasks, topic, profile)` zwraca listę PNG (jedna na zadanie)
+- **Opcja „Ilustracja w karcie”** w UI – dla profili standardowy/zdolny (dla dyskalkulia/ADHD/trudności ilustracje zawsze włączone)
+- Ilustracje **zgodne z treścią zadania**: dodawanie (dwie grupy kół), odejmowanie (kółka z przekreśleniem X na „zabranych”), mnożenie (siatka wiersze×kolumny), dzielenie (grupy obok siebie), ułamki (koło podzielone na części, zaznaczone zgodnie z ułamkiem)
+- **Ułamki zwykłe w zapisie szkolnym** w PDF – licznik nad kreską, kreska ułamkowa, mianownik pod kreską (zamiast 1/2)
+- Parsowanie ułamków z treści zadania (`_parse_fraction_from_task`) oraz liczb (`_parse_numbers_from_task`) do generowania ilustracji
+
+### Changed
+- PDF: parametr `task_images: list[bytes]` – gdy podany, przy każdym zadaniu rysowana jest ilustracja (pełna szerokość treści); gdy brak – opcjonalnie jedna ilustracja u góry
+- Ilustracje: wewnętrzny padding i `_circle_size_to_fit`, żeby skrajne kółka nie były ucinane
+- Prompt dla tematu „ułamki”: instrukcja zapisu ułamków w formacie licznik/mianownik (np. 1/2, 3/4)
+
+### Technical
+- `app/generators/images.py`: `_parse_fraction_from_task()`, `_circle_size_to_fit()`, rozszerzona logika tematów w `generate_worksheet_images_for_tasks`
+- `app/pdf/generator.py`: `_split_line_into_segments()`, `_draw_fraction()`, `_draw_task_line_with_fractions()` – rysowanie ułamków z kreską
+- `app/ai/text_generator.py`: warunkowa instrukcja dla ułamków w `_build_prompt`
+
+---
 ## [0.7.0] – PDF v1: Readable worksheet (Day 9)
 
 ### Added

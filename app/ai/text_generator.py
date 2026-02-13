@@ -38,13 +38,19 @@ def _build_prompt(grade: str, topic: str, profile: str, n: int) -> str:
     
     profile_instruction = profile_hints.get(profile, "Standardowe zadania.")
     
+    # Dla ułamków: zapis licznik/mianownik (np. 1/2, 3/4) – będzie wyświetlany szkolnie z kreską ułamkową
+    fraction_instruction = (
+        ' Dla tematu "ułamki zwykłe" używaj ułamków w formacie licznik/mianownik (np. 1/2, 3/4, 2/5).'
+        if topic and "ułamk" in topic.lower()
+        else ""
+    )
     prompt = f"""Jesteś nauczycielem matematyki. Wygeneruj {n} zadań dla klasy {grade} na temat: {topic}.
 
     Wymagania:
     - {profile_instruction}
     - Każde zadanie w jednej linii.
-    - Format: "Policz: [treść zadania] = ____"
-    - Używaj tylko liczb całkowitych.
+    - Format: "Policz: [treść zadania] = ____" lub "Zaznacz [ułamek] ..." itp.
+    - Używaj tylko liczb całkowitych (poza ułamkami).{fraction_instruction}
     - Zadania dostosowane do klasy {grade}.
 
     Wygeneruj tylko listę zadań, po jednym w linii, bez numeracji, bez dodatkowych komentarzy."""

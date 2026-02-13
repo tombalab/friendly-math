@@ -1,4 +1,4 @@
-⚠️ **Status projektu: MVP v0.7.0 (PDF v1 — czytelna karta pracy)**  
+⚠️ **Status projektu: MVP v0.8.0 (Day 10 & 11 — ilustracje per zadanie, ułamki szkolne)**  
   
 Aktualna wersja aplikacji prezentuje **funkcjonalne MVP**:
  - działający interfejs Streamlit,
@@ -6,7 +6,9 @@ Aktualna wersja aplikacji prezentuje **funkcjonalne MVP**:
  - pełny flow: input → generacja zadań przez AI → layout (AI) → grafika → PDF v1,
  - **generowanie zadań przez OpenAI API** (dostosowane do profilu),
  - **layout sterowany AI** (font size, spacing) + wymuszony layout dla profili dyskalkulia/ADHD,
- - **jedna ilustracja w PDF** (low-stimuli, związek z tematem: dodawanie, mnożenie, ułamki, itd.),
+ - **ilustracja przy każdym zadaniu** (dla dyskalkulia/ADHD/trudności zawsze; dla standardowy/zdolny – opcja „Ilustracja w karcie”),
+ - **ilustracje zgodne z treścią**: dodawanie (grupy kół), odejmowanie (przekreślenie „zabranych”), mnożenie (siatka), dzielenie (grupy), ułamki (koło podzielone),
+ - **ułamki zwykłe w zapisie szkolnym** w PDF (licznik, kreska ułamkowa, mianownik zamiast 1/2),
  - **PDF v1**: tło strony (pastelowe dla low-stimuli), separator, dynamiczne łamanie tekstu, stopka z numerem strony,
  - eksport do PDF z polskimi znakami (DejaVu Sans),
  - zapis PDF do pliku + przycisk pobierania.
@@ -25,18 +27,20 @@ z opiniami i orzeczeniami PPP (np. dyskalkulia, ADHD, trudności w koncentracji)
 Aplikacja umożliwia szybkie generowanie **czytelnych, niskobodziecowych kart pracy (PDF)**,
 dostosowanych do indywidualnych potrzeb ucznia.
 
-## ✅ Co działa w wersji v0.7.0 (MVP)
+## ✅ Co działa w wersji v0.8.0 (MVP)
 
 W aktualnej wersji użytkownik może:
 - wybrać klasę ucznia (1–8),
 - wybrać zakres materiału (dodawanie, odejmowanie, mnożenie, dzielenie, ułamki, równania),
 - wybrać **profil ucznia** (dyskalkulia, ADHD, standardowy, zdolny, trudności w nauce, dysleksja),
+- włączyć **„Ilustracja w karcie”** (dla standardowy/zdolny opcjonalnie; dla dyskalkulia/ADHD/trudności zawsze),
 - wygenerować **zadania przez OpenAI API** (dostosowane do profilu i klasy),
 - wygenerować **layout** (AI) z większymi fontami i odstępami dla dyskalkulia/ADHD,
-- wygenerować **ilustrację** (low-stimuli, związek z tematem),
+- wygenerować **ilustrację przy każdym zadaniu** (zgodną z treścią: grupy kół, siatka, koło ułamkowe itd.),
 - **wygenerować i pobrać PDF v1** (A4, polskie znaki):
   - tło strony (pastelowe dla profili low-stimuli),
   - separator pod sekcją "Zadania:",
+  - **ułamki w zapisie szkolnym** (licznik, kreska, mianownik),
   - dynamiczne łamanie tekstu (dostosowane do szerokości strony i fontu),
   - stopka z numerem strony,
 - zapisać PDF do `data/out/worksheet.pdf`.
