@@ -1,19 +1,14 @@
-⚠️ **Status projektu: MVP v0.8.0 (Day 10 & 11 — ilustracje per zadanie, ułamki szkolne)**  
+⚠️ **Status projektu: MVP v1.0.0**  
   
-Aktualna wersja aplikacji prezentuje **funkcjonalne MVP**:
- - działający interfejs Streamlit,
- - wybór profilu ucznia (dyskalkulia, ADHD, standardowy, itd.),
- - pełny flow: input → generacja zadań przez AI → layout (AI) → grafika → PDF v1,
- - **generowanie zadań przez OpenAI API** (dostosowane do profilu),
- - **layout sterowany AI** (font size, spacing) + wymuszony layout dla profili dyskalkulia/ADHD,
- - **ilustracja przy każdym zadaniu** (dla dyskalkulia/ADHD/trudności zawsze; dla standardowy/zdolny – opcja „Ilustracja w karcie”),
- - **ilustracje zgodne z treścią**: dodawanie (grupy kół), odejmowanie (przekreślenie „zabranych”), mnożenie (siatka), dzielenie (grupy), ułamki (koło podzielone),
- - **ułamki zwykłe w zapisie szkolnym** w PDF (licznik, kreska ułamkowa, mianownik zamiast 1/2),
- - **PDF v1**: tło strony (pastelowe dla low-stimuli), separator, dynamiczne łamanie tekstu, stopka z numerem strony,
- - eksport do PDF z polskimi znakami (DejaVu Sans),
- - zapis PDF do pliku + przycisk pobierania.
+Aktualna wersja aplikacji to **funkcjonalne MVP v1.0**:
+ - działający interfejs Streamlit (sensowne domyślne, opisy pól, stopka „Friendly Math v1.0”),
+ - pełny flow: parametry → generacja zadań (OpenAI API) → layout (AI) → grafika → PDF,
+ - **opcja „Dołącz stronę z odpowiedziami”** — na końcu PDF strona „Odpowiedzi” (dla prostych działań),
+ - **obsługa błędów**: brak klucza API lub timeout → czytelny komunikat i ewentualne zadania zastępcze,
+ - ilustracja przy każdym zadaniu (zgodna z treścią), ułamki w zapisie szkolnym w PDF,
+ - eksport do PDF (A4, polskie znaki), zapis do `data/out/worksheet.pdf` + przycisk pobierania.
   
-Opis funkcji oznaczonych jako **v1** dotyczy **kolejnych etapów** (np. klucz odpowiedzi, interaktywne zadania).
+Przykładowe wygenerowane karty: `data/worksheets_samples/`.
 
 
 ---
@@ -27,25 +22,16 @@ z opiniami i orzeczeniami PPP (np. dyskalkulia, ADHD, trudności w koncentracji)
 Aplikacja umożliwia szybkie generowanie **czytelnych, niskobodziecowych kart pracy (PDF)**,
 dostosowanych do indywidualnych potrzeb ucznia.
 
-## ✅ Co działa w wersji v0.8.0 (MVP)
+## ✅ Co działa w wersji v1.0.0 (MVP)
 
-W aktualnej wersji użytkownik może:
-- wybrać klasę ucznia (1–8),
-- wybrać zakres materiału (dodawanie, odejmowanie, mnożenie, dzielenie, ułamki, równania),
-- wybrać **profil ucznia** (dyskalkulia, ADHD, standardowy, zdolny, trudności w nauce, dysleksja),
-- włączyć **„Ilustracja w karcie”** (dla standardowy/zdolny opcjonalnie; dla dyskalkulia/ADHD/trudności zawsze),
-- wygenerować **zadania przez OpenAI API** (dostosowane do profilu i klasy),
-- wygenerować **layout** (AI) z większymi fontami i odstępami dla dyskalkulia/ADHD,
-- wygenerować **ilustrację przy każdym zadaniu** (zgodną z treścią: grupy kół, siatka, koło ułamkowe itd.),
-- **wygenerować i pobrać PDF v1** (A4, polskie znaki):
-  - tło strony (pastelowe dla profili low-stimuli),
-  - separator pod sekcją "Zadania:",
-  - **ułamki w zapisie szkolnym** (licznik, kreska, mianownik),
-  - dynamiczne łamanie tekstu (dostosowane do szerokości strony i fontu),
-  - stopka z numerem strony,
-- zapisać PDF do `data/out/worksheet.pdf`.
+- **Panel boczny**: klasa (domyślnie 2), zakres materiału (dodawanie, odejmowanie, mnożenie, dzielenie, ułamki, równania), liczba zadań (5), profil ucznia, opcje ilustracji i klucza odpowiedzi, przycisk „Generuj kartę”.
+- **Okno główne**: lista wygenerowanych zadań oraz sekcja „Karta pracy PDF” — podgląd stron jako obrazy (jeśli zainstalowano PyMuPDF), ścieżka do pliku, przycisk „Pobierz PDF”.
+- **Klucz odpowiedzi**: opcjonalna strona „Odpowiedzi” w PDF (proste działania).
+- **Obsługa błędów**: brak OPENAI_API_KEY lub timeout API → czytelny komunikat; zadania zastępcze gdy API niedostępne.
+- **Ilustracje**: jedna per zadanie, dopasowane do tematu; celowo ograniczone tak, by zawsze były czytelne (najlepiej przy dodawaniu, odejmowaniu, prostym mnożeniu).
 
-⚠️ Po zmianie kodu (np. w `app/pdf/generator.py`) **zrestartuj Streamlit**, żeby załadować nową wersję.
+Przykładowe karty: `data/worksheets_samples/`.  
+Po zmianie kodu **zrestartuj Streamlit**.
 
 ---
 
@@ -126,14 +112,47 @@ Profiles are implemented as modular Python classes and can be extended easily.
 - Python 3.11
 - Streamlit
 - OpenAI API
-- Pillow
-- ReportLab
+- Pillow, ReportLab
+- PyMuPDF (opcjonalnie — podgląd PDF jako obrazy w UI)
+
+---
+
+## Deploy na Streamlit Cloud
+
+1. Wypchnij repozytorium na GitHub.
+2. Wejdź na [share.streamlit.io](https://share.streamlit.io), zaloguj się przez GitHub.
+3. **New app** → wybierz repo `friendly-math`, branch `main`, plik główny: `app/ui/app.py`, ścieżka: `app/ui/app.py`.
+4. W **Advanced settings** ustaw **Python version**: 3.11.
+5. W sekcji **Secrets** dodaj (np. TOML):
+   ```toml
+   OPENAI_API_KEY = "sk-..."
+   ```
+6. Deploy — aplikacja będzie dostępna pod linkiem `https://...streamlit.app`.
+
+Uwaga: bez `OPENAI_API_KEY` w Secrets aplikacja uruchomi się, ale generowanie zadań wyświetli komunikat o braku klucza.
+
+---
+
+## Wypychanie na Git (release v1.0.0)
+
+Z katalogu projektu:
+
+```bash
+git add .
+git status   # sprawdź, co trafi do commita
+git commit -m "v1.0.0 MVP: sidebar, podgląd PDF, ilustracje ograniczone, README i deploy"
+git branch -M main   # opcjonalnie, jeśli główna gałąź to main
+git remote add origin https://github.com/TWOJ_USER/friendly-math.git   # tylko przy pierwszym pushu
+git push -u origin main
+```
+
+Zamień `TWOJ_USER` na swoją nazwę użytkownika GitHub. Po pushu możesz wykonać deploy na Streamlit Cloud (kroki powyżej).
 
 ---
 
 ## Project Status
 
-**v1 / MVP**
+**v1.0.0 — MVP**
 
 The current focus is on validating:
 - pedagogical assumptions,

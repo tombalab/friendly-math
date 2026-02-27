@@ -18,6 +18,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 
 ---
+## [1.0.0] – 2025-01-23 – MVP v1.0.0 (release)
+
+### Added
+- **Klucz odpowiedzi** — opcjonalna strona „Odpowiedzi” w PDF (checkbox „Dołącz stronę z odpowiedziami”); wyniki dla prostych zadań a op b, pozostałe „—”
+- Moduł `app/generators/answers.py` — `compute_answers(tasks)` (regex)
+- **Podgląd PDF w przeglądarce** — strony PDF jako obrazy (PyMuPDF, opcjonalnie); przycisk Pobierz PDF zawsze dostępny
+- **Deploy na Streamlit Cloud** — opis w README (Secrets: OPENAI_API_KEY)
+
+### Changed
+- **UI**: formularz w **panelu bocznym** (sidebar), wyniki (zadania + PDF) w oknie głównym; sensowne domyślne, opisy pól, stopka „Friendly Math v1.0”
+- **Obsługa błędów** — brak OPENAI_API_KEY lub timeout → komunikat w UI; zadania zastępcze przy błędzie API
+- **Ilustracje (v1.0)** — celowo mniej ambitne, zawsze czytelne: max 10 kół w sumie (dodawanie/odejmowanie), mnożenie max 5×5, dzielenie max 8 elementów / 2 grupy, ułamki max 2 koła; równania — schemat „lewa = prawa”
+- Sekcja JSON (request) ukryta w UI
+
+### Technical
+- `build_worksheet_pdf_bytes(..., answers=Optional[list[str]])`
+- `app/ui/app.py`: opcjonalny import fitz (PyMuPDF), `_pdf_bytes_to_images()`, `st.image(..., width="stretch")`
+- `app/generators/images.py`: limity max_circles, rows/cols, n_total/n_groups, n_fracs
+- requirements.txt: PyMuPDF
+
+---
 ## [0.8.0] – Day 10 & 11: Testy, ilustracje per zadanie, ułamki szkolne
 
 ### Added (Day 10 – testy ręczne)

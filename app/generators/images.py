@@ -134,10 +134,24 @@ def _parse_fraction_from_task(task: str) -> Tuple[int, int] | None:
     num, den = int(m.group(1)), int(m.group(2))
     if den <= 0 or num < 0 or num > den:
         return None
-    # ograniczenie czytelności: mianownik do 8
     den = min(den, 8)
     num = min(num, den)
     return (num, den)
+
+
+def _parse_all_fractions_from_task(task: str) -> List[Tuple[int, int]]:
+    """Wyciąga wszystkie ułamki z treści (np. '1/2 + 1/4' -> [(1,2), (1,4)]). Max 4 ułamki."""
+    out: List[Tuple[int, int]] = []
+    for m in re.finditer(r"(\d+)\s*/\s*(\d+)", task):
+        if len(out) >= 4:
+            break
+        num, den = int(m.group(1)), int(m.group(2))
+        if den <= 0 or num < 0 or num > den:
+            continue
+        den = min(den, 8)
+        num = min(num, den)
+        out.append((num, den))
+    return out
 
 
 def _circle_size_to_fit(available_w: int, available_h: int, num_cols: int, num_rows: int, gap: int = 6) -> int:
@@ -157,19 +171,20 @@ def generate_worksheet_images_for_tasks(
     size: Tuple[int, int] = (480, 100),
 ) -> List[bytes]:
     """
-    Day 11: Jedna ilustracja na zadanie, powiązana z treścią i tematem.
-    Rozmiar kółek (ss) dostosowany do liczby elementów i miejsca – nic nie ucinane.
+    Day 11: Jedna ilustracja na zadanie, powiązana z tematem i treścią.
+    v1.0: Ilustracje celowo ograniczone — czytelne i spójne z zadaniem.
+    Najlepiej dopasowane: dodawanie, odejmowanie, proste mnożenie; reszta tematyczna.
     """
     result: List[bytes] = []
     colors = list(_PASTEL_SHAPES)
     topic_lower = (topic or "").strip().lower()
     w, h = size
     margin = 24
-    pad = 10  # wewnętrzny padding – żeby skrajne kółka nie były ucinane
+    pad = 10
     gap = 6
     aw = w - 2 * margin - 2 * pad
     ah = h - 2 * margin - 2 * pad
-    max_circles = 12
+    max_circles = 10  # mniej ambitnie — zawsze czytelne (np. 5+5)
 
     for task in tasks:
         nums = _parse_numbers_from_task(task)
@@ -183,8 +198,8 @@ def generate_worksheet_images_for_tasks(
             cx, cy = w // 2, h // 2
             draw.ellipse([cx - ss, cy - ss, cx + ss, cy + ss], fill=colors[0], outline="#9e9e9e", width=1)
         elif topic_lower == "mnożenie" and len(nums) >= 2:
-            # a × b = siatka a wierszy, b kolumn (zgodnie z treścią zadania)
-            rows, cols = min(nums[0], 6), min(nums[1], 8)
+            # Siatka — limit 5×5 dla czytelności (v1.0: mniej ambitne ilustracje)
+            rows, cols = min(nums[0], 5), min(nums[1], 5)
             ss = _circle_size_to_fit(aw, ah, cols, rows, gap)
             total_w = cols * (ss + gap) - gap
             total_h = rows * (ss + gap) - gap
@@ -212,9 +227,9 @@ def generate_worksheet_images_for_tasks(
                     draw.line([x, cy - ss // 2, x + ss, cy + ss // 2], fill="#e57373", width=2)
                     draw.line([x + ss, cy - ss // 2, x, cy + ss // 2], fill="#e57373", width=2)
         elif topic_lower == "dzielenie" and len(nums) >= 2:
-            # np. 6 : 2 = 3 → dwie grupy po 3 (obok siebie, jak „6 podzielone na 2”)
-            n_total = min(nums[0], 12)
-            n_groups = max(1, min(nums[1], 4))
+            # Dwie grupy obok — limit dla czytelności (v1.0)
+            n_total = min(nums[0], 8)
+            n_groups = max(1, min(nums[1], 2))
             per_group = n_total // n_groups  # w każdej grupie tyle samo
             if per_group == 0:
                 per_group = 1
@@ -234,47 +249,44 @@ def generate_worksheet_images_for_tasks(
                 x = start2 + i * (ss + gap)
                 draw.ellipse([x, cy - ss // 2, x + ss, cy + ss // 2], fill=colors[1], outline="#9e9e9e", width=1)
         elif topic_lower == "ułamki":
-            # Ilustracja zgodna z treścią: koło podzielone na mianownik części, licznik części zaznaczonych
-            frac = _parse_fraction_from_task(task)
-            if frac:
-                num, den = frac
-                r = min(40, aw // 2, ah // 2 - 4)
-                cx, cy = bx + aw // 2, by + ah // 2
-                # Pełne koło (obrys)
+            # Pierwszy ułamek z zadania — jedno czytelne koło (v1.0: mniej ambitnie)
+            fractions = _parse_all_fractions_from_task(task)
+            if not fractions:
+                fractions = [(1, 2)]
+            n_fracs = min(len(fractions), 2)  # max 2 koła
+            cell_w = aw // max(n_fracs, 1)
+            r = min(cell_w // 2 - 6, ah // 2 - 6, 45)
+            r = max(r, 18)
+            step_cx = aw // max(n_fracs, 1)
+            for idx, (num, den) in enumerate(fractions[:2]):
+                cx = bx + step_cx * idx + step_cx // 2
+                cy = by + ah // 2
                 bbox = [cx - r, cy - r, cx + r, cy + r]
-                # Podział na den „kawałków” (początek od góry: -90°), każdy kawałek 360/den stopni
-                step = 360.0 / den
+                step_angle = 360.0 / den
                 for i in range(den):
-                    start_angle = -90 + i * step  # -90 żeby pierwszy kawałek od góry
-                    end_angle = start_angle + step
-                    fill_color = colors[0] if i < num else _PASTEL_BG
-                    outline_color = "#9e9e9e"
-                    draw.pieslice(bbox, start=start_angle, end=end_angle, fill=fill_color, outline=outline_color, width=2)
-            else:
-                # Fallback: 1/2 – pół koła
-                r = min(40, aw // 2, ah // 2 - 4)
-                cx, cy = bx + aw // 2, by + ah // 2
-                bbox = [cx - r, cy - r, cx + r, cy + r]
-                draw.pieslice(bbox, start=-90, end=90, fill=colors[0], outline="#9e9e9e", width=2)
-                draw.pieslice(bbox, start=90, end=270, fill=_PASTEL_BG, outline="#9e9e9e", width=2)
-        elif topic_lower == "równania" and len(nums) >= 2:
-            n1, n2 = min(nums[0], 6), min(nums[1], 6)
-            half_aw = aw // 2
-            group_gap = 16
-            ss1 = _circle_size_to_fit(half_aw - group_gap, ah, n1, 1, gap)
-            ss2 = _circle_size_to_fit(half_aw - group_gap, ah, n2, 1, gap)
-            ss = min(ss1, ss2)
+                    start_angle = -90 + i * step_angle
+                    end_angle = start_angle + step_angle
+                    fill_color = colors[idx % len(colors)] if i < num else _PASTEL_BG
+                    draw.pieslice(bbox, start=start_angle, end=end_angle, fill=fill_color, outline="#9e9e9e", width=2)
+        elif topic_lower == "równania":
+            # Ilustracja ogólna: lewa strona = prawa strona (bez konkretnych liczb – równania mają różne działania)
             cy = by + ah // 2
-            total1 = n1 * (ss + gap) - gap
-            start1 = bx + (half_aw - group_gap - total1) // 2
-            for i in range(n1):
-                x = start1 + i * (ss + gap)
+            ss = min(24, aw // 8, ah // 2 - 4)
+            third = aw // 3
+            # Lewa „strona”: jeden prosty blok (3 kółka jako symbol wyrażenia)
+            left_cx = bx + third // 2
+            for i in range(3):
+                x = left_cx + i * (ss + 4) - (3 * (ss + 4)) // 2
                 draw.ellipse([x, cy - ss // 2, x + ss, cy + ss // 2], fill=colors[0], outline="#9e9e9e", width=1)
-            total2 = n2 * (ss + gap) - gap
-            right_half_w = aw - half_aw - group_gap
-            start2 = bx + half_aw + group_gap + max(0, (right_half_w - total2) // 2)
-            for i in range(n2):
-                x = start2 + i * (ss + gap)
+            # Znak równości na środku
+            eq_w, eq_h = 20, 8
+            eq_x = bx + aw // 2 - eq_w // 2
+            draw.rectangle([eq_x, cy - eq_h - 2, eq_x + eq_w, cy - 2], outline="#9e9e9e", fill=colors[1], width=1)
+            draw.rectangle([eq_x, cy + 2, eq_x + eq_w, cy + eq_h + 2], outline="#9e9e9e", fill=colors[1], width=1)
+            # Prawa „strona”: jeden blok (3 kółka)
+            right_cx = bx + aw - third // 2
+            for i in range(3):
+                x = right_cx + i * (ss + 4) - (3 * (ss + 4)) // 2
                 draw.ellipse([x, cy - ss // 2, x + ss, cy + ss // 2], fill=colors[1], outline="#9e9e9e", width=1)
         else:
             # Dodawanie (lub domyślnie): dwie grupy kół (np. 3 + 4)

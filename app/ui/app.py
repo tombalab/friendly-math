@@ -4,7 +4,7 @@
 #--------------------------------------------------
 #
 # Autor: Tomasz Balabuch
-# Data: 2026-01-13
+# Data: 2026-02-24
 # Wersja: 1.0.0
 #
 #--------------------------------------------------
@@ -14,8 +14,19 @@
 # Importy
 # --------------------------------------------------
 
+import os
 import sys
+from io import BytesIO
 from pathlib import Path
+
+try:
+    import fitz  # type: ignore  # PyMuPDF
+except ModuleNotFoundError:
+    fitz = None  # pip install PyMuPDF — wtedy podgląd PDF jako obrazy będzie działał
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(ROOT_DIR) not in sys.path:
@@ -24,36 +35,51 @@ if str(ROOT_DIR) not in sys.path:
 import streamlit as st
 from app.ai.layout_generator import generate_layout
 from app.ai.text_generator import generate_tasks
+from app.generators.answers import compute_answers
 from app.generators.images import generate_worksheet_image, generate_worksheet_images_for_tasks
 from app.pdf.generator import WorksheetMeta, build_worksheet_pdf_bytes
+
+def _pdf_bytes_to_images(pdf_bytes: bytes, dpi: int = 120) -> list[BytesIO]:
+    """Konwertuje PDF (bytes) na listę obrazów stron (PNG w BytesIO). Wymaga: pip install PyMuPDF."""
+    out = []
+    if fitz is None:
+        return out
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        for page in doc:
+            pix = page.get_pixmap(dpi=dpi)
+            png_bytes = pix.tobytes("png")
+            out.append(BytesIO(png_bytes))
+        doc.close()
+    except Exception:
+        pass
+    return out
+
 
 # --------------------------------------------------
 # Konfiguracja strony
 # --------------------------------------------------
 st.set_page_config(
     page_title="Friendly Math",
-    layout="centered"
-)
-
-# Nagłówek
-# --------------------------------------------------
-st.title("🧮 Friendly Math")
-st.subheader("Generator kart pracy (MVP)")
-
-st.write(
-    "Wypełnij formularz i wygeneruj JSON request, "
-    "który w kolejnym etapie zostanie wysłany do AI."
+    layout="centered",
 )
 
 # --------------------------------------------------
-# Formularz
+# Panel boczny (lewa strona) – formularz
 # --------------------------------------------------
-with st.form("worksheet_form"):
+st.sidebar.title("🧮 Friendly Math")
+st.sidebar.subheader("Generator kart pracy")
+st.sidebar.write(
+    "Wybierz parametry karty pracy i kliknij **Generuj kartę**. "
+    "Zadania zostaną wygenerowane przez AI, a PDF będzie gotowy do pobrania."
+)
 
+with st.sidebar.form("worksheet_form"):
     grade = st.selectbox(
         "Klasa",
         options=["1", "2", "3", "4", "5", "6", "7", "8"],
-        help="Wybierz klasę ucznia"
+        index=1,
+        help="Klasa ucznia (1–8). Wpływa na poziom trudności zadań.",
     )
 
     topic = st.selectbox(
@@ -64,18 +90,19 @@ with st.form("worksheet_form"):
             "mnożenie",
             "dzielenie",
             "ułamki",
-            "równania"
+            "równania",
         ],
-        help="Zakres tematyczny karty pracy"
+        index=0,
+        help="Temat karty pracy (jedna operacja lub zakres na kartę).",
     )
 
     number_of_tasks = st.number_input(
         "Liczba zadań",
         min_value=1,
         max_value=30,
-        value=10,
+        value=5,
         step=1,
-        help="Ile zadań ma zawierać karta pracy"
+        help="Ile zadań ma zawierać karta (1–30). Dla klas 1–3 max 15.",
     )
 
     student_profile = st.selectbox(
@@ -85,46 +112,62 @@ with st.form("worksheet_form"):
             "dyskalkulia",
             "zdolny",
             "trudności w nauce",
-            "ADHD"
+            "ADHD",
         ],
-        help="Profil wpływa na styl i trudność zadań"
+        index=0,
+        help="Profil wpływa na styl zadań, layout i ilustracje (np. dyskalkulia: prostsze liczby, większe fonty).",
     )
 
-    # Day 11: dla standardowy/zdolny – opcja ilustracji; dla dyskalkulia/ADHD/trudności zawsze per zadanie
     include_illustration = st.checkbox(
         "Ilustracja w karcie",
         value=True,
         help="Dla profili standardowy/zdolny: jedna ilustracja u góry. Dla dyskalkulia/ADHD/trudności: ilustracja przy każdym zadaniu (zawsze włączone).",
     )
 
+    include_answers = st.checkbox(
+        "Dołącz stronę z odpowiedziami",
+        value=False,
+        help="Dodaje na końcu PDF stronę „Odpowiedzi” z wynikami (dla prostych działań typu a op b).",
+    )
+
     submitted = st.form_submit_button("🧠 Generuj kartę")
+
+# --------------------------------------------------
+# Sekcja główna – tylko wyniki (zadania + PDF)
+# --------------------------------------------------
+st.title("🧮 Friendly Math")
 
 # --------------------------------------------------
 # Logika po wysłaniu formularza
 # --------------------------------------------------
 if submitted:
 
+    # v1.0: brak klucza API – nie wywołuj generowania
+    if not os.getenv("OPENAI_API_KEY"):
+        st.error(
+            "Brak klucza **OPENAI_API_KEY**. Dodaj go do pliku `.env` w katalogu projektu "
+            "(np. skopiuj z `.env.example` i uzupełnij klucz z platformy OpenAI)."
+        )
+        st.stop()
+
     # Prosta walidacja biznesowa
     if int(grade) <= 3 and number_of_tasks > 15:
         st.error("Dla klas 1–3 maksymalna liczba zadań to 15.")
     else:
-        request_payload = {
-            "grade": int(grade),
-            "topic": topic,
-            "number_of_tasks": number_of_tasks,
-            "student_profile": student_profile
-        }
+        # request_payload = {
+        #     "grade": int(grade),
+        #     "topic": topic,
+        #     "number_of_tasks": number_of_tasks,
+        #     "student_profile": student_profile
+        # }
+        # st.success("✅ JSON request wygenerowany")
+        # st.json(request_payload)
+        # st.info(
+        #     "Ten JSON będzie w kolejnym kroku wysyłany do API "
+        #     "generującego zadania."
+        # )
 
-        st.success("✅ JSON request wygenerowany")
-        st.json(request_payload)
-
-        st.info(
-            "Ten JSON będzie w kolejnym kroku wysyłany do API "
-            "generującego zadania."
-        )
-        
-        st.divider()
-        st.subheader("📘 Wygenerowane zadania (MVP)")
+        st.subheader("📘 Wygenerowane zadania")
 
         result = generate_tasks(
             profile=student_profile,
@@ -132,6 +175,12 @@ if submitted:
             topic=topic,
             n=number_of_tasks
         )
+
+        if result.get("_error"):
+            st.warning(
+                "Generowanie zadań przez API nie powiodło się (timeout lub błąd sieci). "
+                "Poniżej zadania zastępcze — możesz wygenerować PDF."
+            )
 
         # Lista zadań jako zwykły tekst
         tasks = result["tasks"]
@@ -142,7 +191,7 @@ if submitted:
         # PDF v0: generowanie, zapis do pliku + download
         # ----------------------------------------------
         st.divider()
-        st.subheader("📄 PDF v0")
+        st.subheader("📄 Karta pracy PDF")
 
         # Metadane karty pracy
         meta = WorksheetMeta(
@@ -180,13 +229,17 @@ if submitted:
             except Exception as e:
                 st.warning(f"Grafika niedostępna ({e}), PDF bez ilustracji.")
 
-        # 1) Generowanie PDF (z layoutem, opcjonalnie image_bytes lub task_images)
+        # Odpowiedzi do klucza (v1.0) – tylko dla prostych zadań
+        answers = compute_answers(tasks) if include_answers else None
+
+        # 1) Generowanie PDF (z layoutem, opcjonalnie image_bytes, task_images, answers)
         pdf_bytes = build_worksheet_pdf_bytes(
             meta=meta,
             tasks=tasks,
             layout=layout,
             image_bytes=image_bytes,
             task_images=task_images,
+            answers=answers,
         )
 
         # 2) Zapis do pliku (wariant A)
@@ -197,15 +250,27 @@ if submitted:
         with open(output_path, "wb") as f:
             f.write(pdf_bytes)
 
-        st.write(
-            f"📁 PDF zapisany jako: "
-            f"`{output_path.relative_to(ROOT_DIR)}`"
-        )
+        st.caption(f"Plik zapisany w: **{output_path.relative_to(ROOT_DIR)}**")
 
-        # 3) Przycisk pobierania (wariant B)
+        # Podgląd PDF jako obrazy stron (działa w Chrome/Edge)
+        page_images = _pdf_bytes_to_images(pdf_bytes)
+        if page_images:
+            for i, img_io in enumerate(page_images, start=1):
+                st.image(img_io, caption=f"Strona {i}", width="stretch")
+        else:
+            st.caption("Podgląd niedostępny — pobierz PDF i otwórz plik na swoim komputerze.")
+
+        st.caption("Po pobraniu otwórz plik (np. dwuklik), aby zobaczyć lub wydrukować PDF.")
+
         st.download_button(
             label="⬇️ Pobierz PDF",
             data=pdf_bytes,
             file_name="worksheet.pdf",
             mime="application/pdf",
         )
+
+# --------------------------------------------------
+# Stopka
+# --------------------------------------------------
+st.divider()
+st.caption("Friendly Math v1.0 — generator kart pracy dla szkoły podstawowej")

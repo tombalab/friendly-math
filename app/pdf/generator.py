@@ -126,12 +126,13 @@ def build_worksheet_pdf_bytes(
     layout: Optional[dict] = None,
     image_bytes: Optional[bytes] = None,
     task_images: Optional[list] = None,
+    answers: Optional[list[str]] = None,
 ) -> bytes:
     """
-    PDF v1: czytelna karta pracy (Day 9). Day 11: ilustracja per zadanie.
-    - Nagłówek + metadane + (opcjonalnie jedna ilustracja u góry LUB ilustracje przy zadaniach) + lista zadań, A4.
-    - task_images: lista PNG (bytes) – jedna na zadanie; jeśli podana, rysowana przy każdym zadaniu (bez jednej u góry).
-    - image_bytes: jedna ilustracja pod metadanymi (używana tylko gdy task_images nie jest podane).
+    PDF v1: czytelna karta pracy (Day 9). Day 11: ilustracja per zadanie. v1.0: opcjonalna strona Odpowiedzi.
+    - task_images: lista PNG (bytes) – jedna na zadanie.
+    - image_bytes: jedna ilustracja pod metadanymi (gdy task_images nie jest podane).
+    - answers: lista odpowiedzi (ta sama długość co tasks); jeśli podana, dodawana jest strona "Odpowiedzi".
     Zwraca bytes (łatwe do zapisu i do Streamlit download).
     """
     L = _default_layout()
@@ -254,11 +255,30 @@ def build_worksheet_pdf_bytes(
             y -= line_spacing
         y -= task_spacing
 
-    # Stopka na ostatniej stronie
+    # Stopka na ostatniej stronie z zadaniami
     _draw_footer(c, width, margin, page_num, base_font, L["text_color"])
     c.showPage()
-    c.save()
 
+    # v1.0: opcjonalna strona "Odpowiedzi"
+    if answers and len(answers) == len(tasks_list):
+        page_num += 1
+        _draw_page_background(c, width, height, bg_color)
+        try:
+            c.setFillColor(HexColor(L["text_color"]))
+        except Exception:
+            pass
+        c.setFont(bold_font, L["section_font_size"])
+        y_ans = height - margin
+        c.drawString(margin, y_ans, "Odpowiedzi:")
+        y_ans -= line_spacing * 2
+        c.setFont(base_font, L["task_font_size"])
+        for i, ans in enumerate(answers, start=1):
+            c.drawString(margin, y_ans, f"{i}. {ans}")
+            y_ans -= line_spacing
+        _draw_footer(c, width, margin, page_num, base_font, L["text_color"])
+        c.showPage()
+
+    c.save()
     return buffer.getvalue()
 
 
@@ -305,18 +325,19 @@ def _draw_fraction(
 ) -> float:
     """
     Rysuje ułamek w stylu szkolnym: licznik nad kreską, mianownik pod.
-    y = baseline linii tekstu. Zwraca szerokość ułamka w pt.
+    y = baseline linii tekstu. Kreska dokładnie w połowie między licznikiem a mianownikiem, mały odstęp od licznika.
+    Zwraca szerokość ułamka w pt.
     """
     frac_size = max(6, font_size * 0.85)
     num_str, den_str = str(num), str(den)
     w_num = pdfmetrics.stringWidth(num_str, font_name, frac_size)
     w_den = pdfmetrics.stringWidth(den_str, font_name, frac_size)
     frac_width = max(w_num, w_den) + 6
-    gap = 2.0
-    # Kreska ułamkowa nieco poniżej baseline linii; licznik nad kreską, mianownik pod
-    bar_y = y - frac_size * 0.5
-    num_baseline = bar_y + gap + frac_size * 0.75
-    den_baseline = bar_y - gap - frac_size * 0.25
+    gap = 1.0  # mały odstęp między kreską a liczbami
+    # Kreska na wysokości y (środek ułamka). Licznik tuż nad kreską, mianownik tuż pod.
+    bar_y = y
+    num_baseline = y + gap + frac_size * 0.25   # dół cyfry ~0.2*size nad baseline; licznik blisko kreski
+    den_baseline = y - gap - frac_size * 0.8    # mianownik pod kreską
     c.setFont(font_name, frac_size)
     c.drawString(x + (frac_width - w_num) / 2, num_baseline, num_str)
     c.drawString(x + (frac_width - w_den) / 2, den_baseline, den_str)
