@@ -64,6 +64,19 @@ st.set_page_config(
     layout="centered",
 )
 
+# Cienka, szara ramka wokół podglądu stron PDF (PNG), żeby była widoczna na białym tle.
+st.markdown(
+    """
+    <style>
+    .stImage img {
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # --------------------------------------------------
 # Panel boczny (lewa strona) – formularz
 # --------------------------------------------------
@@ -191,7 +204,7 @@ if submitted:
         # PDF v0: generowanie, zapis do pliku + download
         # ----------------------------------------------
         st.divider()
-        st.subheader("📄 Karta pracy PDF")
+        st.subheader("📄 Karta pracy PDF - podgląd")
 
         # Metadane karty pracy
         meta = WorksheetMeta(
@@ -250,7 +263,7 @@ if submitted:
         with open(output_path, "wb") as f:
             f.write(pdf_bytes)
 
-        st.caption(f"Plik zapisany w: **{output_path.relative_to(ROOT_DIR)}**")
+        # st.caption(f"Plik zapisany w: **{output_path.relative_to(ROOT_DIR)}**")
 
         # Podgląd PDF jako obrazy stron (działa w Chrome/Edge)
         page_images = _pdf_bytes_to_images(pdf_bytes)
