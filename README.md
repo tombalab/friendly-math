@@ -1,3 +1,8 @@
+> 📌 **Notatka (kwiecień 2026):** Po przerwie rozpoczynam prace nad **wersją v2** projektu.
+> Plan rozwoju i backlog pomysłów: zobacz sekcję [Roadmap](#roadmap-high-level) oraz tablicę Trello projektu.
+
+---
+
 ⚠️ **Status projektu: MVP v1.0.0**  
   
 Aktualna wersja aplikacji to **funkcjonalne MVP v1.0**:
