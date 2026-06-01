@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 5 – mnożenie",
+    "grade": 5,
+    "topic": "mnożenie",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Mnożenie do 100 i nieco wyżej. Wzorzec dla generatora przy standardowym profilu w klasie 5."
+  },
+  "tasks": [
+    "Policz: 12 × 4 = ____",
+    "Policz: 15 × 6 = ____",
+    "Policz: 25 × 4 = ____",
+    "Policz: 18 × 5 = ____",
+    "Policz: 9 × 13 = ____",
+    "Policz: 7 × 14 = ____",
+    "Policz: 11 × 11 = ____",
+    "Policz: 30 × 3 = ____",
+    "Policz: 16 × 5 = ____",
+    "Policz: 8 × 12 = ____"
+  ],
+  "answers": ["48", "90", "100", "90", "117", "98", "121", "90", "80", "96"],
+  "quality_criteria": [
+    "Mnożenia adekwatne do klasy 5 (jeden czynnik dwucyfrowy).",
+    "Wyniki w zakresie do ~150 – mieszczą się w tabliczce + lekkie rozszerzenie.",
+    "Format spójny – „Policz: a × b = ____\".",
+    "Brak działań z liczbami ujemnymi."
+  ]
+}

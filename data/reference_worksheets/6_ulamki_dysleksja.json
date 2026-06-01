@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 6 – ułamki (dysleksja)",
+    "grade": 6,
+    "topic": "ułamki",
+    "profile": "dysleksja",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Dysleksja: liczby normalne dla klasy, ale polecenia bardzo krótkie i powtarzalne. Format „Policz: 1/2 + 1/4 = ____\" – brak zbędnego tekstu."
+  },
+  "tasks": [
+    "Policz: 1/2 + 1/4 = ____",
+    "Policz: 3/4 − 1/4 = ____",
+    "Policz: 1/3 + 1/3 = ____",
+    "Policz: 5/6 − 1/6 = ____",
+    "Policz: 1/2 + 2/4 = ____",
+    "Policz: 2/5 + 1/5 = ____",
+    "Policz: 7/8 − 3/8 = ____",
+    "Policz: 1/4 + 1/4 = ____"
+  ],
+  "answers": ["3/4", "2/4", "2/3", "4/6", "1", "3/5", "4/8", "2/4"],
+  "quality_criteria": [
+    "Mianowniki proste (2, 3, 4, 5, 6, 8) – łatwe do wizualizacji.",
+    "Polecenia identyczne i krótkie – minimum dekodowania (kluczowe dla dysleksji).",
+    "Brak zadań tekstowych w stylu „Ania zjadła 1/3 ciasta…\" – tylko działania.",
+    "Wynik nie wymaga upraszczania ułamków na siłę (uczeń może podać równoważną postać)."
+  ]
+}

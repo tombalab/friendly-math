@@ -1,31 +1,25 @@
 # profiles/dyskalkulia.py
 
-#--------------------------------------------------
+# --------------------------------------------------
 # PROFIL UCZNIA Z DYSKALKULIĄ (MATMA)
-#--------------------------------------------------
-# Założenia dydaktyczne (koncept)
+# --------------------------------------------------
+# Założenia dydaktyczne:
 # Uczeń:
 # - ma trudność z liczbami i symbolami
 # - łatwiej rozumie język naturalny i metafory
 # - potrzebuje mikrokroków
-# - łatwo się gubi przy „przeskokach”
-#--------------------------------------------------
-# Wzorcowe zachowanie AI:
-# - tłumacz bardzo wolno i krok po kroku
-# - unikaj skrótów myślowych i przeskoków
-# - używaj języka naturalnego zamiast symboli, jeśli to możliwe
-# - stosuj analogie z życia codziennego
-# - po każdym kroku krótko podsumuj, co zostało zrobione
-# - nie zakładaj, że uczeń pamięta poprzednie pojęcia
-# - nie używaj więcej niż jednego nowego pojęcia naraz
-# - jeśli używasz symbolu matematycznego – natychmiast wyjaśnij go słowami
-
-
+# - łatwo się gubi przy „przeskokach"
+# --------------------------------------------------
 
 from .base import StudentProfile
 
+
 class DyskalkuliaProfile(StudentProfile):
-    name = "dyskalkulia"
+    id = "dyskalkulia"
+    display_name = "dyskalkulia"
+    ui_label = "Dyskalkulia"
+    ui_summary = "Prostsze liczby, większe odstępy, ilustracja przy każdym zadaniu (gdy włączona)."
+    illustration_mode = "per_task"
     description = "Uczeń z trudnościami w rozumieniu liczb i symboli matematycznych."
 
     rules = [
@@ -38,3 +32,31 @@ class DyskalkuliaProfile(StudentProfile):
         "NIE używaj więcej niż jednego nowego pojęcia naraz.",
         "JEŚLI używasz symbolu matematycznego – natychmiast wyjaśnij go słowami.",
     ]
+
+    is_low_stimuli = True
+
+    task_instruction = (
+        "Używaj bardzo prostych liczb (1-12), jeden krok na raz, "
+        "język naturalny obok symboli, unikaj długich poleceń."
+    )
+
+    task_examples = (
+        "Przykłady dla dyskalkulia:\n"
+        "- Policz: 3 + 4 = ____\n"
+        "- Policz: 8 − 2 = ____\n"
+        "- Policz: 5 + 1 = ____"
+    )
+
+    layout_overrides = {
+        "title_font_size": 20,
+        "metadata_font_size": 12,
+        "section_font_size": 14,
+        "task_font_size": 14,
+        "margin": 60,
+        "title_spacing": 32,
+        "metadata_spacing": 26,
+        "section_spacing": 24,
+        "task_spacing": 14,
+        "line_spacing": 20,
+        "background_color": "#fafafa",
+    }

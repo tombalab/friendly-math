@@ -1,12 +1,60 @@
+"""
+Generator zadań matematycznych.
+
+v1.x: prompt budowany z `TOPIC_BLUEPRINTS` (zgodnie z podstawą programową
+edukacji wczesnoszkolnej 1-3) + nakładki z profilu ucznia.
+
+Dla profilu „standardowy" w klasach 1-3 dążymy do PEŁNEGO pokrycia tematyki PP.
+Pozostałe profile dziedziczą blueprinty i nakładają na nie własne reguły
+(`task_instruction`, `task_examples`).
+"""
+from __future__ import annotations
+
 import os
+import re
+
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# Ładowanie zmiennych z .env
+from app.ai.fallback_tasks import fallback_tasks_for_topic
+from app.ai.topic_blueprints import Blueprint, get_blueprint
+from app.domain.topic_catalog import resolve_topic
+from app.generators.profiles.registry import get_profile
+
 load_dotenv()
 
-# Inicjalizacja klienta OpenAI
+# v1.x: jeden model i niska temperature dla powtarzalności.
+_MODEL = "gpt-4o-mini"
+_TEMPERATURE = 0.3
+_MAX_TOKENS = 2000
+_TIMEOUT_S = 30.0
+
 _client = None
+
+
+def _warning(code: str, message: str, severity: str = "warning") -> dict[str, str]:
+    return {"code": code, "message": message, "severity": severity}
+
+
+def _add_warning(
+    result: dict,
+    code: str,
+    message: str,
+    severity: str = "warning",
+) -> None:
+    result.setdefault("_warnings", []).append(_warning(code, message, severity))
+
+
+def warning_messages(result: dict) -> list[str]:
+    """Return warning messages from legacy string warnings or structured warnings."""
+    out: list[str] = []
+    for w in result.get("_warnings", []):
+        if isinstance(w, dict):
+            out.append(str(w.get("message", "")))
+        else:
+            out.append(str(w))
+    return [m for m in out if m]
+
 
 def _get_client():
     """Lazy initialization OpenAI client."""
@@ -21,139 +69,358 @@ def _get_client():
         _client = OpenAI(api_key=api_key)
     return _client
 
-def _build_prompt(grade: str, topic: str, profile: str, n: int) -> str:
+
+# --------------------------------------------------------------------
+# Walidacja numeryczna
+# --------------------------------------------------------------------
+
+# Maksymalny wynik dopuszczalny per klasa (fallback, gdy blueprint nie podaje swojego).
+_MAX_RESULT_BY_GRADE = {
+    1: 20,
+    2: 100,
+    3: 1000,
+    4: 10000,
+    5: 100000,
+    6: 1000000,
+    7: 10000000,
+    8: 100000000,
+}
+
+
+def _try_compute(task: str) -> int | None:
     """
-    Buduje krótki, edukacyjny prompt dla jednego typu zadania.
-    Day 6: prosty, bez finezji, skupiony na jednym typie.
-    Day 12: rozszerzone prompty dla różnych profili z przykładami few-shot.
+    Próbuje policzyć prosty wzorzec `a op b` w treści zadania.
+    Zwraca wynik jako int lub None, gdy zadania nie da się obliczyć
+    (zadania tekstowe, równania z okienkiem, ułamki, porównania).
     """
-    # Dla ułamków: zapis licznik/mianownik (np. 1/2, 3/4) – będzie wyświetlany szkolnie z kreską ułamkową
-    fraction_instruction = (
-        ' Dla tematu "ułamki zwykłe" używaj ułamków w formacie licznik/mianownik (np. 1/2, 3/4, 2/5).'
-        if topic and "ułamk" in topic.lower()
-        else ""
-    )
-    
-    # Day 12: Szczegółowe instrukcje i przykłady dla każdego profilu
-    if profile == "dyskalkulia":
-        profile_instruction = """Używaj bardzo prostych liczb (1-12), jeden krok na raz, język naturalny obok symboli, unikaj długich poleceń."""
-        examples = """Przykłady dla dyskalkulia:
-- Policz: 3 + 4 = ____
-- Policz: 8 − 2 = ____
-- Policz: 5 + 1 = ____"""
-        
-    elif profile == "ADHD":
-        profile_instruction = """Krótkie polecenia (max 1 zdanie), jedna operacja na zadanie, wyraźny format "Policz: X op Y = ____", bez dodatkowych informacji."""
-        examples = """Przykłady dla ADHD:
-- Policz: 6 + 3 = ____
-- Policz: 9 − 4 = ____
-- Policz: 2 × 5 = ____"""
-        
-    elif profile == "trudności w nauce":
-        profile_instruction = """Proste liczby (1-15), krótkie polecenia, jeden krok, dużo miejsca na odpowiedź."""
-        examples = """Przykłady dla trudności w nauce:
-- Policz: 4 + 5 = ____
-- Policz: 10 − 3 = ____
-- Policz: 7 + 2 = ____"""
-        
-    elif profile == "zdolny":
-        profile_instruction = """Nieco trudniejsze liczby (można do 50), opcjonalnie dwa kroki lub prosty łańcuch (np. "Policz: 2 + 3, wynik pomnóż przez 2 = ____")."""
-        examples = """Przykłady dla zdolny:
-- Policz: 15 + 23 = ____
-- Policz: 45 − 18 = ____
-- Policz: 2 + 3, wynik pomnóż przez 4 = ____"""
-        
-    elif profile == "dysleksja":
-        profile_instruction = """Krótkie polecenia, czytelne liczby (1-20), prosty format."""
-        examples = """Przykłady dla dysleksja:
-- Policz: 5 + 6 = ____
-- Policz: 12 − 5 = ____
-- Policz: 8 + 4 = ____"""
-        
-    else:  # standardowy
-        profile_instruction = "Standardowe zadania dla klasy, odpowiednie do poziomu."
-        examples = """Przykłady dla standardowy:
-- Policz: 7 + 8 = ____
-- Policz: 15 − 6 = ____
-- Policz: 4 × 3 = ____"""
-    
-    prompt = f"""Jesteś nauczycielem matematyki. Wygeneruj {n} zadań dla klasy {grade} na temat: {topic}.
+    m = re.search(r"(\d+)\s*([+\-−*×·/:÷])\s*(\d+)", task)
+    if not m:
+        return None
+    a, op, b = int(m.group(1)), m.group(2), int(m.group(3))
+    if op == "+":
+        return a + b
+    if op in ("-", "−"):
+        return a - b
+    if op in ("*", "×", "·"):
+        return a * b
+    if op in ("/", ":", "÷"):
+        return a // b if b != 0 else None
+    return None
 
-Wymagania:
-- {profile_instruction}
-- Każde zadanie w jednej linii.
-- Format: "Policz: [treść zadania] = ____" lub "Zaznacz [ułamek] ..." itp.
-- Używaj tylko liczb całkowitych (poza ułamkami).{fraction_instruction}
-- Zadania dostosowane do klasy {grade}.
 
-{examples}
+def _is_task_in_range(task: str, grade_int: int, max_result: int) -> bool:
+    """
+    True, jeśli wynik mieści się w zakresie (klasa + ewentualny limit blueprintu).
+    Dla zadań, których nie umiemy obliczyć – True (nie odrzucamy zadań tekstowych itp.).
+    """
+    result = _try_compute(task)
+    if result is None:
+        return True
+    if grade_int <= 3 and result < 0:
+        return False
+    if grade_int <= 3:
+        return 0 <= result <= max_result
+    return result <= max_result
 
-Wygeneruj tylko listę zadań, po jednym w linii, bez numeracji, bez dodatkowych komentarzy."""
 
-    return prompt
+def _filter_tasks_by_grade(
+    tasks: list[str], grade: str, blueprint: Blueprint | None
+) -> tuple[list[str], int]:
+    """
+    Odrzuca zadania, których wynik wykracza poza zakres klasy/blueprintu.
+    Zwraca (tasks_w_zakresie, ile_odrzucono).
+    """
+    try:
+        grade_int = int(grade)
+    except (TypeError, ValueError):
+        return tasks, 0
+
+    max_result = _MAX_RESULT_BY_GRADE.get(grade_int, 100000000)
+    if blueprint and "max_result" in blueprint:
+        # Limit z blueprintu ma pierwszeństwo, jeśli jest bardziej restrykcyjny.
+        max_result = min(max_result, blueprint["max_result"])
+
+    kept: list[str] = []
+    dropped = 0
+    for t in tasks:
+        if _is_task_in_range(t, grade_int, max_result):
+            kept.append(t)
+        else:
+            dropped += 1
+    return kept, dropped
+
+
+# --------------------------------------------------------------------
+# Prompt
+# --------------------------------------------------------------------
+
+
+def _build_prompt(grade: str, topic: str, profile_id: str, n: int) -> str:
+    """
+    Składa prompt:
+    1. Bazowa instrukcja generatora.
+    2. Blueprint tematu+klasy (zakres liczb, format, przykłady).
+    3. Profil ucznia (`task_instruction`).
+
+    Jeśli brak blueprintu dla danej pary topic+grade – fallback na ogólną
+    instrukcję z profilu (jak w poprzednich wersjach).
+    """
+    profile = get_profile(profile_id)
+
+    try:
+        grade_int = int(grade)
+    except (TypeError, ValueError):
+        grade_int = 2
+
+    bp = get_blueprint(topic, grade_int)
+
+    # Sekcja „topic & grade" – z blueprintu albo z profilu (fallback).
+    if bp:
+        topic_section = (
+            f"Temat: {topic} (klasa {grade}).\n"
+            f"Wymagania merytoryczne:\n- {bp.get('instruction', '').strip()}\n\n"
+            f"Przykłady (wzoruj się na nich, ale generuj NOWE zadania):\n"
+            f"{bp.get('examples', '').strip()}"
+        )
+    else:
+        topic_section = (
+            f"Temat: {topic} (klasa {grade}).\n"
+            f"Wymagania merytoryczne:\n- {profile.task_instruction}\n\n"
+            f"Przykłady:\n{profile.task_examples}"
+        )
+
+    # Sekcja profilu – stylistyczne nakładki (skupienie, długość poleceń, itp.).
+    # Dla profilu „standardowy" `task_instruction` jest neutralne i nie dodaje nic.
+    profile_section = ""
+    if profile.id != "standardowy":
+        profile_section = (
+            f"\nStyl dopasowany do profilu ucznia ({profile.display_name}):\n"
+            f"- {profile.task_instruction}"
+        )
+
+    return f"""Jesteś nauczycielem matematyki edukacji wczesnoszkolnej w polskiej szkole.
+Wygeneruj DOKŁADNIE {n} zadań – po jednym w linii, BEZ numeracji, BEZ dodatkowych komentarzy.
+
+{topic_section}{profile_section}
+
+Reguły wspólne:
+- Liczby wyłącznie z zakresu wskazanego w wymaganiach (NIE wychodź poza zakres klasy).
+- Każde zadanie w JEDNEJ linii.
+- Format zadań ma być spójny z przykładami powyżej.
+- NIE numeruj zadań (numerację dodajemy później).
+- NIE pisz wstępu, podsumowania ani uwag – tylko surowe zadania."""
+
 
 def generate_tasks(profile, grade, topic, n=3):
     """
-    Generuje zadania matematyczne używając OpenAI API.
-    Day 6: prosty prompt, jeden typ zadania, edukacyjne.
+    Generuje zadania matematyczne.
+
+    Zwraca dict: {tasks, profile, grade, topic, [_warning], [_warnings], [_error]}.
+    Gdy nie da się zachować tematu w fallbacku: `_blocked=True`.
     """
+    grade_str = str(grade)
+    try:
+        grade_int = int(grade)
+    except (TypeError, ValueError):
+        grade_int = 2
+
+    resolved = resolve_topic(topic, grade_int)
+    topic_key = resolved.blueprint_key
+    bp = get_blueprint(topic_key, grade_int)
+
+    if resolved.topic_id == "unknown":
+        return _blocked_result(
+            profile=profile,
+            grade=grade,
+            resolved=resolved,
+            reason=(
+                f"Nieznany temat „{topic}” — nie można bezpiecznie wygenerować "
+                "zadań ani fallbacku zachowującego temat."
+            ),
+            error=None,
+        )
+
+    if not bp:
+        fallback = fallback_tasks_for_topic(
+            resolved.topic_id,
+            grade_int,
+            n,
+            profile_id=str(profile),
+        )
+        if fallback is None:
+            return _blocked_result(
+                profile=profile,
+                grade=grade,
+                resolved=resolved,
+                reason=(
+                    f"Brak szablonu i bezpiecznego fallbacku dla tematu "
+                    f"„{resolved.label_pl}” w klasie {grade}."
+                ),
+                error=None,
+            )
+        result = {
+            "tasks": fallback,
+            "profile": profile,
+            "grade": grade,
+            "topic": resolved.label_pl,
+            "topic_id": resolved.topic_id,
+            "_used_fallback": True,
+        }
+        for w in resolved.warnings:
+            _add_warning(result, "topic_catalog", w)
+        _add_warning(
+            result,
+            "blueprint_missing_fallback",
+            (
+                f"Brak szablonu dla pary „{resolved.label_pl}” / klasa {grade}. "
+                "Użyto deterministycznych zadań zastępczych zachowujących temat."
+            ),
+        )
+        result["_warning"] = " ".join(warning_messages(result))
+        return result
+
     try:
         client = _get_client()
-        prompt = _build_prompt(grade=str(grade), topic=topic, profile=profile, n=n)
-        
-        # Wywołanie API (używamy gpt-3.5-turbo dla oszczędności kosztów). v1.0: timeout 30 s
+        prompt = _build_prompt(grade=grade_str, topic=topic_key, profile_id=str(profile), n=n)
+
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=_MODEL,
             messages=[
-                {"role": "system", "content": "Jesteś pomocnym nauczycielem matematyki."},
-                {"role": "user", "content": prompt}
+                {
+                    "role": "system",
+                    "content": (
+                        "Jesteś nauczycielem edukacji wczesnoszkolnej w Polsce. "
+                        "Generujesz zadania matematyczne ZGODNE z podstawą programową "
+                        "dla wskazanej klasy. Trzymasz się formatu z przykładów."
+                    ),
+                },
+                {"role": "user", "content": prompt},
             ],
-            temperature=0.7,
-            max_tokens=500,
-            timeout=30.0,
+            temperature=_TEMPERATURE,
+            max_completion_tokens=_MAX_TOKENS,
+            timeout=_TIMEOUT_S,
         )
-        
-        # Parsowanie odpowiedzi - każda linia to jedno zadanie
+
         tasks_text = response.choices[0].message.content.strip()
         tasks = [line.strip() for line in tasks_text.split("\n") if line.strip()]
-        
-        # Fallback jeśli AI zwróciło mniej zadań niż prosiłeś
-        if len(tasks) < n:
-            # Dodaj proste zadania placeholder
-            while len(tasks) < n:
-                tasks.append(f"Policz: {2 + len(tasks)} + {3 + len(tasks)} = ____")
-        
-        return {
-            "tasks": tasks[:n],  # Upewniamy się, że nie ma więcej niż n zadań
-            "profile": profile,
-            "grade": grade,
-            "topic": topic
-        }
-    
-    except Exception as e:
-        # Fallback na hardcoded zadania jeśli API nie działa
-        return {
-            "tasks": [
-                "Policz: 3 + 4 = ____",
-                "Policz: 7 − 2 = ____",
-                "Policz: 5 + 5 = ____"
-            ],
-            "profile": profile,
-            "grade": grade,
-            "topic": topic,
-            "_error": str(e)  # Opcjonalnie: możesz to wyświetlić w UI dla debugowania
-        }
+        # Często model mimo zakazu numeruje – usuwamy prefiksy „1. ", „1) " itp.
+        tasks = [re.sub(r"^\s*\d+[.)]\s+", "", t) for t in tasks]
 
-# Initial version for v0.4.0 testing - hardcoded
-#
-# def generate_tasks(profile, grade, topic, n=3):
-#     return {
-#         "tasks": [
-#             "Policz: 3 + 4 = ____",
-#             "Policz: 7 − 2 = ____",
-#             "Policz: 5 + 5 = ____"
-#         ],
-#         "profile": profile,
-#         "grade": grade,
-#         "topic": topic
-#    }
+        # Walidacja: odrzucamy zadania wyraźnie poza zakresem klasy/blueprintu.
+        tasks, dropped = _filter_tasks_by_grade(tasks, grade_str, bp)
+        kept_after_validation = len(tasks)
+        padded_count = 0
+
+        if len(tasks) < n:
+            missing = n - len(tasks)
+            fallback = fallback_tasks_for_topic(
+                resolved.topic_id,
+                grade_int,
+                missing,
+                profile_id=str(profile),
+            )
+            if fallback is None:
+                return _blocked_result(
+                    profile=profile,
+                    grade=grade,
+                    resolved=resolved,
+                    reason=(
+                        f"Nie udało się wygenerować {n} zadań i brak bezpiecznego "
+                        f"fallbacku dla tematu „{resolved.label_pl}”."
+                    ),
+                    error=None,
+                )
+            tasks.extend(fallback)
+            padded_count = len(tasks) - kept_after_validation
+
+        result = {
+            "tasks": tasks[:n],
+            "profile": profile,
+            "grade": grade,
+            "topic": resolved.label_pl,
+            "topic_id": resolved.topic_id,
+        }
+        for w in resolved.warnings:
+            _add_warning(result, "topic_catalog", w)
+        if dropped:
+            msg = (
+                f"Odrzucono {dropped} zadań – wynik wykraczał poza zakres klasy {grade} "
+                f"lub tematu „{topic}”."
+            )
+            _add_warning(result, "tasks_dropped", msg)
+        if len(tasks) > len(tasks[:n]):
+            _add_warning(result, "tasks_trimmed", f"Model zwrócił więcej niż {n} zadań — nadmiar pominięto.")
+        if len(tasks[:n]) < n:
+            _add_warning(result, "tasks_missing", f"Wygenerowano tylko {len(tasks[:n])}/{n} zadań.")
+        if padded_count:
+            _add_warning(
+                result,
+                "fallback_padded_tasks",
+                f"Dopełniono {padded_count} zadań deterministycznym fallbackiem dla tematu „{resolved.label_pl}”.",
+            )
+        messages = warning_messages(result)
+        if len(messages) == 1:
+            result["_warning"] = messages[0]
+        elif messages:
+            result["_warning"] = " ".join(messages)
+        return result
+
+    except Exception as e:
+        fallback = fallback_tasks_for_topic(
+            resolved.topic_id,
+            grade_int,
+            n,
+            profile_id=str(profile),
+        )
+        if fallback is None:
+            return _blocked_result(
+                profile=profile,
+                grade=grade,
+                resolved=resolved,
+                reason=(
+                    f"Generowanie zadań przez API nie powiodło się i brak bezpiecznego "
+                    f"fallbacku dla tematu „{resolved.label_pl}”."
+                ),
+                error=str(e),
+            )
+        result = {
+            "tasks": fallback,
+            "profile": profile,
+            "grade": grade,
+            "topic": resolved.label_pl,
+            "topic_id": resolved.topic_id,
+            "_error": str(e),
+            "_used_fallback": True,
+        }
+        _add_warning(
+            result,
+            "api_fallback_used",
+            (
+                "Generowanie zadań przez API nie powiodło się. "
+                f"Użyto deterministycznych zadań zastępczych dla tematu „{resolved.label_pl}”."
+            ),
+        )
+        result["_warning"] = warning_messages(result)[0]
+        return result
+
+
+def _blocked_result(
+    *,
+    profile,
+    grade,
+    resolved,
+    reason: str,
+    error: str | None,
+) -> dict:
+    result = {
+        "tasks": [],
+        "profile": profile,
+        "grade": grade,
+        "topic": resolved.label_pl,
+        "topic_id": resolved.topic_id,
+        "_blocked": True,
+        "_error": error,
+    }
+    _add_warning(result, "fallback_blocked", reason, severity="error")
+    result["_warning"] = reason
+    return result
