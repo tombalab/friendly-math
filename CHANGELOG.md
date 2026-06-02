@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Faza 1: `docs/curriculum-matrix.md` — kontrakt topic_id × klasa × blueprint × klucz × wzorzec
+- Skrypty `scripts/curriculum_fallback_audit.py`, `scripts/curriculum_matrix_report.py`; test audytu
 - Faza 0: komunikat MVP dla klas 4–8, ostrzeżenia przy „Dołącz odpowiedzi” (tematy partial/none)
 - Phase 3: zakładki **Generuj / Historia / Recenzja** w Streamlit
 - Filtry historii (klasa, temat), status jakości, zapis recenzji (`review.json`)
@@ -16,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Dokumenty PP 2025/2026, `docs/teacher-review.md`, `docs/phase3-decision.md`, macierz w `docs/curriculum-matrix-plan.canvas.tsx`
 
 ### Changed
+- Walidatory profil×temat: limity zależne od tematu (mnożenie kl. 5, porównania, zadania tekstowe bez fałszywych `word_problem_load`)
+- Blueprinty kl. 3 dla dodawania/odejmowania do 20; ułamki 4–8 w fallbacku jako `Policz: a/b + …`
 - Temat **równania** (4–8): generator i fallback używają okienka ☐ zamiast `x`; pełny klucz odpowiedzi jak we wzorcach
 - Sidebar: temat i checkbox odpowiedzi poza formularzem — podpowiedzi reagują na wybór
 - Panel jakości: baner statusu OK/uwagi/błąd, osobna sekcja walidacji zadań
