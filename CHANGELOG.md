@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Faza 4 (opcja B): blueprinty `exact` dla klas 7–8; nowe tematy UI `procenty`, `potęgi`, `pitagoras`; `docs/phase4-decision.md`
+- 3 karty wzorcowe dla kl. 7–8 (procenty, potęgi, Pitagoras)
 - Faza 3: blueprinty `exact` dla klas 4–6 w tematach `dodawanie`, `odejmowanie`, `mnożenie`, `dzielenie`, `ułamki`, `równania`
 - Faza 2: 35 kart wzorcowych (rdzeń I–III) — m.in. równania z okienkiem kl. 1, ułamki kl. 2, tabliczka/dzielenie kl. 3; parsery klucza dla tematów praktycznych i zadań tekstowych
 - Faza 1: `docs/curriculum-matrix.md` — kontrakt topic_id × klasa × blueprint × klucz × wzorzec
@@ -20,7 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Dokumenty PP 2025/2026, `docs/teacher-review.md`, `docs/phase3-decision.md`, macierz w `docs/curriculum-matrix-plan.canvas.tsx`
 
 ### Changed
-- Macierz PP: klasy 4–6 przestają raportować `downgraded`; 7–8 pozostają świadomie ograniczone do MVP
+- Baner MVP: osobny komunikat dla kl. 4–6 i rozszerzony zakres 7–8 (procenty, potęgi, Pitagoras)
+- Macierz PP: klasy 4–6 przestają raportować `downgraded`; 7–8 mają własne blueprinty zamiast downgrade z kl. 6
 - Walidatory profil×temat: limity zależne od tematu (mnożenie kl. 5, porównania, zadania tekstowe bez fałszywych `word_problem_load`)
 - Blueprinty kl. 3 dla dodawania/odejmowania do 20; ułamki 4–8 w fallbacku jako `Policz: a/b + …`
 - Temat **równania** (4–8): generator i fallback używają okienka ☐ zamiast `x`; pełny klucz odpowiedzi jak we wzorcach

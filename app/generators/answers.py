@@ -8,6 +8,7 @@ Zwraca status per zadanie: supported | unsupported | ambiguous | error.
 """
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 from typing import Literal, Optional
@@ -126,6 +127,10 @@ def _answer_for_task_structured(
     if practical is not None:
         return TaskAnswer(status="supported", value=practical)
 
+    exam = _answer_exam_formats(raw, low)
+    if exam is not None:
+        return TaskAnswer(status="supported", value=exam)
+
     narrative = _answer_simple_narrative(raw, low)
     if narrative is not None:
         return TaskAnswer(status="supported", value=narrative)
@@ -236,6 +241,52 @@ def _answer_practical_task(raw: str, low: str) -> str | None:
         sides = [int(n) for n in re.findall(r"(\d+)\s*cm", low)]
         if len(sides) >= 2:
             return str(2 * (sides[0] + sides[1]))
+
+    return None
+
+
+def _answer_exam_formats(raw: str, low: str) -> str | None:
+    """Procenty, potęgi, Pitagoras — proste formaty z banków fallbacków (kl. 7–8)."""
+    m = re.search(r"(\d+)\s*%\s*z\s*(\d+)", low)
+    if m:
+        p, n = int(m.group(1)), int(m.group(2))
+        return str(p * n // 100)
+
+    m = re.search(r"ile to jest\s*(\d+)\s*%\s*z\s*(\d+)", low)
+    if m:
+        p, n = int(m.group(1)), int(m.group(2))
+        return str(p * n // 100)
+
+    m = re.search(r"policz:\s*(\d+)([²³⁴])", low)
+    if m:
+        base = int(m.group(1))
+        exp = {"²": 2, "³": 3, "⁴": 4}[m.group(2)]
+        return str(base**exp)
+
+    m = re.search(r"policz:\s*√(\d+)", low)
+    if m:
+        n = int(m.group(1))
+        root = math.isqrt(n)
+        if root * root == n:
+            return str(root)
+
+    if "przyprostokątne" in low and "przeciwprostokątna" in low:
+        legs = [int(x) for x in re.findall(r"(\d+)\s*cm", raw)]
+        if len(legs) >= 2:
+            a, b = legs[0], legs[1]
+            hyp = math.isqrt(a * a + b * b)
+            if hyp * hyp == a * a + b * b:
+                return str(hyp)
+
+    if "przeciwprostokątna" in low and "przyprostokątna" in low:
+        nums = [int(x) for x in re.findall(r"(\d+)\s*cm", raw)]
+        if len(nums) >= 2:
+            c, a = nums[0], nums[1]
+            leg_sq = c * c - a * a
+            if leg_sq >= 0:
+                leg = math.isqrt(leg_sq)
+                if leg * leg == leg_sq:
+                    return str(leg)
 
     return None
 

@@ -37,8 +37,10 @@ def test_upper_grades_mvp_caption():
     from app.domain.topic_catalog import upper_grades_mvp_caption_pl
 
     assert upper_grades_mvp_caption_pl(3) is None
-    assert upper_grades_mvp_caption_pl(4) is not None
-    assert "MVP" in upper_grades_mvp_caption_pl(5)
+    assert upper_grades_mvp_caption_pl(5) is not None
+    assert "4–6" in upper_grades_mvp_caption_pl(5)
+    assert upper_grades_mvp_caption_pl(7) is not None
+    assert "procenty" in upper_grades_mvp_caption_pl(7)
 
 
 def test_answer_key_expectation_for_money():
@@ -83,6 +85,32 @@ def test_grade_4_6_arithmetic_topics_have_exact_blueprints():
     topics = ("dodawanie", "odejmowanie", "mnożenie", "dzielenie", "ułamki", "równania")
 
     for grade in (4, 5, 6):
+        for topic in topics:
+            resolved = resolve_topic(topic, grade=grade)
+            assert resolved.blueprint_status == "exact", (grade, topic, resolved.warnings)
+
+
+def test_grade_7_8_expanded_topics_in_ui():
+    labels_g7 = topic_labels_for_grade(7)
+    assert "procenty" in labels_g7
+    assert "potęgi" in labels_g7
+    assert "pitagoras" in labels_g7
+    assert "procenty" not in topic_labels_for_grade(6)
+
+
+def test_grade_7_8_topics_have_exact_blueprints():
+    topics = (
+        "dodawanie",
+        "odejmowanie",
+        "mnożenie",
+        "dzielenie",
+        "ulamki",
+        "rownania",
+        "procenty",
+        "potegi",
+        "pitagoras",
+    )
+    for grade in (7, 8):
         for topic in topics:
             resolved = resolve_topic(topic, grade=grade)
             assert resolved.blueprint_status == "exact", (grade, topic, resolved.warnings)

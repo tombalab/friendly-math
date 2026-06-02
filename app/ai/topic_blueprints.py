@@ -351,6 +351,33 @@ TOPIC_BLUEPRINTS: dict[str, dict[int, Blueprint]] = {
             ),
             "max_result": 10000,
         },
+        7: {
+            "instruction": (
+                "Dzielenie liczb naturalnych i dziesiętnych dla klasy 7. "
+                "Wynik skończony, bez reszty w zadaniach podstawowych. "
+                "Format: „Policz: a : b = ____”."
+            ),
+            "examples": _ex(
+                "Policz: 256 : 16 = ____",
+                "Policz: 4,2 : 0,7 = ____",
+                "Policz: 144 : 12 = ____",
+                "Policz: 7,5 : 2,5 = ____",
+            ),
+            "max_result": 10000,
+        },
+        8: {
+            "instruction": (
+                "Dzielenie dla klasy 8: liczby naturalne, dziesiętne, proste ułamki. "
+                "Jedno działanie, format „Policz: a : b = ____”."
+            ),
+            "examples": _ex(
+                "Policz: 3/4 : 1/2 = ____",
+                "Policz: 12,6 : 0,3 = ____",
+                "Policz: 420 : 15 = ____",
+                "Policz: 0,84 : 0,12 = ____",
+            ),
+            "max_result": 10000,
+        },
     },
 
     # ----- Liczby i porównywanie -----
@@ -546,6 +573,33 @@ TOPIC_BLUEPRINTS: dict[str, dict[int, Blueprint]] = {
                 "Policz: 1,25 + 0,75 = ____",
                 "Policz: 3 × 2/7 = ____",
                 "Policz: 7/8 − 3/8 = ____",
+            ),
+            "max_result": 100,
+        },
+        7: {
+            "instruction": (
+                "Ułamki zwykłe i dziesiętne dla klasy 7: działania, porównywanie, "
+                "proste mnożenie ułamka przez liczbę. Preferuj ten sam mianownik "
+                "w zadaniach z automatycznym kluczem."
+            ),
+            "examples": _ex(
+                "Policz: 2/3 + 1/3 = ____",
+                "Policz: 7/8 − 3/8 = ____",
+                "Policz: 3 × 2/5 = ____",
+                "Policz: 0,5 + 0,25 = ____",
+            ),
+            "max_result": 100,
+        },
+        8: {
+            "instruction": (
+                "Ułamki, dziesiętne i proste wyrażenia dla klasy 8. "
+                "Jedno działanie na zadanie, bez długich dowodów."
+            ),
+            "examples": _ex(
+                "Policz: 5/6 − 1/6 = ____",
+                "Policz: 1,2 × 0,5 = ____",
+                "Policz: 4/5 + 2/5 = ____",
+                "Policz: 3/8 × 4 = ____",
             ),
             "max_result": 100,
         },
@@ -770,6 +824,32 @@ TOPIC_BLUEPRINTS: dict[str, dict[int, Blueprint]] = {
             ),
             "max_result": 50000,
         },
+        7: {
+            "instruction": (
+                "Dodawanie liczb całkowitych, dziesiętnych i ułamków prostych dla klasy 7. "
+                "Jedno działanie w linii."
+            ),
+            "examples": _ex(
+                "Policz: -15 + 28 = ____",
+                "Policz: 3,75 + 2,5 = ____",
+                "Policz: 1/4 + 3/4 = ____",
+                "Policz: 1250 + 875 = ____",
+            ),
+            "max_result": 50000,
+        },
+        8: {
+            "instruction": (
+                "Dodawanie dla klasy 8: liczby wymierne w prostych przykładach, "
+                "jedno działanie, format „Policz: a + b = ____”."
+            ),
+            "examples": _ex(
+                "Policz: -12 + (-8) = ____",
+                "Policz: 2,4 + 1,85 = ____",
+                "Policz: 3/5 + 1/5 = ____",
+                "Policz: 10000 + 2500 = ____",
+            ),
+            "max_result": 100000,
+        },
     },
     "odejmowanie": {
         4: {
@@ -809,6 +889,32 @@ TOPIC_BLUEPRINTS: dict[str, dict[int, Blueprint]] = {
             ),
             "max_result": 50000,
         },
+        7: {
+            "instruction": (
+                "Odejmowanie liczb całkowitych, dziesiętnych i ułamków dla klasy 7. "
+                "Jedno działanie w linii."
+            ),
+            "examples": _ex(
+                "Policz: 12 − (-5) = ____",
+                "Policz: 8,5 − 3,25 = ____",
+                "Policz: 5/6 − 1/6 = ____",
+                "Policz: 3000 − 1450 = ____",
+            ),
+            "max_result": 50000,
+        },
+        8: {
+            "instruction": (
+                "Odejmowanie dla klasy 8, w tym liczby ujemne i dziesiętne. "
+                "Format „Policz: a − b = ____”."
+            ),
+            "examples": _ex(
+                "Policz: -7 − 4 = ____",
+                "Policz: 9,2 − 4,75 = ____",
+                "Policz: 7/8 − 3/8 = ____",
+                "Policz: 5000 − 2680 = ____",
+            ),
+            "max_result": 100000,
+        },
     },
     "mnożenie": {
         4: {
@@ -844,6 +950,32 @@ TOPIC_BLUEPRINTS: dict[str, dict[int, Blueprint]] = {
                 "Policz: 0,6 × 0,7 = ____",
             ),
             "max_result": 20000,
+        },
+        7: {
+            "instruction": (
+                "Mnożenie dla klasy 7: liczby całkowite, dziesiętne, ułamki × liczba. "
+                "Jedno działanie."
+            ),
+            "examples": _ex(
+                "Policz: (-4) × 6 = ____",
+                "Policz: 2,5 × 1,2 = ____",
+                "Policz: 3/4 × 8 = ____",
+                "Policz: 125 × 16 = ____",
+            ),
+            "max_result": 20000,
+        },
+        8: {
+            "instruction": (
+                "Mnożenie dla klasy 8, w tym potęgi o wykładniku naturalnym w prostych "
+                "przykładach (np. 2³). Format „Policz: … = ____”."
+            ),
+            "examples": _ex(
+                "Policz: (-3) × (-7) = ____",
+                "Policz: 1,5 × 0,4 = ____",
+                "Policz: 2/3 × 9 = ____",
+                "Policz: 12 × 15 = ____",
+            ),
+            "max_result": 50000,
         },
     },
     "równania": {
@@ -888,6 +1020,120 @@ TOPIC_BLUEPRINTS: dict[str, dict[int, Blueprint]] = {
                 f"Rozwiąż: 3 × {_BOX} = 2,4",
             ),
             "max_result": 1000,
+        },
+        7: {
+            "instruction": (
+                f"Równania jednokrokowe z okienkiem {_BOX} dla klasy 7. "
+                "Liczby całkowite i dziesiętne, bez litery x."
+            ),
+            "examples": _ex(
+                f"Rozwiąż: {_BOX} + 35 = 120",
+                f"Rozwiąż: 7 × {_BOX} = 28",
+                f"Rozwiąż: {_BOX} − 6,5 = 2,5",
+                f"Rozwiąż: 84 : {_BOX} = 7",
+            ),
+            "max_result": 1000,
+        },
+        8: {
+            "instruction": (
+                f"Równania z okienkiem {_BOX} dla klasy 8, także z ułamkami i "
+                "liczbami ujemnymi w prostych przypadkach."
+            ),
+            "examples": _ex(
+                f"Rozwiąż: {_BOX} + (-9) = 3",
+                f"Rozwiąż: 2,4 × {_BOX} = 7,2",
+                f"Rozwiąż: 3 × {_BOX} = 1/2",
+                f"Rozwiąż: 96 : {_BOX} = 12",
+            ),
+            "max_result": 1000,
+        },
+    },
+
+    # ----- Klasy 7–8: zakres egzaminacyjny (opcja B) -----
+    "procenty": {
+        7: {
+            "instruction": (
+                "Procenty dla klasy 7: obliczanie procentu danej liczby, prosty podatek "
+                "składany / rabat w jednym kroku. Format: „Policz: p% z n = ____” lub "
+                "„Ile to jest p% z n? ____”."
+            ),
+            "examples": _ex(
+                "Policz: 10% z 200 = ____",
+                "Policz: 25% z 80 = ____",
+                "Ile to jest 15% z 60? ____",
+                "Po obniżce o 20% cena 250 zł wynosi ____ zł",
+            ),
+            "max_result": 10000,
+        },
+        8: {
+            "instruction": (
+                "Procenty dla klasy 8: procent liczby, procenty złożone w jednym kroku "
+                "(np. podwyżka, obniżka), zamiana ułamek ↔ procent w prostych przypadkach."
+            ),
+            "examples": _ex(
+                "Policz: 12% z 350 = ____",
+                "Policz: 150% z 40 = ____",
+                "Ile to jest 8% z 125? ____",
+                "Cena wzrosła o 10% z 200 zł. Nowa cena: ____ zł",
+            ),
+            "max_result": 10000,
+        },
+    },
+    "potęgi": {
+        7: {
+            "instruction": (
+                "Potęgi o wykładniku naturalnym dla klasy 7 (do ³). "
+                "Format: „Policz: aⁿ = ____” lub „Policz: 2³ = ____”."
+            ),
+            "examples": _ex(
+                "Policz: 2³ = ____",
+                "Policz: 5² = ____",
+                "Policz: 10² = ____",
+                "Policz: 3³ = ____",
+            ),
+            "max_result": 10000,
+        },
+        8: {
+            "instruction": (
+                "Potęgi i proste pierwiastki kwadratowe dla klasy 8. "
+                "Wykładniki naturalne, pierwiastek z kwadratu liczby całkowitej."
+            ),
+            "examples": _ex(
+                "Policz: 2⁴ = ____",
+                "Policz: √36 = ____",
+                "Policz: √81 = ____",
+                "Policz: 5³ = ____",
+            ),
+            "max_result": 10000,
+        },
+    },
+    "pitagoras": {
+        7: {
+            "instruction": (
+                "Twierdzenie Pitagorasa w trójkącie prostokątnym. "
+                "Podaj długości przyprostokątnych lub przeciwprostokątnej w cm. "
+                "Wynik całkowity (trójki pitagorejskie)."
+            ),
+            "examples": _ex(
+                "Przyprostokątne 3 cm i 4 cm. Przeciwprostokątna c = ____ cm",
+                "Przyprostokątne 6 cm i 8 cm. Przeciwprostokątna c = ____ cm",
+                "Przyprostokątne 5 cm i 12 cm. Przeciwprostokątna c = ____ cm",
+                "Przeciwprostokątna 13 cm, przyprostokątna 5 cm. Druga przyprostokątna a = ____ cm",
+            ),
+            "max_result": 20,
+        },
+        8: {
+            "instruction": (
+                "Pitagoras dla klasy 8: oblicz brakujący bok w trójkącie prostokątnym, "
+                "także w kontekście przekątnej kwadratu/prostokąta."
+            ),
+            "examples": _ex(
+                "Przyprostokątne 9 cm i 12 cm. Przeciwprostokątna c = ____ cm",
+                "Przekątna kwadratu o boku 6 cm ma długość d = ____ cm",
+                "Przyprostokątne 8 cm i 15 cm. Przeciwprostokątna c = ____ cm",
+                "Przeciwprostokątna 25 cm, przyprostokątna 7 cm. Druga przyprostokątna a = ____ cm",
+            ),
+            "max_result": 30,
         },
     },
 }

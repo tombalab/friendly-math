@@ -19,6 +19,25 @@ def test_topic_none_skips_automatic_answers():
     assert "temat bez" in key.items[0].reason.lower()
 
 
+def test_exam_topic_answers():
+    key = compute_answer_key(
+        ["Policz: 10% z 200 = ____", "Policz: 2³ = ____"],
+        topic_id="procenty",
+        grade=7,
+    )
+    assert key.items[0].value == "20"
+
+    key2 = compute_answer_key(["Policz: 2³ = ____"], topic_id="potegi", grade=7)
+    assert key2.items[0].value == "8"
+
+    key3 = compute_answer_key(
+        ["Przyprostokątne 3 cm i 4 cm. Przeciwprostokątna c = ____ cm"],
+        topic_id="pitagoras",
+        grade=7,
+    )
+    assert key3.items[0].value == "5"
+
+
 def test_practical_topic_answers():
     key = compute_answer_key(
         ["Ile to razem? 5 zł + 2 zł = ____ zł", "Zamień: 3 zł = ____ gr"],

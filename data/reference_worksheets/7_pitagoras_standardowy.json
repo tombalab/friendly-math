@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 7 – Pitagoras (standardowy)",
+    "grade": 7,
+    "topic": "pitagoras",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Trójki pitagorejskie — wyniki całkowite. Klucz częściowy."
+  },
+  "tasks": [
+    "Przyprostokątne 3 cm i 4 cm. Przeciwprostokątna c = ____ cm",
+    "Przyprostokątne 6 cm i 8 cm. Przeciwprostokątna c = ____ cm",
+    "Przyprostokątne 5 cm i 12 cm. Przeciwprostokątna c = ____ cm",
+    "Przeciwprostokątna 13 cm, przyprostokątna 5 cm. Druga przyprostokątna a = ____ cm"
+  ],
+  "answers": ["5", "10", "13", "12"],
+  "quality_criteria": [
+    "Trójkąt prostokątny podany wprost.",
+    "Wynik całkowity (trójki pitagorejskie).",
+    "Jedna niewiadoma na zadanie.",
+    "Jednostka cm w treści i odpowiedzi.",
+    "Bez dowodów i bez rysunku wymaganego w treści."
+  ],
+  "structured_criteria": {
+    "max_operand": 30,
+    "max_result": 30,
+    "max_operations_per_task": 2,
+    "max_task_length": 140,
+    "forbidden_phrases": [],
+    "max_word_problem_sentences": 2
+  }
+}

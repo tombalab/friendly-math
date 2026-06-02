@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 7 – procenty (standardowy)",
+    "grade": 7,
+    "topic": "procenty",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Procent liczby w jednym kroku. Klucz częściowy dla prostych formatów."
+  },
+  "tasks": [
+    "Policz: 10% z 200 = ____",
+    "Policz: 25% z 80 = ____",
+    "Ile to jest 15% z 60? ____",
+    "Policz: 20% z 150 = ____"
+  ],
+  "answers": ["20", "20", "9", "30"],
+  "quality_criteria": [
+    "Jedno działanie procentowe na zadanie.",
+    "Procent całkowity, wynik całkowity.",
+    "Format spójny: „Policz: p% z n” lub „Ile to jest p% z n?”.",
+    "Bez zadań wieloetapowych z narzutem VAT.",
+    "Liczby w zakresie typowym dla klasy 7."
+  ],
+  "structured_criteria": {
+    "max_operand": 1000,
+    "max_result": 10000,
+    "max_operations_per_task": 1,
+    "max_task_length": 140,
+    "forbidden_phrases": [],
+    "max_word_problem_sentences": 2
+  }
+}

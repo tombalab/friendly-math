@@ -182,13 +182,19 @@ def _numeric_caps_for_topic(topic_id: str, grade: int, profile_id: str) -> tuple
     if "mnoz" in topic or "mnoż" in topic:
         return (60, 500) if low_support else (100, 1000)
     if "dziel" in topic:
-        return (1200, 100) if low_support else (5000, 1000)
+        return (5000, 1000) if low_support else (5000, 10000)
     if "rown" in topic or "rów" in topic:
         return (150, 150) if low_support else (500, 500)
     if "dodaw" in topic or "odejm" in topic:
         return (500, 1000) if low_support else (5000, 10000)
     if "ulam" in topic or "ułam" in topic:
         return (20, 20)
+    if "procent" in topic:
+        return (1000, 10000)
+    if "poteg" in topic or "potęg" in topic:
+        return (100, 10000)
+    if "pitagoras" in topic or "pitagor" in topic:
+        return (30, 30)
 
     return (30, 60) if low_support else (100, 200)
 
@@ -206,7 +212,15 @@ def _format_prefix_for_topic(topic_id: str, grade: int) -> str | None:
         return "Rozwiąż:"
     if "ulam" in topic or "ułam" in topic:
         return "Policz:" if grade >= 4 else None
-    if topic in ("pieniadze", "czas", "pomiary_dlugosci", "obwody", "zadania_tekstowe"):
+    if topic in (
+        "pieniadze",
+        "czas",
+        "pomiary_dlugosci",
+        "obwody",
+        "zadania_tekstowe",
+        "procenty",
+        "pitagoras",
+    ):
         return None
     return "Policz:"
 
@@ -218,7 +232,12 @@ def _forbidden_phrases_for_topic(topic_id: str) -> tuple[str, ...]:
 
 
 def _max_word_problem_sentences_for_topic(topic_id: str, grade: int) -> int | None:
-    if topic_id.casefold() == "zadania_tekstowe":
+    if topic_id.casefold() in (
+        "zadania_tekstowe",
+        "procenty",
+        "pitagoras",
+        "potegi",
+    ):
         return None
     if topic_id.casefold() in ("czas", "pomiary_dlugosci", "pieniadze", "obwody"):
         return 2
@@ -235,6 +254,10 @@ def _max_task_length_for_topic(
     topic = topic_id.casefold()
     if topic == "zadania_tekstowe":
         return 140 if profile_id == "adhd" else 160
+    if topic in ("procenty", "pitagoras"):
+        return 120 if profile_id == "adhd" else 140
+    if topic == "potegi":
+        return 55 if profile_id == "adhd" else 65
     if topic in ("czas", "pomiary_dlugosci", "pieniadze", "obwody"):
         return 85 if profile_id == "adhd" else 95
     if "ulam" in topic or "ułam" in topic:
@@ -244,6 +267,8 @@ def _max_task_length_for_topic(
 
 def _ops_for_topic(topic_id: str, grade: int) -> tuple[str, ...]:
     if "ułam" in topic_id or "ulam" in topic_id:
+        if grade >= 7:
+            return ("+", "−", "-", "×", "*")
         return ("+", "−", "-")
     if "mnoż" in topic_id or "mnoz" in topic_id:
         return ("×", "*", "x", "X")

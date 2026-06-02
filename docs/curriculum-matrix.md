@@ -77,9 +77,9 @@ Ostatnia weryfikacja: audyt fallbacków × 6 profili — **0 ostrzeżeń walidat
 | 4 | `mnozenie` | mnożenie | exact | full | tak | tak | MVP |
 | 4 | `rownania` | równania | exact | full | tak | — | MVP (☐) |
 | 5–6 | `dzielenie` … `rownania` | 6 tematów | exact | full/partial | tak | częściowo | MVP rachunkowe — lepsze dopasowanie per klasa |
-| 7–8 | `dzielenie` … `rownania` | 6 tematów | downgraded* | full/partial | tak | częściowo | MVP — nie pełne PP |
+| 7–8 | `dzielenie` … `rownania` + `procenty`, `potegi`, `pitagoras` | 9 tematów | exact | full/partial | tak | częściowo | Rozszerzone MVP (opcja B) |
 
-\* Dla klas 7–8 tematy ogólne korzystają z blueprintów klasy 6 do czasu decyzji produktowej.
+\* Klasy 7–8: blueprinty per klasa; tematy egzaminacyjne od kl. 7. Nadal brak pełnej PP (statystyka, bryły, algebra).
 
 Szczegóły wierszy 5–8: `python scripts/curriculum_matrix_report.py --markdown`.
 
@@ -105,7 +105,7 @@ Szczegóły wierszy 5–8: `python scripts/curriculum_matrix_report.py --markdow
 | **1. Macierz PP** | Ten dokument | Utrzymywać przy zmianach katalogu; raport: `curriculum_matrix_report.py` |
 | **2. Domknięcie 1–3** | Zrobione (rdzeń) | 35 wzorców; dalsze luki: geometria, masa, kl. 1 czas/pomiary |
 | **3. Stabilizacja 4–6** | Zrobione (blueprinty) | Ewentualnie rozszerzyć fallbacki i wzorce 4–6 |
-| **4. Decyzja 7–8** | Plan | Zawęzić UI lub dodać zakres egzaminacyjny |
+| **4. Rozbudowa 7–8** | Zrobione (opcja B, rdzeń) | Więcej wzorców, liczby całkowite, pełniejsze PP |
 | **5. Curriculum smoke** | Częściowo | `curriculum_fallback_audit.py` (CI — do podpięcia) |
 
 ---
