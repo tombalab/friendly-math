@@ -1,18 +1,6 @@
 #--------------------------------------------------
-# FRIENDLY MATH - v1
-# Generator kart pracy matematyki dla uczniów szkoły podstawowej
+# FRIENDLY MATH - Streamlit UI (cienka warstwa nad WorksheetService)
 #--------------------------------------------------
-#
-# Autor: Tomasz Balabuch
-# Data: 2026-02-24
-# Wersja: 1.0.0
-#
-#--------------------------------------------------
-# --------------------------------------------------
-
-# --------------------------------------------------
-# Importy
-# --------------------------------------------------
 
 import os
 import sys
@@ -20,9 +8,9 @@ from io import BytesIO
 from pathlib import Path
 
 try:
-    import fitz  # type: ignore  # PyMuPDF
+    import fitz  # type: ignore
 except ModuleNotFoundError:
-    fitz = None  # pip install PyMuPDF — wtedy podgląd PDF jako obrazy będzie działał
+    fitz = None
 
 from dotenv import load_dotenv
 
@@ -33,38 +21,46 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 import streamlit as st
-from app.ai.layout_generator import generate_layout
-from app.ai.text_generator import generate_tasks
-from app.generators.answers import compute_answers
-from app.generators.images import generate_worksheet_image, generate_worksheet_images_for_tasks
-from app.pdf.generator import WorksheetMeta, build_worksheet_pdf_bytes
+from app.domain.profile_catalog import (
+    default_profile_id,
+    profile_ids_for_ui,
+    profile_selectbox_labels,
+    resolve_profile,
+)
+from app.domain.topic_catalog import (
+    default_topic_label_for_grade,
+    topic_labels_for_grade,
+)
+from app.domain.worksheet_contract import WorksheetRequest
+from app.history.store import default_history_dir
+from app.pdf.fonts import resolve_polish_font_path
+from app.ui.events_panel import record_download_event, render_events_panel
+from app.ui.history_panel import history_store_for_root, render_history_sidebar, render_history_view
+from app.ui.quality_panel import render_quality_panel
+from app.worksheet.service import WorksheetService
+
+HISTORY_DIR = default_history_dir(ROOT_DIR)
+OUT_DIR = ROOT_DIR / "data" / "out"
+_history_store = history_store_for_root(ROOT_DIR)
+
 
 def _pdf_bytes_to_images(pdf_bytes: bytes, dpi: int = 120) -> list[BytesIO]:
-    """Konwertuje PDF (bytes) na listę obrazów stron (PNG w BytesIO). Wymaga: pip install PyMuPDF."""
-    out = []
+    out: list[BytesIO] = []
     if fitz is None:
         return out
     try:
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         for page in doc:
             pix = page.get_pixmap(dpi=dpi)
-            png_bytes = pix.tobytes("png")
-            out.append(BytesIO(png_bytes))
+            out.append(BytesIO(pix.tobytes("png")))
         doc.close()
     except Exception:
         pass
     return out
 
 
-# --------------------------------------------------
-# Konfiguracja strony
-# --------------------------------------------------
-st.set_page_config(
-    page_title="Friendly Math",
-    layout="centered",
-)
+st.set_page_config(page_title="Friendly Math", layout="centered")
 
-# Cienka, szara ramka wokół podglądu stron PDF (PNG), żeby była widoczna na białym tle.
 st.markdown(
     """
     <style>
@@ -77,9 +73,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --------------------------------------------------
-# Panel boczny (lewa strona) – formularz
-# --------------------------------------------------
 st.sidebar.title("🧮 Friendly Math")
 st.sidebar.subheader("Generator kart pracy")
 st.sidebar.write(
@@ -87,28 +80,33 @@ st.sidebar.write(
     "Zadania zostaną wygenerowane przez AI, a PDF będzie gotowy do pobrania."
 )
 
-with st.sidebar.form("worksheet_form"):
-    grade = st.selectbox(
-        "Klasa",
-        options=["1", "2", "3", "4", "5", "6", "7", "8"],
-        index=1,
-        help="Klasa ucznia (1–8). Wpływa na poziom trudności zadań.",
+_font_path, _ = resolve_polish_font_path()
+if _font_path is None:
+    st.sidebar.warning(
+        "Brak czcionki DejaVu Sans — PDF może nie wyświetlać polskich znaków. "
+        "Zainstaluj zależności projektu (patrz assets/fonts/README.md)."
     )
 
+grade = st.sidebar.selectbox(
+    "Klasa",
+    options=["1", "2", "3", "4", "5", "6", "7", "8"],
+    index=1,
+    help="Klasa ucznia (1–8). Wpływa na poziom trudności zadań i dostępne tematy.",
+)
+_grade_int = int(grade)
+_topic_options = topic_labels_for_grade(_grade_int)
+_default_topic = default_topic_label_for_grade(_grade_int)
+_topic_index = (
+    _topic_options.index(_default_topic) if _default_topic in _topic_options else 0
+)
+
+with st.sidebar.form("worksheet_form"):
     topic = st.selectbox(
         "Zakres materiału",
-        options=[
-            "dodawanie",
-            "odejmowanie",
-            "mnożenie",
-            "dzielenie",
-            "ułamki",
-            "równania",
-        ],
-        index=0,
-        help="Temat karty pracy (jedna operacja lub zakres na kartę).",
+        options=_topic_options,
+        index=_topic_index,
+        help="Tematy zgodne z podstawą programową dla wybranej klasy.",
     )
-
     number_of_tasks = st.number_input(
         "Liczba zadań",
         min_value=1,
@@ -117,173 +115,104 @@ with st.sidebar.form("worksheet_form"):
         step=1,
         help="Ile zadań ma zawierać karta (1–30). Dla klas 1–3 max 15.",
     )
-
+    _profile_ids = profile_ids_for_ui()
+    _profile_labels = profile_selectbox_labels()
+    _default_pid = default_profile_id()
     student_profile = st.selectbox(
         "Profil ucznia",
-        options=[
-            "standardowy",
-            "dyskalkulia",
-            "zdolny",
-            "trudności w nauce",
-            "ADHD",
-        ],
-        index=0,
-        help="Profil wpływa na styl zadań, layout i ilustracje (np. dyskalkulia: prostsze liczby, większe fonty).",
+        options=_profile_ids,
+        index=_profile_ids.index(_default_pid) if _default_pid in _profile_ids else 0,
+        format_func=lambda pid: _profile_labels.get(pid, pid),
+        help="Preset dydaktyczny (PPP), nie diagnoza kliniczna.",
+    )
+    _selected_profile = resolve_profile(student_profile)
+    st.caption(_selected_profile.profile.ui_summary)
+
+    worksheet_label = st.text_input(
+        "Etykieta karty (opcjonalnie)",
+        value="",
+        placeholder="np. grupa A, ćwiczenie 3",
+        help="Organizacja pracy — bez imion i nazwisk uczniów.",
     )
 
-    include_illustration = st.checkbox(
-        "Ilustracja w karcie",
-        value=True,
-        help="Dla profili standardowy/zdolny: jedna ilustracja u góry. Dla dyskalkulia/ADHD/trudności: ilustracja przy każdym zadaniu (zawsze włączone).",
-    )
-
-    include_answers = st.checkbox(
-        "Dołącz stronę z odpowiedziami",
-        value=False,
-        help="Dodaje na końcu PDF stronę „Odpowiedzi” z wynikami (dla prostych działań typu a op b).",
-    )
-
+    include_illustration = st.checkbox("Ilustracja w karcie", value=False)
+    include_workspace = st.checkbox("Miejsce na obliczenia", value=True)
+    include_answers = st.checkbox("Dołącz stronę z odpowiedziami", value=False)
     submitted = st.form_submit_button("🧠 Generuj kartę")
 
-# --------------------------------------------------
-# Sekcja główna – tylko wyniki (zadania + PDF)
-# --------------------------------------------------
+render_history_sidebar(_history_store)
+
 st.title("🧮 Friendly Math")
 
-# --------------------------------------------------
-# Logika po wysłaniu formularza
-# --------------------------------------------------
-if submitted:
+_history_view_id = st.session_state.get("fm_history_view")
 
-    # v1.0: brak klucza API – nie wywołuj generowania
-    if not os.getenv("OPENAI_API_KEY"):
-        st.error(
-            "Brak klucza **OPENAI_API_KEY**. Dodaj go do pliku `.env` w katalogu projektu "
-            "(np. skopiuj z `.env.example` i uzupełnij klucz z platformy OpenAI)."
-        )
+if submitted:
+    st.session_state.pop("fm_history_view", None)
+
+    _label = worksheet_label.strip() or None
+    request = WorksheetRequest(
+        grade=_grade_int,
+        topic_label=topic,
+        profile_id=student_profile,
+        number_of_tasks=int(number_of_tasks),
+        include_illustration=include_illustration,
+        include_workspace=include_workspace,
+        include_answers=include_answers,
+        worksheet_label=_label,
+    )
+
+    service = WorksheetService(output_dir=OUT_DIR, history_dir=HISTORY_DIR)
+    result = service.generate(request)
+    st.session_state["fm_last_result"] = result
+
+    if result.history_path:
+        st.success(f"Zapisano w historii: `{result.history_path.name}`")
+
+    render_quality_panel(result)
+    render_events_panel(result)
+
+    if result.blocked:
         st.stop()
 
-    # Prosta walidacja biznesowa
-    if int(grade) <= 3 and number_of_tasks > 15:
-        st.error("Dla klas 1–3 maksymalna liczba zadań to 15.")
-    else:
-        # request_payload = {
-        #     "grade": int(grade),
-        #     "topic": topic,
-        #     "number_of_tasks": number_of_tasks,
-        #     "student_profile": student_profile
-        # }
-        # st.success("✅ JSON request wygenerowany")
-        # st.json(request_payload)
-        # st.info(
-        #     "Ten JSON będzie w kolejnym kroku wysyłany do API "
-        #     "generującego zadania."
-        # )
+    st.subheader("📘 Wygenerowane zadania")
+    for i, task in enumerate(result.tasks, start=1):
+        st.write(f"{i}. {task}")
 
-        st.subheader("📘 Wygenerowane zadania")
-
-        result = generate_tasks(
-            profile=student_profile,
-            grade=grade,
-            topic=topic,
-            n=number_of_tasks
+    if result.answer_key and result.answer_key.tasks_needing_review():
+        st.warning(
+            "Zadania bez automatycznej odpowiedzi: "
+            + ", ".join(str(n) for n in result.answer_key.tasks_needing_review())
         )
 
-        if result.get("_error"):
-            st.warning(
-                "Generowanie zadań przez API nie powiodło się (timeout lub błąd sieci). "
-                "Poniżej zadania zastępcze — możesz wygenerować PDF."
-            )
+    st.divider()
+    st.subheader("📄 Karta pracy PDF — podgląd")
 
-        # Lista zadań jako zwykły tekst
-        tasks = result["tasks"]
-        for i, task in enumerate(tasks, start=1):
-            st.write(f"{i}. {task}")
-
-        # ----------------------------------------------
-        # PDF v0: generowanie, zapis do pliku + download
-        # ----------------------------------------------
-        st.divider()
-        st.subheader("📄 Karta pracy PDF - podgląd")
-
-        # Metadane karty pracy
-        meta = WorksheetMeta(
-            title=f"Karta pracy – klasa {grade}",
-            grade=str(grade),
-            topic_range=topic,
-            student_profile=student_profile,
-        )
-
-        # Layout sterowany AI (Day 7) – font size, spacing, kolory
-        layout = None
-        try:
-            layout = generate_layout(
-                profile=student_profile,
-                grade=str(grade),
-                number_of_tasks=number_of_tasks,
-            )
-        except Exception as e:
-            st.warning(f"Layout AI niedostępny ({e}), używam domyślnego layoutu.")
-
-        # Ilustracja (Day 8/11): per zadanie dla low-stimuli, opcjonalnie jedna u góry dla standardowy/zdolny
-        image_bytes = None
-        task_images = None
-        low_stimuli_profiles = ["dyskalkulia", "ADHD", "trudności w nauce"]
-        if student_profile in low_stimuli_profiles:
-            try:
-                task_images = generate_worksheet_images_for_tasks(
-                    tasks=tasks, topic=topic, profile=student_profile
-                )
-            except Exception as e:
-                st.warning(f"Grafiki per zadanie niedostępne ({e}), PDF bez ilustracji przy zadaniach.")
-        elif include_illustration:
-            try:
-                image_bytes = generate_worksheet_image(topic=topic, profile=student_profile)
-            except Exception as e:
-                st.warning(f"Grafika niedostępna ({e}), PDF bez ilustracji.")
-
-        # Odpowiedzi do klucza (v1.0) – tylko dla prostych zadań
-        answers = compute_answers(tasks) if include_answers else None
-
-        # 1) Generowanie PDF (z layoutem, opcjonalnie image_bytes, task_images, answers)
-        pdf_bytes = build_worksheet_pdf_bytes(
-            meta=meta,
-            tasks=tasks,
-            layout=layout,
-            image_bytes=image_bytes,
-            task_images=task_images,
-            answers=answers,
-        )
-
-        # 2) Zapis do pliku (wariant A)
-        output_dir = ROOT_DIR / "data" / "out"
-        output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = output_dir / "worksheet.pdf"
-
-        with open(output_path, "wb") as f:
-            f.write(pdf_bytes)
-
-        # st.caption(f"Plik zapisany w: **{output_path.relative_to(ROOT_DIR)}**")
-
-        # Podgląd PDF jako obrazy stron (działa w Chrome/Edge)
-        page_images = _pdf_bytes_to_images(pdf_bytes)
+    if result.pdf_bytes:
+        page_images = _pdf_bytes_to_images(result.pdf_bytes)
         if page_images:
             for i, img_io in enumerate(page_images, start=1):
                 st.image(img_io, caption=f"Strona {i}", width="stretch")
         else:
-            st.caption("Podgląd niedostępny — pobierz PDF i otwórz plik na swoim komputerze.")
-
-        st.caption("Po pobraniu otwórz plik (np. dwuklik), aby zobaczyć lub wydrukować PDF.")
+            st.caption("Podgląd niedostępny — pobierz PDF lokalnie.")
 
         st.download_button(
             label="⬇️ Pobierz PDF",
-            data=pdf_bytes,
+            data=result.pdf_bytes,
             file_name="worksheet.pdf",
             mime="application/pdf",
+            disabled=not result.can_download_pdf,
+            on_click=record_download_event,
+            args=(result,),
         )
+    else:
+        st.caption("PDF niedostępny.")
 
-# --------------------------------------------------
-# Stopka
-# --------------------------------------------------
+elif _history_view_id:
+    render_history_view(
+        _history_store,
+        _history_view_id,
+        pdf_to_images=_pdf_bytes_to_images,
+    )
+
 st.divider()
-st.caption("Friendly Math v1.0 — generator kart pracy dla szkoły podstawowej")
+st.caption("Friendly Math v1.1 — generator kart pracy dla szkoły podstawowej")

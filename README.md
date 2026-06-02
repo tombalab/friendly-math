@@ -178,29 +178,21 @@ Future versions may include:
 
 ## Local Development Setup
 
-### Requirements
-- Miniconda or Anaconda
-- Python 3.11
-- Git
+Pełna instrukcja (venv/conda, font, smoke, lockfile): **[docs/install.md](docs/install.md)**.
 
-### Clone repository
+```bash
 git clone https://github.com/tombalab/friendly-math.git
 cd friendly-math
 
-### Create Conda environment
-conda create -n friendly-math python=3.11
-conda activate friendly-math
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# Linux/macOS: source .venv/bin/activate
 
-### Install dependencies
 pip install -r requirements.txt
+cp .env.example .env   # uzupełnij OPENAI_API_KEY
 
-### Environment variables
-cp .env.example .env
-
-### Run Streamlit app
+python scripts/smoke_check.py   # offline: importy, font, PDF
 streamlit run app/ui/app.py
+```
 
-
-### App will be available at:
-
-http://localhost:8501
+Aplikacja: http://localhost:8501

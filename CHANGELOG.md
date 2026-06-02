@@ -7,17 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+---
+
+## [1.2.0] – 2026-06-02 – Streamlit v2 jakość P1–P2
+
 ### Added
-- 
+- `WorksheetService`, kontrakty `WorksheetRequest`/`WorksheetResult`, panel jakości (P1.3–P1.6)
+- Centralna polityka ilustracji i jedna warstwa layoutu PDF (P1.1, P1.5)
+- Walidatory zadań wg profilu + `structured_criteria` w kartach referencyjnych (P2.1, P2.2)
+- Observability: `request_id`, zdarzenia JSON, panel debug w Streamlit (P2.4)
+- Lokalna historia kart w `data/history/<request_id>/`, sidebar z archiwum (P2.5)
+- `requirements-lock.txt`, `scripts/smoke_check.py`, `docs/install.md`, CI smoke (P2.3)
 
 ### Changed
--
-
-### Planned
-- 
-
+- `liczenie po` — pełne wsparcie klucza odpowiedzi i osobna polityka walidacji sekwencji
+- Walidator ignoruje bullet `-` w zadaniach; generator czyści prefiksy list
+- Deduplikacja powtarzających się ostrzeżeń w `WorksheetService`
+- `README.md` — instalacja i smoke; `.gitignore` — `data/history/`
 
 ---
+
+## [1.1.0] – 2026-06-01 – Streamlit v2 jakość P0
+
+### Added
+- Katalog tematów (`topic_id`, blueprint, możliwości odpowiedzi i ilustracji)
+- Katalog profili PPP w UI (w tym dysleksja)
+- Uczciwe fallbacki zadań zachowujące temat + blokada przy nieznanym temacie
+- Przejrzysty klucz odpowiedzi ze statusami i podsumowaniem
+- Font DejaVu + ostrzeżenia PDF/Streamlit
+- Karty referencyjne i testy offline (`tests/test_reference_worksheets.py`)
+- Dokumentacja architektury i backlogu (`docs/`)
+
+### Changed
+- Generator PDF zwraca `PdfBuildResult` ze strukturalnymi ostrzeżeniami
+- Streamlit pokazuje degradację generacji przed PDF
+
+---
+
 ## [1.0.0] – 2025-01-23 – MVP v1.0.0 (release)
 
 ### Added

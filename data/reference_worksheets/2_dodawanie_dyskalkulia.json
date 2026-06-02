@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 2 – dodawanie (dyskalkulia)",
+    "grade": 2,
+    "topic": "dodawanie",
+    "profile": "dyskalkulia",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Liczby do 12, jeden krok, krótkie polecenie. Wzorzec dla generatora przy dyskalkulia."
+  },
+  "tasks": [
+    "Policz: 3 + 4 = ____",
+    "Policz: 5 + 2 = ____",
+    "Policz: 6 + 1 = ____",
+    "Policz: 4 + 4 = ____",
+    "Policz: 7 + 2 = ____",
+    "Policz: 2 + 8 = ____",
+    "Policz: 9 + 1 = ____",
+    "Policz: 3 + 6 = ____"
+  ],
+  "answers": ["7", "7", "7", "8", "9", "10", "10", "9"],
+  "quality_criteria": [
+    "Wszystkie liczby w zakresie 1–12.",
+    "Wynik nie przekracza 20 (klasa 2).",
+    "Każde polecenie w jednej linii, jeden krok.",
+    "Format „Policz: a + b = ____\" konsekwentny we wszystkich zadaniach.",
+    "Brak zadań tekstowych z dodatkową narracją (mniej dekodowania)."
+  ],
+  "structured_criteria": {
+    "max_operand": 12,
+    "max_result": 20,
+    "allowed_operations": ["+"],
+    "max_operations_per_task": 1,
+    "max_task_length": 50,
+    "forbidden_phrases": ["Ania", "kupił", "miał"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

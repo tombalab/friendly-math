@@ -3,5 +3,10 @@
 __pycache__/
 *.pyc
 .venv/
+.venv-lock/
+data/test_hist_tmp/
 .vscode/
 .cursor/
+data/out/
+data/history/
+data/preview/

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from io import BytesIO
-from pathlib import Path
 from typing import Iterable, Optional
 
 import re
@@ -11,8 +10,23 @@ from reportlab.lib.pagesizes import A4  # pyright: ignore[reportMissingModuleSou
 from reportlab.lib.colors import HexColor  # pyright: ignore[reportMissingModuleSource]
 from reportlab.lib.utils import ImageReader  # pyright: ignore[reportMissingModuleSource]
 from reportlab.pdfbase import pdfmetrics  # pyright: ignore[reportMissingModuleSource]
-from reportlab.pdfbase.ttfonts import TTFont  # pyright: ignore[reportMissingModuleSource]
 from reportlab.pdfgen import canvas  # pyright: ignore[reportMissingModuleSource]
+
+from app.generators.answers import AnswerKeyResult
+from app.pdf.fonts import register_polish_font
+from app.domain.worksheet_layout import PDF_PRINT_DEFAULTS, ResolvedWorksheetLayout
+
+
+@dataclass(frozen=True)
+class PdfWarning:
+    code: str
+    message: str
+
+
+@dataclass(frozen=True)
+class PdfBuildResult:
+    pdf_bytes: bytes
+    warnings: tuple[PdfWarning, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -21,86 +35,80 @@ class WorksheetMeta:
     grade: str
     topic_range: str
     student_profile: str
+    student_profile_id: str = ""
 
 
-# Używamy jednej czcionki z polskimi znakami
-_FONT_NAME = "DejaVuSans"
-_FONT_PATH = Path("assets/fonts/DejaVuSans.ttf")
+# Bold emulowany w `_draw_bold` (podwójne rysowanie) — wystarczy DejaVu regular.
+# Finalny layout pochodzi z `resolve_worksheet_layout()` (P1.5) — PDF nie decyduje o profilu.
 
 
-def _register_font() -> tuple[str, str]:
+# --------------------------------------------------------------------
+# Niskie poziomy rysowania (bold emulation, tła, podkreślenia, stopka)
+# --------------------------------------------------------------------
+
+
+def _draw_bold(c, x: float, y: float, text: str, font_name: str, size: float) -> None:
     """
-    Rejestruje czcionkę TTF z polskimi znakami.
-    Zwraca tuple (font_name, font_bold_name) do użycia w setFont().
-    Fallback do Helvetica jeśli plik nie istnieje.
+    Emulowany bold: rysujemy tekst 3 razy z mikro-offsetem (0.4 pt).
+    Daje wizualnie pogrubione znaki bez konieczności posiadania osobnego TTF.
     """
-    base_font = "Helvetica"
-    bold_font = "Helvetica-Bold"
+    c.setFont(font_name, size)
+    c.drawString(x, y, text)
+    c.drawString(x + 0.4, y, text)
+    c.drawString(x, y + 0.4, text)
 
+
+def _string_width(text: str, font_name: str, size: float) -> float:
     try:
-        if _FONT_PATH.exists():
-            pdfmetrics.registerFont(TTFont(_FONT_NAME, str(_FONT_PATH)))
-            base_font = _FONT_NAME
-            # Nie mamy osobnego pliku bold, więc bold = regular
-            bold_font = _FONT_NAME
-        else:
-            # To tylko ostrzeżenie w konsoli, PDF i tak się wygeneruje
-            print(
-                f"⚠️ Font file not found: {_FONT_PATH}. "
-                "Using Helvetica (may lack Polish characters)."
-            )
-    except Exception as e:
-        print(f"⚠️ Error registering font: {e}. Using Helvetica fallback.")
-
-    return base_font, bold_font
+        return pdfmetrics.stringWidth(text, font_name, size)
+    except Exception:
+        # Konserwatywny fallback – ~0.6× size na znak.
+        return len(text) * size * 0.6
 
 
-def _default_layout() -> dict:
-    """Domyślny layout gdy nie przekazano layoutu z AI (Day 7)."""
-    return {
-        "title_font_size": 16,
-        "metadata_font_size": 10,
-        "section_font_size": 12,
-        "task_font_size": 11,
-        "margin": 50,
-        "title_spacing": 24,
-        "metadata_spacing": 20,
-        "section_spacing": 18,
-        "task_spacing": 6,
-        "line_spacing": 14,
-        "text_color": "#000000",
-        "background_color": "#FFFFFF",
-    }
+def _draw_section_header(
+    c, x: float, y: float, text: str, font_name: str, size: float,
+    width_to_underline: float, text_color: str,
+) -> None:
+    """Nagłówek sekcji: UPPERCASE + bold + cienkie podkreślenie pod tekstem."""
+    upper = text.upper()
+    _draw_bold(c, x, y, upper, font_name, size)
+    try:
+        c.setStrokeColor(HexColor(text_color))
+        c.setLineWidth(1.0)
+        c.line(x, y - 4, x + width_to_underline, y - 4)
+    except Exception:
+        pass
 
 
-def _profile_layout(profile: str) -> dict:
-    """Layout dla profili wymagających większych fontów i odstępów (dyskalkulia, ADHD, trudności)."""
-    return {
-        "title_font_size": 20,
-        "metadata_font_size": 12,
-        "section_font_size": 14,
-        "task_font_size": 14,
-        "margin": 60,
-        "title_spacing": 32,
-        "metadata_spacing": 26,
-        "section_spacing": 24,
-        "task_spacing": 14,
-        "line_spacing": 20,
-        "background_color": "#fafafa",  # Bardzo jasne szare tło dla low-stimuli (Day 9)
-    }
-
-
-# Rozmiar ilustracji na stronie (pt; ~140 pt ≈ 5 cm)
-_IMAGE_WIDTH_PT = 140
-_IMAGE_HEIGHT_PT = 80
-
-# Day 11: ilustracja przy zadaniu – pełna szerokość treści (bez ucinania)
-# Wysokość proporcjonalna do generowanego obrazka 480×100 px
-_TASK_IMAGE_ASPECT = 100 / 480  # height/width
+def _draw_workspace_lines(
+    c, x_start: float, x_end: float, y_top: float,
+    n_lines: int, gap: float, color: str,
+) -> float:
+    """
+    Rysuje `n_lines` kropkowanych linijek do obliczeń (jasnoszare).
+    Zwraca nowe y (po ostatniej linijce, gotowe do kontynuacji rysowania).
+    """
+    if n_lines <= 0:
+        return y_top
+    try:
+        c.setStrokeColor(HexColor(color))
+        c.setLineWidth(0.5)
+        c.setDash([2, 3])
+        y = y_top
+        for _ in range(n_lines):
+            c.line(x_start, y, x_end, y)
+            y -= gap
+        return y
+    finally:
+        try:
+            c.setDash()  # reset dash
+        except Exception:
+            pass
 
 
 def _draw_page_background(canvas_obj, width: float, height: float, bg_color: str) -> None:
-    """Rysuje tło strony jeśli nie jest białe (Day 9)."""
+    """Rysuje tło strony jeśli nie białe."""
     if bg_color.upper() not in ("#FFFFFF", "WHITE", "#FFF"):
         try:
             canvas_obj.setFillColor(HexColor(bg_color))
@@ -109,177 +117,289 @@ def _draw_page_background(canvas_obj, width: float, height: float, bg_color: str
             pass
 
 
-def _draw_footer(canvas_obj, width: float, margin: float, page_num: int, font_name: str, text_color: str) -> None:
-    """Rysuje stopkę z numerem strony na dole (Day 9)."""
+def _draw_footer(canvas_obj, width: float, margin: float, page_num: int,
+                 font_name: str, text_color: str) -> None:
+    """Stopka z numerem strony."""
     try:
         canvas_obj.setFillColor(HexColor(text_color))
-        canvas_obj.setFont(font_name, 8)
-        footer_text = f"Friendly Math — strona {page_num}"
-        canvas_obj.drawRightString(width - margin, 20, footer_text)
+        canvas_obj.setFont(font_name, 9)
+        canvas_obj.drawRightString(width - margin, 24, f"Friendly Math — strona {page_num}")
     except Exception:
         pass
+
+
+# --------------------------------------------------------------------
+# Główna funkcja – buduje PDF i zwraca bytes
+# --------------------------------------------------------------------
 
 
 def build_worksheet_pdf_bytes(
     meta: WorksheetMeta,
     tasks: Iterable[str],
-    layout: Optional[dict] = None,
+    layout: Optional[dict | ResolvedWorksheetLayout] = None,
     image_bytes: Optional[bytes] = None,
     task_images: Optional[list] = None,
     answers: Optional[list[str]] = None,
-) -> bytes:
+    answer_key: Optional[AnswerKeyResult] = None,
+    include_workspace: bool = True,
+) -> PdfBuildResult:
     """
-    PDF v1: czytelna karta pracy (Day 9). Day 11: ilustracja per zadanie. v1.0: opcjonalna strona Odpowiedzi.
-    - task_images: lista PNG (bytes) – jedna na zadanie.
-    - image_bytes: jedna ilustracja pod metadanymi (gdy task_images nie jest podane).
-    - answers: lista odpowiedzi (ta sama długość co tasks); jeśli podana, dodawana jest strona "Odpowiedzi".
-    Zwraca bytes (łatwe do zapisu i do Streamlit download).
+    Czytelna karta pracy A4 z większą czcionką, emulowanym pogrubieniem,
+    kropkowanym miejscem na obliczenia i opcjonalną stroną „Odpowiedzi".
+
+    Parametry:
+    - layout: `ResolvedWorksheetLayout` lub pełny dict z `resolve_worksheet_layout()`.
+    - image_bytes: jedna ilustracja u góry (gdy `task_images` nie podano).
+    - task_images: lista PNG (bytes) – po jednej na zadanie (pusty bytes = pominięcie).
+    - answer_key: strukturalny klucz (P0.3) — preferowany.
+    - answers: lista tekstów odpowiedzi (legacy); jeśli podana bez `answer_key`,
+      dodajemy stronę „ODPOWIEDZI".
+    - include_workspace: czy rysować kropkowane linijki na obliczenia (default True).
     """
-    L = _default_layout()
-    if layout:
-        for k, v in layout.items():
-            if k in L:
-                L[k] = v
-    # Wymuszenie większych fontów i odstępów dla dyskalkulia/ADHD/trudności (profil ma pierwszeństwo)
-    if meta.student_profile in ["dyskalkulia", "ADHD", "trudności w nauce"]:
-        L.update(_profile_layout(meta.student_profile))
+    if isinstance(layout, ResolvedWorksheetLayout):
+        L = layout.to_pdf_dict()
+    elif isinstance(layout, dict):
+        L = dict(layout)
+    else:
+        L = dict(PDF_PRINT_DEFAULTS)
+
+    if not include_workspace:
+        L["workspace_lines"] = 0
+
+    warnings: list[PdfWarning] = []
+    font_reg = register_polish_font()
+    if font_reg.warning:
+        warnings.append(PdfWarning(code="pdf_font_missing", message=font_reg.warning))
 
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
-    base_font, bold_font = _register_font()
+    base_font = font_reg.regular_name  # bold emulowany przez `_draw_bold`
     bg_color = L.get("background_color", "#FFFFFF")
+    text_color = L["text_color"]
+    muted_color = L["muted_color"]
 
-    # Tło strony (Day 9) – pierwsza strona
     _draw_page_background(c, width, height, bg_color)
-
     try:
-        c.setFillColor(HexColor(L["text_color"]))
+        c.setFillColor(HexColor(text_color))
     except Exception:
         pass
-
     c.setTitle(meta.title)
 
     margin = L["margin"]
     y = height - margin
     page_num = 1
 
-    # Nagłówek
-    c.setFont(bold_font, L["title_font_size"])
-    c.drawString(margin, y, meta.title)
+    # --- Nagłówek ---
+    _draw_bold(c, margin, y, meta.title, base_font, L["title_font_size"])
     y -= L["title_spacing"]
 
-    # Metadane
-    c.setFont(base_font, L["metadata_font_size"])
-    c.drawString(
-        margin,
-        y,
-        f"Klasa: {meta.grade}   Zakres: {meta.topic_range}   Profil: {meta.student_profile}",
-    )
-    y -= L["metadata_spacing"]
-
-    # Ilustracja (Day 8/11): jedna u góry tylko gdy NIE ma ilustracji per zadanie
-    tasks_list = list(tasks)
-    if (not task_images or len(task_images) != len(tasks_list)) and image_bytes:
-        if image_bytes:
-            try:
-                img_reader = ImageReader(BytesIO(image_bytes))
-                c.drawImage(img_reader, margin, y - _IMAGE_HEIGHT_PT, width=_IMAGE_WIDTH_PT, height=_IMAGE_HEIGHT_PT)
-                y -= _IMAGE_HEIGHT_PT + 12
-            except Exception:
-                pass
-
-    # Sekcja "Zadania:"
-    c.setFont(base_font, L["section_font_size"])
-    c.drawString(margin, y, "Zadania:")
-    y -= 18  # Odstęp przed separatorem (padding)
-
-    # Separator (Day 9) – cienka linia pod "Zadania:" z większym paddingiem
+    # --- Metadane (mniejsza czcionka, kolor stonowany) ---
     try:
-        c.setStrokeColor(HexColor(L["text_color"]))
-        c.setLineWidth(0.5)
-        c.line(margin, y, width - margin, y)
+        c.setFillColor(HexColor(muted_color))
     except Exception:
         pass
-    y -= 18  # Odstęp po separatorze (padding) – oddzielenie od listy zadań
+    c.setFont(base_font, L["metadata_font_size"])
+    c.drawString(
+        margin, y,
+        f"Klasa: {meta.grade}   |   Zakres: {meta.topic_range}   |   Profil: {meta.student_profile}",
+    )
+    try:
+        c.setFillColor(HexColor(text_color))
+    except Exception:
+        pass
+    y -= L["metadata_spacing"]
 
-    # Lista zadań
-    c.setFont(base_font, L["task_font_size"])
+    # --- Opcjonalna ilustracja u góry ---
+    tasks_list = list(tasks)
+    has_task_images = bool(task_images) and len(task_images or []) == len(tasks_list)
+    if not has_task_images and image_bytes:
+        try:
+            img_reader = ImageReader(BytesIO(image_bytes))
+            header_w = L.get("header_image_width_pt", 160)
+            header_h = L.get("header_image_height_pt", 90)
+            c.drawImage(img_reader, margin, y - header_h, width=header_w, height=header_h)
+            y -= header_h + 14
+        except Exception:
+            pass
+
+    # --- Sekcja „ZADANIA" ---
+    section_w = width - 2 * margin
+    _draw_section_header(c, margin, y, "Zadania",
+                         base_font, L["section_font_size"],
+                         section_w, text_color)
+    y -= L["section_spacing"]
+
+    # --- Lista zadań ---
+    task_font = L["task_font_size"]
     line_spacing = L["line_spacing"]
     task_spacing = L["task_spacing"]
+    workspace_lines = L["workspace_lines"]
+    workspace_gap = L["workspace_line_gap"]
 
-    # Łamanie tekstu (Day 9) – dostosowanie do szerokości strony i rozmiaru fontu
     available_width = width - 2 * margin
-    font_size = L["task_font_size"]
-    chars_per_pt = 6.5 if font_size <= 12 else 8.0  # Przybliżenie
-    max_chars = int(available_width / chars_per_pt) - 5  # -5 dla bezpieczeństwa
-    max_chars = max(60, min(max_chars, 85))  # Ograniczenie: 60-85 znaków
+    chars_per_pt = 6.0 if task_font <= 12 else 5.5  # większa czcionka = mniej znaków/linia
+    max_chars = max(45, min(int(available_width / (chars_per_pt * 0.18)), 75))
 
-    # Day 11: ilustracja przy zadaniu – pełna szerokość treści, wysokość proporcjonalna (wszystko widoczne)
     task_img_width_pt = available_width
-    task_img_height_pt = max(60, int(task_img_width_pt * _TASK_IMAGE_ASPECT))
+    task_aspect = L.get("task_image_aspect", 100 / 480)
+    task_img_height_pt = max(60, int(task_img_width_pt * task_aspect))
+
+    # Minimum miejsca potrzebnego na 1 zadanie (do decyzji o nowej stronie)
+    min_block_h = line_spacing + workspace_lines * workspace_gap + task_spacing
+
+    def _new_page_if_needed(y_now: float) -> tuple[float, int]:
+        nonlocal page_num
+        if y_now < margin + 40:  # 40 na stopkę
+            _draw_footer(c, width, margin, page_num, base_font, text_color)
+            c.showPage()
+            page_num += 1
+            _draw_page_background(c, width, height, bg_color)
+            try:
+                c.setFillColor(HexColor(text_color))
+            except Exception:
+                pass
+            return height - margin, page_num
+        return y_now, page_num
 
     for i, task in enumerate(tasks_list, start=1):
-        # Day 11: ilustracja przy zadaniu (pełna szerokość, bez ucinania)
-        if task_images and i <= len(task_images) and task_images[i - 1]:
+        # 1) Ilustracja per zadanie (jeśli mamy)
+        if has_task_images and task_images[i - 1]:
             try:
                 img_reader = ImageReader(BytesIO(task_images[i - 1]))
                 c.drawImage(
                     img_reader,
-                    margin,
-                    y - task_img_height_pt,
-                    width=task_img_width_pt,
-                    height=task_img_height_pt,
+                    margin, y - task_img_height_pt,
+                    width=task_img_width_pt, height=task_img_height_pt,
                 )
-                y -= task_img_height_pt + 10
+                y -= task_img_height_pt + 8
             except Exception:
                 pass
-        lines = _wrap_text(f"{i}. {task}", max_chars=max_chars)
-        for line in lines:
-            if y < margin + 30:  # +30 dla stopki
-                _draw_footer(c, width, margin, page_num, base_font, L["text_color"])
-                c.showPage()
-                page_num += 1
-                _draw_page_background(c, width, height, bg_color)  # Tło na kolejnych stronach
-                try:
-                    c.setFillColor(HexColor(L["text_color"]))
-                except Exception:
-                    pass
-                y = height - margin
-                c.setFont(base_font, L["task_font_size"])
-            if re.search(r"\d+/\d+", line):
-                _draw_task_line_with_fractions(c, margin, y, line, base_font, font_size)
-            else:
-                c.drawString(margin, y, line)
-            y -= line_spacing
-        y -= task_spacing
 
-    # Stopka na ostatniej stronie z zadaniami
-    _draw_footer(c, width, margin, page_num, base_font, L["text_color"])
+        # 2) Linia zadania: pogrubiony numer „1." + zwykła treść.
+        lines = _wrap_text(task, max_chars=max_chars)
+        for line_idx, line in enumerate(lines):
+            y, page_num = _new_page_if_needed(y)
+            if line_idx == 0:
+                prefix = f"{i}."
+                _draw_bold(c, margin, y, prefix, base_font, task_font)
+                prefix_w = _string_width(prefix, base_font, task_font) + 6
+                _draw_task_content(c, margin + prefix_w, y, line, base_font, task_font)
+            else:
+                # Wcięcie kontynuacji – wyrównane do treści, nie do numeru.
+                indent = _string_width("99.", base_font, task_font) + 6
+                _draw_task_content(c, margin + indent, y, line, base_font, task_font)
+            y -= line_spacing
+
+        # 3) Miejsce na obliczenia (kropkowane linijki)
+        if workspace_lines > 0:
+            y -= 4  # mały oddech między tekstem zadania a linijkami
+            y = _draw_workspace_lines(
+                c,
+                x_start=margin + 12, x_end=width - margin,
+                y_top=y, n_lines=workspace_lines, gap=workspace_gap,
+                color=muted_color,
+            )
+
+        y -= task_spacing
+        # Sprawdź czy zmieści się kolejne zadanie – jeśli nie, łam stronę.
+        if i < len(tasks_list) and y - min_block_h < margin + 40:
+            y, page_num = _new_page_if_needed(margin + 30)
+
+    _draw_footer(c, width, margin, page_num, base_font, text_color)
     c.showPage()
 
-    # v1.0: opcjonalna strona "Odpowiedzi"
-    if answers and len(answers) == len(tasks_list):
+    # --- Strona „ODPOWIEDZI" ---
+    answer_summary: Optional[str] = None
+    answer_lines: Optional[list[str]] = None
+    if answer_key is not None and len(answer_key.items) == len(tasks_list):
+        answer_lines = answer_key.display_values()
+        answer_summary = answer_key.summary_pl()
+    elif answers and len(answers) == len(tasks_list):
+        answer_lines = list(answers)
+
+    if answer_lines is not None:
         page_num += 1
         _draw_page_background(c, width, height, bg_color)
         try:
-            c.setFillColor(HexColor(L["text_color"]))
+            c.setFillColor(HexColor(text_color))
         except Exception:
             pass
-        c.setFont(bold_font, L["section_font_size"])
+
         y_ans = height - margin
-        c.drawString(margin, y_ans, "Odpowiedzi:")
-        y_ans -= line_spacing * 2
-        c.setFont(base_font, L["task_font_size"])
-        for i, ans in enumerate(answers, start=1):
-            c.drawString(margin, y_ans, f"{i}. {ans}")
+        _draw_bold(c, margin, y_ans, "Karta odpowiedzi", base_font, L["title_font_size"])
+        y_ans -= L["title_spacing"]
+
+        try:
+            c.setFillColor(HexColor(muted_color))
+        except Exception:
+            pass
+        c.setFont(base_font, L["metadata_font_size"])
+        c.drawString(margin, y_ans,
+                     f"Klasa: {meta.grade}   |   Zakres: {meta.topic_range}")
+        try:
+            c.setFillColor(HexColor(text_color))
+        except Exception:
+            pass
+        y_ans -= L["metadata_spacing"]
+
+        _draw_section_header(c, margin, y_ans, "Odpowiedzi",
+                             base_font, L["section_font_size"],
+                             section_w, text_color)
+        y_ans -= L["section_spacing"]
+
+        if answer_summary:
+            try:
+                c.setFillColor(HexColor(muted_color))
+            except Exception:
+                pass
+            c.setFont(base_font, max(9, L["metadata_font_size"] - 1))
+            c.drawString(margin, y_ans, answer_summary)
+            try:
+                c.setFillColor(HexColor(text_color))
+            except Exception:
+                pass
+            y_ans -= L["metadata_spacing"]
+
+        for i, ans in enumerate(answer_lines, start=1):
+            if y_ans < margin + 40:
+                _draw_footer(c, width, margin, page_num, base_font, text_color)
+                c.showPage()
+                page_num += 1
+                _draw_page_background(c, width, height, bg_color)
+                try:
+                    c.setFillColor(HexColor(text_color))
+                except Exception:
+                    pass
+                y_ans = height - margin
+
+            prefix = f"{i}."
+            _draw_bold(c, margin, y_ans, prefix, base_font, L["answer_font_size"])
+            prefix_w = _string_width(prefix, base_font, L["answer_font_size"]) + 6
+            _draw_task_content(c, margin + prefix_w, y_ans, str(ans),
+                               base_font, L["answer_font_size"])
             y_ans -= line_spacing
-        _draw_footer(c, width, margin, page_num, base_font, L["text_color"])
+        _draw_footer(c, width, margin, page_num, base_font, text_color)
         c.showPage()
 
     c.save()
-    return buffer.getvalue()
+    return PdfBuildResult(pdf_bytes=buffer.getvalue(), warnings=tuple(warnings))
+
+
+# --------------------------------------------------------------------
+# Helpery zawartości linii (treść zadania – tekst + ułamki)
+# --------------------------------------------------------------------
+
+
+def _draw_task_content(c, x: float, y: float, line: str,
+                       font_name: str, font_size: float) -> None:
+    """Rysuje treść zadania: jeśli zawiera ułamek `a/b`, rysuje go z kreską."""
+    if re.search(r"\d+/\d+", line):
+        _draw_task_line_with_fractions(c, x, y, line, font_name, font_size)
+    else:
+        c.setFont(font_name, font_size)
+        c.drawString(x, y, line)
 
 
 def _wrap_text(text: str, max_chars: int) -> list[str]:
@@ -296,7 +416,6 @@ def _wrap_text(text: str, max_chars: int) -> list[str]:
                 lines.append(" ".join(current))
                 current = [w]
             else:
-                # pojedyncze bardzo długie słowo
                 lines.append(w[:max_chars])
                 current = [w[max_chars:]] if len(w) > max_chars else []
     if current:
@@ -305,10 +424,7 @@ def _wrap_text(text: str, max_chars: int) -> list[str]:
 
 
 def _split_line_into_segments(line: str) -> list[tuple]:
-    """
-    Dzieli linię na segmenty: ("text", str) lub ("frac", num, den).
-    Ułamki w formacie 1/2, 3/4 są rysowane szkolnie (licznik, kreska, mianownik).
-    """
+    """Dzieli linię na segmenty: `("text", str)` lub `("frac", num, den)`."""
     parts = re.split(r"(\d+/\d+)", line)
     segments: list[tuple] = []
     for p in parts:
@@ -320,24 +436,18 @@ def _split_line_into_segments(line: str) -> list[tuple]:
     return segments
 
 
-def _draw_fraction(
-    c, x: float, y: float, num: int, den: int, font_name: str, font_size: float
-) -> float:
-    """
-    Rysuje ułamek w stylu szkolnym: licznik nad kreską, mianownik pod.
-    y = baseline linii tekstu. Kreska dokładnie w połowie między licznikiem a mianownikiem, mały odstęp od licznika.
-    Zwraca szerokość ułamka w pt.
-    """
+def _draw_fraction(c, x: float, y: float, num: int, den: int,
+                   font_name: str, font_size: float) -> float:
+    """Ułamek szkolny: licznik nad kreską, mianownik pod. Zwraca szerokość."""
     frac_size = max(6, font_size * 0.85)
     num_str, den_str = str(num), str(den)
     w_num = pdfmetrics.stringWidth(num_str, font_name, frac_size)
     w_den = pdfmetrics.stringWidth(den_str, font_name, frac_size)
     frac_width = max(w_num, w_den) + 6
-    gap = 1.0  # mały odstęp między kreską a liczbami
-    # Kreska na wysokości y (środek ułamka). Licznik tuż nad kreską, mianownik tuż pod.
+    gap = 1.0
     bar_y = y
-    num_baseline = y + gap + frac_size * 0.25   # dół cyfry ~0.2*size nad baseline; licznik blisko kreski
-    den_baseline = y - gap - frac_size * 0.8    # mianownik pod kreską
+    num_baseline = y + gap + frac_size * 0.25
+    den_baseline = y - gap - frac_size * 0.8
     c.setFont(font_name, frac_size)
     c.drawString(x + (frac_width - w_num) / 2, num_baseline, num_str)
     c.drawString(x + (frac_width - w_den) / 2, den_baseline, den_str)
@@ -346,12 +456,9 @@ def _draw_fraction(
     return frac_width
 
 
-def _draw_task_line_with_fractions(
-    c, x: float, y: float, line: str, font_name: str, font_size: float
-) -> None:
-    """
-    Rysuje linię zadania; jeśli zawiera ułamki (np. 1/2), rysuje je z kreską ułamkową.
-    """
+def _draw_task_line_with_fractions(c, x: float, y: float, line: str,
+                                   font_name: str, font_size: float) -> None:
+    """Linia zadania z ułamkami a/b – każda taka liczba rysowana z kreską."""
     segments = _split_line_into_segments(line)
     if len(segments) == 1 and segments[0][0] == "text":
         c.setFont(font_name, font_size)

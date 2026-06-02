@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 1 – dodawanie (ADHD)",
+    "grade": 1,
+    "topic": "dodawanie",
+    "profile": "ADHD",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Liczby do 10, krótkie polecenie, jedna operacja na zadanie. Mało zadań na stronę – nie przytłaczać."
+  },
+  "tasks": [
+    "Policz: 2 + 3 = ____",
+    "Policz: 4 + 1 = ____",
+    "Policz: 5 + 2 = ____",
+    "Policz: 6 + 3 = ____",
+    "Policz: 1 + 8 = ____",
+    "Policz: 4 + 5 = ____"
+  ],
+  "answers": ["5", "5", "7", "9", "9", "9"],
+  "quality_criteria": [
+    "Wszystkie liczby ≤ 10.",
+    "Wynik ≤ 10 (klasa 1, bez przekroczenia dziesiątki).",
+    "Polecenia identycznej długości („Policz: a + b = ____\") – minimum dekodowania.",
+    "Maks 6–8 zadań na karcie, dużo białego miejsca (layout w PDF).",
+    "Brak zadań tekstowych / wieloetapowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 10,
+    "max_result": 10,
+    "allowed_operations": ["+"],
+    "max_operations_per_task": 1,
+    "max_task_length": 45,
+    "forbidden_phrases": ["Ania", "Marek", "kupił", "miał", "zostało"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}
