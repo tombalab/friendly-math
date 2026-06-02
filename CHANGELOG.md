@@ -8,16 +8,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
-- 
+- `WorksheetRequest` / `WorksheetResult` — kontrakty pipeline'u (P1.3)
+- `WorksheetService.generate()` — orchestracja poza Streamlit (P1.4)
+- Panel „Jakość generacji” w UI — temat, fallback, odpowiedzi, ilustracje, PDF (P1.6)
+- `tests/test_worksheet_service.py`
 
 ### Changed
--
+- `app/ui/app.py` — cienka warstwa nad serwisem; pobieranie PDF wyłączone przy blokadzie
+- `.gitignore` — `data/out/`, `data/preview/`
 
 ### Planned
-- 
-
+- P1.5 — jedna autoratywna warstwa layoutu PDF
 
 ---
+
+## [1.1.0] – 2026-06-01 – Streamlit v2 jakość P0
+
+### Added
+- Katalog tematów (`topic_id`, blueprint, możliwości odpowiedzi i ilustracji)
+- Katalog profili PPP w UI (w tym dysleksja)
+- Uczciwe fallbacki zadań zachowujące temat + blokada przy nieznanym temacie
+- Przejrzysty klucz odpowiedzi ze statusami i podsumowaniem
+- Font DejaVu + ostrzeżenia PDF/Streamlit
+- Karty referencyjne i testy offline (`tests/test_reference_worksheets.py`)
+- Dokumentacja architektury i backlogu (`docs/`)
+
+### Changed
+- Generator PDF zwraca `PdfBuildResult` ze strukturalnymi ostrzeżeniami
+- Streamlit pokazuje degradację generacji przed PDF
+
+---
+
 ## [1.0.0] – 2025-01-23 – MVP v1.0.0 (release)
 
 ### Added
