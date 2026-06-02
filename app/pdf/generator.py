@@ -14,6 +14,7 @@ from reportlab.pdfgen import canvas  # pyright: ignore[reportMissingModuleSource
 
 from app.generators.answers import AnswerKeyResult
 from app.pdf.fonts import register_polish_font
+from app.domain.worksheet_layout import PDF_PRINT_DEFAULTS, ResolvedWorksheetLayout
 
 
 @dataclass(frozen=True)
@@ -38,63 +39,7 @@ class WorksheetMeta:
 
 
 # Bold emulowany w `_draw_bold` (podwójne rysowanie) — wystarczy DejaVu regular.
-
-# --------------------------------------------------------------------
-# Layout – wartości domyślne i nakładki per profil
-# --------------------------------------------------------------------
-#
-# Fonty świadomie większe niż w v1.0 – karta ma być czytelna z odległości
-# i nadawać się do druku dla młodszego ucznia.
-
-
-def _default_layout() -> dict:
-    return {
-        "title_font_size": 22,        # poprzednio 16
-        "metadata_font_size": 11,     # poprzednio 10
-        "section_font_size": 16,      # poprzednio 12
-        "task_font_size": 14,         # poprzednio 11
-        "answer_font_size": 14,
-        "margin": 50,
-        "title_spacing": 28,
-        "metadata_spacing": 22,
-        "section_spacing": 20,
-        "task_spacing": 10,
-        "line_spacing": 18,
-        "workspace_lines": 3,         # liczba kropkowanych linijek pod zadaniem
-        "workspace_line_gap": 18,     # odstęp między linijkami
-        "text_color": "#000000",
-        "muted_color": "#9e9e9e",     # kolor metadanych i kropkowanych linijek
-        "background_color": "#FFFFFF",
-    }
-
-
-def _profile_layout(profile: str) -> dict:
-    """Nakładki dla profili low-stimuli – jeszcze większe fonty i odstępy."""
-    return {
-        "title_font_size": 24,
-        "metadata_font_size": 12,
-        "section_font_size": 18,
-        "task_font_size": 16,
-        "answer_font_size": 16,
-        "margin": 60,
-        "title_spacing": 32,
-        "metadata_spacing": 26,
-        "section_spacing": 24,
-        "task_spacing": 14,
-        "line_spacing": 22,
-        "workspace_lines": 4,
-        "workspace_line_gap": 22,
-        "background_color": "#fafafa",
-    }
-
-
-_LOW_STIMULI = {"dyskalkulia", "ADHD", "trudności w nauce"}
-
-
-# Rozmiar pojedynczej ilustracji u góry karty (gdy NIE ma ilustracji per zadanie).
-_IMAGE_WIDTH_PT = 160
-_IMAGE_HEIGHT_PT = 90
-_TASK_IMAGE_ASPECT = 100 / 480  # height/width dla ilustracji per zadanie (480×100 px)
+# Finalny layout pochodzi z `resolve_worksheet_layout()` (P1.5) — PDF nie decyduje o profilu.
 
 
 # --------------------------------------------------------------------
@@ -191,7 +136,7 @@ def _draw_footer(canvas_obj, width: float, margin: float, page_num: int,
 def build_worksheet_pdf_bytes(
     meta: WorksheetMeta,
     tasks: Iterable[str],
-    layout: Optional[dict] = None,
+    layout: Optional[dict | ResolvedWorksheetLayout] = None,
     image_bytes: Optional[bytes] = None,
     task_images: Optional[list] = None,
     answers: Optional[list[str]] = None,
@@ -203,7 +148,7 @@ def build_worksheet_pdf_bytes(
     kropkowanym miejscem na obliczenia i opcjonalną stroną „Odpowiedzi".
 
     Parametry:
-    - layout: nadpisania domyślnych wartości (np. z `generate_layout`).
+    - layout: `ResolvedWorksheetLayout` lub pełny dict z `resolve_worksheet_layout()`.
     - image_bytes: jedna ilustracja u góry (gdy `task_images` nie podano).
     - task_images: lista PNG (bytes) – po jednej na zadanie (pusty bytes = pominięcie).
     - answer_key: strukturalny klucz (P0.3) — preferowany.
@@ -211,14 +156,12 @@ def build_worksheet_pdf_bytes(
       dodajemy stronę „ODPOWIEDZI".
     - include_workspace: czy rysować kropkowane linijki na obliczenia (default True).
     """
-    L = _default_layout()
-    if layout:
-        for k, v in layout.items():
-            if k in L:
-                L[k] = v
-    profile_key = meta.student_profile_id or meta.student_profile
-    if profile_key in _LOW_STIMULI:
-        L.update(_profile_layout(profile_key))
+    if isinstance(layout, ResolvedWorksheetLayout):
+        L = layout.to_pdf_dict()
+    elif isinstance(layout, dict):
+        L = dict(layout)
+    else:
+        L = dict(PDF_PRINT_DEFAULTS)
 
     if not include_workspace:
         L["workspace_lines"] = 0
@@ -274,9 +217,10 @@ def build_worksheet_pdf_bytes(
     if not has_task_images and image_bytes:
         try:
             img_reader = ImageReader(BytesIO(image_bytes))
-            c.drawImage(img_reader, margin, y - _IMAGE_HEIGHT_PT,
-                        width=_IMAGE_WIDTH_PT, height=_IMAGE_HEIGHT_PT)
-            y -= _IMAGE_HEIGHT_PT + 14
+            header_w = L.get("header_image_width_pt", 160)
+            header_h = L.get("header_image_height_pt", 90)
+            c.drawImage(img_reader, margin, y - header_h, width=header_w, height=header_h)
+            y -= header_h + 14
         except Exception:
             pass
 
@@ -299,7 +243,8 @@ def build_worksheet_pdf_bytes(
     max_chars = max(45, min(int(available_width / (chars_per_pt * 0.18)), 75))
 
     task_img_width_pt = available_width
-    task_img_height_pt = max(60, int(task_img_width_pt * _TASK_IMAGE_ASPECT))
+    task_aspect = L.get("task_image_aspect", 100 / 480)
+    task_img_height_pt = max(60, int(task_img_width_pt * task_aspect))
 
     # Minimum miejsca potrzebnego na 1 zadanie (do decyzji o nowej stronie)
     min_block_h = line_spacing + workspace_lines * workspace_gap + task_spacing

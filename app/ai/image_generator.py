@@ -263,12 +263,9 @@ def _build_prompt(task: str, topic: str, profile: str) -> str:
     )
 
     # Profilowe wskazówki – low-stimuli = jeszcze prościej, mniej elementów.
-    profile_low_stimuli = profile in {"dyskalkulia", "ADHD", "trudności w nauce"}
-    profile_hint = (
-        "Use only 2-3 colors total. Use very simple shapes. Maximum 8 objects in the image."
-        if profile_low_stimuli
-        else "Use 3-4 colors total. Keep composition uncluttered."
-    )
+    from app.domain.visual_policy import low_stimuli_image_prompt_hint
+
+    profile_hint = low_stimuli_image_prompt_hint(profile)
 
     # Treść – mapowanie tematu i liczb z zadania na opis sceny.
     scene = _scene_description_from_task(task, topic_lower)

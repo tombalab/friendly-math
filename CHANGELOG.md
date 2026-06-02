@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- `app/domain/visual_policy.py` — centralna polityka ilustracji i low-stimuli (P1.1)
+- `app/domain/worksheet_layout.py` — `ResolvedWorksheetLayout` + `resolve_worksheet_layout()` (P1.5)
+- `tests/test_layout_policy.py`
 - `WorksheetRequest` / `WorksheetResult` — kontrakty pipeline'u (P1.3)
 - `WorksheetService.generate()` — orchestracja poza Streamlit (P1.4)
 - Panel „Jakość generacji” w UI — temat, fallback, odpowiedzi, ilustracje, PDF (P1.6)
@@ -15,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - `app/ui/app.py` — cienka warstwa nad serwisem; pobieranie PDF wyłączone przy blokadzie
+- `app/pdf/generator.py` — nie nadpisuje layoutu po `profile_id` (jedno źródło z resolvera)
+- `app/ai/image_generator.py` — hint low-stimuli z katalogu profili
 - `.gitignore` — `data/out/`, `data/preview/`
 
 ### Planned

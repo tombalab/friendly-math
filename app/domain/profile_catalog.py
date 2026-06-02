@@ -82,7 +82,9 @@ def resolve_profile(profile_input: str | None) -> ResolvedProfile:
 
 
 def uses_per_task_illustrations(profile_input: str | None) -> bool:
-    return resolve_profile(profile_input).illustration_mode == "per_task"
+    from app.domain.visual_policy import uses_per_task_illustrations_from_catalog
+
+    return uses_per_task_illustrations_from_catalog(profile_input)
 
 
 def registry_ui_consistency_check() -> list[str]:

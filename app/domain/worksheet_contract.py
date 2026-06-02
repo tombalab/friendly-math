@@ -3,9 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from app.domain.profile_catalog import ResolvedProfile
+
+if TYPE_CHECKING:
+    from app.domain.worksheet_layout import ResolvedWorksheetLayout
 from app.domain.topic_catalog import ResolvedTopic
 from app.generators.answers import AnswerKeyResult
 
@@ -54,7 +57,7 @@ class WorksheetResult:
     tasks: list[str] = field(default_factory=list)
     resolved_topic: ResolvedTopic | None = None
     resolved_profile: ResolvedProfile | None = None
-    layout: dict[str, Any] | None = None
+    resolved_layout: "ResolvedWorksheetLayout | None" = None
     answer_key: AnswerKeyResult | None = None
     header_image: bytes | None = None
     task_images: list[bytes] | None = None
@@ -116,12 +119,21 @@ class WorksheetResult:
         if not self.font_available:
             pdf_line += " (brak czcionki polskiej)"
 
+        layout_line = "—"
+        if self.resolved_layout is not None:
+            rl = self.resolved_layout
+            layout_line = (
+                f"task {rl.task_font_size} pt, margines {rl.margin} pt "
+                f"({'low-stimuli' if rl.is_low_stimuli else 'standard'})"
+            )
+
         return {
             "Temat": topic_line,
             "Profil": profile_line,
             "Źródło zadań": fallback_line,
             "Klucz odpowiedzi": answers_line,
             "Ilustracje": images_line,
+            "Układ PDF": layout_line,
             "PDF": pdf_line,
         }
 

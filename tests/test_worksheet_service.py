@@ -67,7 +67,15 @@ def test_quality_summary_has_expected_keys():
     )
     result = generate_worksheet(req)
     keys = set(result.quality_summary_pl().keys())
-    assert keys == {"Temat", "Profil", "Źródło zadań", "Klucz odpowiedzi", "Ilustracje", "PDF"}
+    assert keys == {
+        "Temat",
+        "Profil",
+        "Źródło zadań",
+        "Klucz odpowiedzi",
+        "Ilustracje",
+        "Układ PDF",
+        "PDF",
+    }
 
 
 @patch("app.worksheet.service.generate_tasks")

@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from app.ai.layout_generator import generate_layout
+from app.domain.worksheet_layout import ResolvedWorksheetLayout, resolve_worksheet_layout
 from app.ai.text_generator import generate_tasks, warning_messages
 from app.domain.profile_catalog import resolve_profile
 from app.domain.topic_catalog import resolve_topic
@@ -161,20 +161,28 @@ def generate_worksheet(
 
     tasks = list(task_payload.get("tasks", []))
 
-    layout: dict[str, Any] | None = None
+    resolved_layout: ResolvedWorksheetLayout
     try:
-        layout = generate_layout(
-            profile=resolved_profile.profile_id,
-            grade=str(request.grade),
-            number_of_tasks=request.number_of_tasks,
+        resolved_layout = resolve_worksheet_layout(
+            resolved_profile,
+            request.grade,
+            request.number_of_tasks,
+            include_workspace=request.include_workspace,
         )
     except Exception as exc:
         warnings.append(
             WorksheetWarning(
                 "layout_fallback",
-                f"Layout AI niedostępny ({exc}) — użyto domyślnego układu PDF.",
+                f"Nie udało się rozwiązać layoutu ({exc}) — użyto domyślnego układu.",
                 "warning",
             )
+        )
+        from app.domain.worksheet_layout import PDF_PRINT_DEFAULTS
+
+        resolved_layout = ResolvedWorksheetLayout.from_mapping(
+            PDF_PRINT_DEFAULTS,
+            is_low_stimuli=resolved_profile.is_low_stimuli,
+            source="fallback",
         )
 
     header_image, task_images, image_coverage = _resolve_images(
@@ -208,7 +216,7 @@ def generate_worksheet(
     pdf_result = build_worksheet_pdf_bytes(
         meta=meta,
         tasks=tasks,
-        layout=layout,
+        layout=resolved_layout,
         image_bytes=header_image,
         task_images=task_images,
         answer_key=answer_key,
@@ -234,7 +242,7 @@ def generate_worksheet(
         tasks=tasks,
         resolved_topic=resolved_topic,
         resolved_profile=resolved_profile,
-        layout=layout,
+        resolved_layout=resolved_layout,
         answer_key=answer_key,
         header_image=header_image,
         task_images=task_images,
