@@ -1,8 +1,7 @@
 #--------------------------------------------------
-# FRIENDLY MATH - Streamlit UI (cienka warstwa nad WorksheetService)
+# FRIENDLY MATH - Streamlit UI (Phase 3 polish)
 #--------------------------------------------------
 
-import os
 import sys
 from io import BytesIO
 from pathlib import Path
@@ -34,14 +33,16 @@ from app.domain.topic_catalog import (
 from app.domain.worksheet_contract import WorksheetRequest
 from app.history.store import default_history_dir
 from app.pdf.fonts import resolve_polish_font_path
-from app.ui.events_panel import record_download_event, render_events_panel
-from app.ui.history_panel import history_store_for_root, render_history_sidebar, render_history_view
-from app.ui.quality_panel import render_quality_panel
+from app.ui.generation_view import render_generation_result
+from app.ui.history_panel import history_store_for_root, render_history_page, render_history_sidebar
+from app.ui.review_panel import render_review_tab
 from app.worksheet.service import WorksheetService
 
 HISTORY_DIR = default_history_dir(ROOT_DIR)
 OUT_DIR = ROOT_DIR / "data" / "out"
 _history_store = history_store_for_root(ROOT_DIR)
+
+APP_VERSION = "1.2.0"
 
 
 def _pdf_bytes_to_images(pdf_bytes: bytes, dpi: int = 120) -> list[BytesIO]:
@@ -59,39 +60,31 @@ def _pdf_bytes_to_images(pdf_bytes: bytes, dpi: int = 120) -> list[BytesIO]:
     return out
 
 
-st.set_page_config(page_title="Friendly Math", layout="centered")
+st.set_page_config(page_title="Friendly Math", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown(
     """
     <style>
-    .stImage img {
-        border: 1px solid #d0d0d0;
-        border-radius: 4px;
-    }
+    .stImage img { border: 1px solid #d0d0d0; border-radius: 4px; }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
 st.sidebar.title("🧮 Friendly Math")
-st.sidebar.subheader("Generator kart pracy")
-st.sidebar.write(
-    "Wybierz parametry karty pracy i kliknij **Generuj kartę**. "
-    "Zadania zostaną wygenerowane przez AI, a PDF będzie gotowy do pobrania."
-)
+st.sidebar.caption(f"v{APP_VERSION} · Streamlit MVP")
 
 _font_path, _ = resolve_polish_font_path()
 if _font_path is None:
     st.sidebar.warning(
-        "Brak czcionki DejaVu Sans — PDF może nie wyświetlać polskich znaków. "
-        "Zainstaluj zależności projektu (patrz assets/fonts/README.md)."
+        "Brak czcionki DejaVu Sans — patrz assets/fonts/README.md."
     )
 
 grade = st.sidebar.selectbox(
     "Klasa",
     options=["1", "2", "3", "4", "5", "6", "7", "8"],
     index=1,
-    help="Klasa ucznia (1–8). Wpływa na poziom trudności zadań i dostępne tematy.",
+    key="fm_grade",
 )
 _grade_int = int(grade)
 _topic_options = topic_labels_for_grade(_grade_int)
@@ -105,16 +98,8 @@ with st.sidebar.form("worksheet_form"):
         "Zakres materiału",
         options=_topic_options,
         index=_topic_index,
-        help="Tematy zgodne z podstawą programową dla wybranej klasy.",
     )
-    number_of_tasks = st.number_input(
-        "Liczba zadań",
-        min_value=1,
-        max_value=30,
-        value=5,
-        step=1,
-        help="Ile zadań ma zawierać karta (1–30). Dla klas 1–3 max 15.",
-    )
+    number_of_tasks = st.number_input("Liczba zadań", min_value=1, max_value=30, value=5, step=1)
     _profile_ids = profile_ids_for_ui()
     _profile_labels = profile_selectbox_labels()
     _default_pid = default_profile_id()
@@ -123,33 +108,42 @@ with st.sidebar.form("worksheet_form"):
         options=_profile_ids,
         index=_profile_ids.index(_default_pid) if _default_pid in _profile_ids else 0,
         format_func=lambda pid: _profile_labels.get(pid, pid),
-        help="Preset dydaktyczny (PPP), nie diagnoza kliniczna.",
     )
-    _selected_profile = resolve_profile(student_profile)
-    st.caption(_selected_profile.profile.ui_summary)
-
+    st.caption(resolve_profile(student_profile).profile.ui_summary)
     worksheet_label = st.text_input(
         "Etykieta karty (opcjonalnie)",
-        value="",
-        placeholder="np. grupa A, ćwiczenie 3",
-        help="Organizacja pracy — bez imion i nazwisk uczniów.",
+        placeholder="np. grupa A",
     )
-
     include_illustration = st.checkbox("Ilustracja w karcie", value=False)
     include_workspace = st.checkbox("Miejsce na obliczenia", value=True)
     include_answers = st.checkbox("Dołącz stronę z odpowiedziami", value=False)
-    submitted = st.form_submit_button("🧠 Generuj kartę")
+    submitted = st.form_submit_button("🧠 Generuj kartę", use_container_width=True)
 
 render_history_sidebar(_history_store)
 
-st.title("🧮 Friendly Math")
+if "fm_page" not in st.session_state:
+    st.session_state["fm_page"] = "Generuj"
 
-_history_view_id = st.session_state.get("fm_history_view")
+# Nawigacja programowa (przyciski historii) — przed widgetem `fm_page`.
+_nav = st.session_state.pop("fm_nav_target", None)
+if _nav:
+    st.session_state["fm_page"] = _nav
 
 if submitted:
     st.session_state.pop("fm_history_view", None)
+    st.session_state["fm_page"] = "Generuj"
 
-    _label = worksheet_label.strip() or None
+st.title("🧮 Friendly Math")
+
+page = st.radio(
+    "Sekcja",
+    options=["Generuj", "Historia", "Recenzja"],
+    horizontal=True,
+    key="fm_page",
+    label_visibility="collapsed",
+)
+
+if submitted:
     request = WorksheetRequest(
         grade=_grade_int,
         topic_label=topic,
@@ -158,61 +152,52 @@ if submitted:
         include_illustration=include_illustration,
         include_workspace=include_workspace,
         include_answers=include_answers,
-        worksheet_label=_label,
+        worksheet_label=worksheet_label.strip() or None,
     )
-
     service = WorksheetService(output_dir=OUT_DIR, history_dir=HISTORY_DIR)
-    result = service.generate(request)
+    with st.spinner("Generowanie karty…"):
+        result = service.generate(request)
     st.session_state["fm_last_result"] = result
 
     if result.history_path:
-        st.success(f"Zapisano w historii: `{result.history_path.name}`")
+        st.toast(f"Zapisano w historii: {result.history_path.name}")
 
-    render_quality_panel(result)
-    render_events_panel(result)
-
-    if result.blocked:
-        st.stop()
-
-    st.subheader("📘 Wygenerowane zadania")
-    for i, task in enumerate(result.tasks, start=1):
-        st.write(f"{i}. {task}")
-
-    if result.answer_key and result.answer_key.tasks_needing_review():
-        st.warning(
-            "Zadania bez automatycznej odpowiedzi: "
-            + ", ".join(str(n) for n in result.answer_key.tasks_needing_review())
+if page == "Generuj":
+    result = st.session_state.get("fm_last_result")
+    if result is None and not submitted:
+        st.info(
+            "Ustaw parametry w panelu bocznym i kliknij **Generuj kartę**. "
+            "Po generacji zobaczysz jakość, zadania i podgląd PDF."
         )
+        with st.expander("Ograniczenia MVP (przeczytaj raz)", expanded=False):
+            st.markdown(
+                """
+- Wymaga `OPENAI_API_KEY` w `.env` lub Secrets (Streamlit Cloud).
+- Klasy 1–3: max 15 zadań.
+- Klucz odpowiedzi działa dla wybranych formatów zadań.
+- Historia i recenzje są **lokalne** na tym komputerze (bez kont użytkowników).
+                """
+            )
+    elif result is not None:
+        render_generation_result(result, pdf_to_images=_pdf_bytes_to_images)
 
-    st.divider()
-    st.subheader("📄 Karta pracy PDF — podgląd")
-
-    if result.pdf_bytes:
-        page_images = _pdf_bytes_to_images(result.pdf_bytes)
-        if page_images:
-            for i, img_io in enumerate(page_images, start=1):
-                st.image(img_io, caption=f"Strona {i}", width="stretch")
-        else:
-            st.caption("Podgląd niedostępny — pobierz PDF lokalnie.")
-
-        st.download_button(
-            label="⬇️ Pobierz PDF",
-            data=result.pdf_bytes,
-            file_name="worksheet.pdf",
-            mime="application/pdf",
-            disabled=not result.can_download_pdf,
-            on_click=record_download_event,
-            args=(result,),
-        )
-    else:
-        st.caption("PDF niedostępny.")
-
-elif _history_view_id:
-    render_history_view(
+elif page == "Historia":
+    render_history_page(
         _history_store,
-        _history_view_id,
+        st.session_state.get("fm_history_view"),
         pdf_to_images=_pdf_bytes_to_images,
     )
 
+elif page == "Recenzja":
+    render_review_tab(
+        _history_store,
+        st.session_state.get("fm_last_result"),
+        project_root=ROOT_DIR,
+        request_id=st.session_state.get("fm_history_view"),
+    )
+
 st.divider()
-st.caption("Friendly Math v1.1 — generator kart pracy dla szkoły podstawowej")
+st.caption(
+    f"Friendly Math v{APP_VERSION} — generator kart pracy · "
+    "historia: `data/history/` · bez danych osobowych uczniów"
+)

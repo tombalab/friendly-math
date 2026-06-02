@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 4 – ułamki (standardowy)",
+    "grade": 4,
+    "topic": "ułamki",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Ułamki zwykłe o tych samych mianownikach. Proste dodawanie i odejmowanie."
+  },
+  "tasks": [
+    "Policz: 1/4 + 2/4 = ____",
+    "Policz: 2/5 + 1/5 = ____",
+    "Policz: 5/8 − 1/8 = ____",
+    "Policz: 3/6 + 2/6 = ____",
+    "Policz: 7/10 − 3/10 = ____",
+    "Policz: 4/9 + 2/9 = ____"
+  ],
+  "answers": ["3/4", "3/5", "4/8", "5/6", "4/10", "6/9"],
+  "quality_criteria": [
+    "Tylko ułamki o tych samych mianownikach.",
+    "Jedno dodawanie albo jedno odejmowanie na zadanie.",
+    "Mianowniki nie przekraczają 10.",
+    "Format „Policz: a/b + c/b = ____” lub „Policz: a/b − c/b = ____”.",
+    "Brak zadań tekstowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 10,
+    "max_result": 10,
+    "allowed_operations": ["+", "−", "-"],
+    "max_operations_per_task": 1,
+    "max_task_length": 55,
+    "forbidden_phrases": ["Ania", "Marek", "kupił", "miał", "zostało"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "allow_fractions": true,
+    "max_denominator": 10,
+    "max_word_problem_sentences": 1
+  }
+}

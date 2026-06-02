@@ -92,7 +92,7 @@ def _is_png(data: bytes) -> bool:
 def test_all_reference_files_present():
     files = list_reference_files()
     assert files, "Brak plików JSON w data/reference_worksheets/"
-    assert len(files) >= 4
+    assert len(files) >= 22
 
 
 def test_all_reference_schema_integrity():

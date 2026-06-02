@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 6 – dzielenie (dyskalkulia)",
+    "grade": 6,
+    "topic": "dzielenie",
+    "profile": "dyskalkulia",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Dzielenie bez reszty z ograniczonym zakresem liczb i stałym formatem."
+  },
+  "tasks": [
+    "Policz: 240 : 12 = ____",
+    "Policz: 300 : 15 = ____",
+    "Policz: 360 : 18 = ____",
+    "Policz: 420 : 21 = ____",
+    "Policz: 480 : 24 = ____",
+    "Policz: 540 : 27 = ____"
+  ],
+  "answers": ["20", "20", "20", "20", "20", "20"],
+  "quality_criteria": [
+    "Dzielenie bez reszty, jeden krok.",
+    "Wynik powtarzalnie równy 20 — mniejsze obciążenie pamięci roboczej.",
+    "Dzielna do 600, dzielnik do 30.",
+    "Format „Policz: a : b = ____”.",
+    "Brak zadań tekstowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 600,
+    "max_result": 100,
+    "allowed_operations": [":", "/", "÷"],
+    "max_operations_per_task": 1,
+    "max_task_length": 50,
+    "forbidden_phrases": ["Ania", "Marek", "kupił", "miał", "zostało"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

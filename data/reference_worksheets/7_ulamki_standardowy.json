@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 7 – ułamki (standardowy)",
+    "grade": 7,
+    "topic": "ułamki",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Ułamki zwykłe o tych samych mianownikach — przykład do recenzji dla starszych klas."
+  },
+  "tasks": [
+    "Policz: 3/11 + 4/11 = ____",
+    "Policz: 9/12 − 5/12 = ____",
+    "Policz: 2/7 + 3/7 = ____",
+    "Policz: 10/15 − 4/15 = ____",
+    "Policz: 5/13 + 6/13 = ____",
+    "Policz: 8/9 − 2/9 = ____"
+  ],
+  "answers": ["7/11", "4/12", "5/7", "6/15", "11/13", "6/9"],
+  "quality_criteria": [
+    "Dodawanie i odejmowanie ułamków o tych samych mianownikach.",
+    "Jedno działanie na zadanie.",
+    "Mianowniki do 15.",
+    "Automatyczny klucz odpowiedzi nie skraca ułamków — zapis zgodny z parserem.",
+    "Brak zadań tekstowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 15,
+    "max_result": 15,
+    "allowed_operations": ["+", "−", "-"],
+    "max_operations_per_task": 1,
+    "max_task_length": 55,
+    "forbidden_phrases": ["Ania", "Marek", "kupił", "miał", "zostało"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "allow_fractions": true,
+    "max_denominator": 15,
+    "max_word_problem_sentences": 1
+  }
+}

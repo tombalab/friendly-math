@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 4 – dzielenie (dyskalkulia)",
+    "grade": 4,
+    "topic": "dzielenie",
+    "profile": "dyskalkulia",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Dzielenie bez reszty, liczby z tabliczki mnożenia i krótkie polecenia."
+  },
+  "tasks": [
+    "Policz: 48 : 6 = ____",
+    "Policz: 63 : 7 = ____",
+    "Policz: 72 : 8 = ____",
+    "Policz: 54 : 9 = ____",
+    "Policz: 36 : 4 = ____",
+    "Policz: 45 : 5 = ____"
+  ],
+  "answers": ["8", "9", "9", "6", "9", "9"],
+  "quality_criteria": [
+    "Dzielenie bez reszty w zakresie tabliczki mnożenia.",
+    "Jedno działanie na zadanie.",
+    "Format „Policz: a : b = ____” — krótki i powtarzalny.",
+    "Dzielnik w zakresie 4–9, bez dzielenia przez 1.",
+    "Brak zadań tekstowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 100,
+    "max_result": 20,
+    "allowed_operations": [":", "/", "÷"],
+    "max_operations_per_task": 1,
+    "max_task_length": 50,
+    "forbidden_phrases": ["Ania", "Marek", "kupił", "miał", "zostało"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

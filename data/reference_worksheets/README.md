@@ -51,11 +51,38 @@ Pole `structured_criteria` (P2.2) uzupełnia listę tekstową — te same progi 
 ## Po co to teraz
 
 Bez tych przykładów nie da się sensownie oceniać jakości generowanych kart
-— „lepiej" / „gorzej" jest subiektywne. Z 5–10 wzorcami możemy:
+— „lepiej" / „gorzej" jest subiektywne. Z katalogiem wzorców dla klas 1–8 możemy:
 
 - Robić proste porównanie A/B (wzorzec vs AI) ręcznie.
 - Później (faza 2) – włączyć je do automatycznego eval pipeline'u.
 - Wstrzykiwać konkretne zadania jako few-shot dla danego profilu (lepiej niż obecne stałe inline w `text_generator.py`).
+
+## Karty w repo (22)
+
+| Plik | Klasa | Temat | Profil |
+|------|-------|-------|--------|
+| `1_dodawanie_adhd.json` | 1 | dodawanie | ADHD |
+| `1_liczenie_po_standardowy.json` | 1 | liczenie po | standardowy |
+| `1_odejmowanie_do_20_dyskalkulia.json` | 1 | odejmowanie do 20 | dyskalkulia |
+| `2_dodawanie_dyskalkulia.json` | 2 | dodawanie | dyskalkulia |
+| `2_liczenie_po_trudnosci_w_nauce.json` | 2 | liczenie po | trudności w nauce |
+| `2_porownywanie_liczb_standardowy.json` | 2 | porównywanie liczb | standardowy |
+| `2_rowania_okienkiem_dyskalkulia.json` | 2 | równania z okienkiem | dyskalkulia |
+| `3_dodawanie_do_1000_standardowy.json` | 3 | dodawanie do 1000 | standardowy |
+| `3_odejmowanie_do_1000_dyskalkulia.json` | 3 | odejmowanie do 1000 | dyskalkulia |
+| `4_dzielenie_dyskalkulia.json` | 4 | dzielenie | dyskalkulia |
+| `4_tabliczka_mnozenia_adhd.json` | 4 | tabliczka mnożenia | ADHD |
+| `4_ulamki_standardowy.json` | 4 | ułamki | standardowy |
+| `5_dzielenie_standardowy.json` | 5 | dzielenie | standardowy |
+| `5_mnozenie_standardowy.json` | 5 | mnożenie | standardowy |
+| `5_rownania_standardowy.json` | 5 | równania | standardowy |
+| `6_dzielenie_dyskalkulia.json` | 6 | dzielenie | dyskalkulia |
+| `6_mnozenie_standardowy.json` | 6 | mnożenie | standardowy |
+| `6_ulamki_dysleksja.json` | 6 | ułamki | dysleksja |
+| `7_rownania_dyskalkulia.json` | 7 | równania | dyskalkulia |
+| `7_ulamki_standardowy.json` | 7 | ułamki | standardowy |
+| `8_dzielenie_dyskalkulia.json` | 8 | dzielenie | dyskalkulia |
+| `8_rownania_standardowy.json` | 8 | równania | standardowy |
 
 ## Jak dodać nową kartę
 

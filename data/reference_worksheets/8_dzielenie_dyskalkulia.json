@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 8 – dzielenie (dyskalkulia)",
+    "grade": 8,
+    "topic": "dzielenie",
+    "profile": "dyskalkulia",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Powtórka rachunkowa: dzielenie bez reszty, mała liczba zadań i stały format."
+  },
+  "tasks": [
+    "Policz: 720 : 12 = ____",
+    "Policz: 840 : 14 = ____",
+    "Policz: 960 : 16 = ____",
+    "Policz: 1080 : 18 = ____",
+    "Policz: 1200 : 20 = ____",
+    "Policz: 900 : 15 = ____"
+  ],
+  "answers": ["60", "60", "60", "60", "60", "60"],
+  "quality_criteria": [
+    "Dzielenie bez reszty, jeden krok.",
+    "Stały wynik 60 — ćwiczenie procedury przy mniejszym obciążeniu poznawczym.",
+    "Dzielna do 1200, dzielnik do 20.",
+    "Format „Policz: a : b = ____”.",
+    "Brak zadań tekstowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 1200,
+    "max_result": 100,
+    "allowed_operations": [":", "/", "÷"],
+    "max_operations_per_task": 1,
+    "max_task_length": 55,
+    "forbidden_phrases": ["Ania", "Marek", "kupił", "miał", "zostało"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

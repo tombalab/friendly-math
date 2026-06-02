@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 5 – równania (standardowy)",
+    "grade": 5,
+    "topic": "równania",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Równania jednokrokowe zapisane z okienkiem, żeby zachować automatyczny klucz odpowiedzi."
+  },
+  "tasks": [
+    "Rozwiąż: ☐ + 18 = 45",
+    "Rozwiąż: 6 × ☐ = 54",
+    "Rozwiąż: ☐ − 14 = 36",
+    "Rozwiąż: 72 : ☐ = 8",
+    "Rozwiąż: 25 + ☐ = 60",
+    "Rozwiąż: ☐ : 7 = 9"
+  ],
+  "answers": ["27", "9", "50", "9", "35", "63"],
+  "quality_criteria": [
+    "Jedna niewiadoma w okienku na zadanie.",
+    "Równania jednokrokowe, bez przekształceń wieloetapowych.",
+    "Liczby naturalne w zakresie do 100.",
+    "Mieszane działania: dodawanie, odejmowanie, mnożenie i dzielenie.",
+    "Brak narracji tekstowej."
+  ],
+  "structured_criteria": {
+    "max_operand": 100,
+    "max_result": 100,
+    "allowed_operations": ["+", "−", "-", "×", "*", ":", "/", "÷"],
+    "max_operations_per_task": 1,
+    "max_task_length": 45,
+    "forbidden_phrases": ["Ania", "Marek", "kupił", "miał", "zostało"],
+    "require_format_prefix": "Rozwiąż:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

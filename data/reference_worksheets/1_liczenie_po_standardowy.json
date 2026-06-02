@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 1 – liczenie po (standardowy)",
+    "grade": 1,
+    "topic": "liczenie po",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Ciągi po 2 w zakresie 0–20. Format Uzupełnij — wzorzec dla klasy 1."
+  },
+  "tasks": [
+    "Uzupełnij: 2, 4, 6, __, __",
+    "Uzupełnij: 1, 3, 5, __, __",
+    "Uzupełnij: 10, 12, 14, __, __",
+    "Uzupełnij: 4, 6, 8, __, __",
+    "Uzupełnij: 5, 7, 9, __, __",
+    "Uzupełnij: 8, 10, 12, __, __"
+  ],
+  "answers": ["8, 10", "7, 9", "16, 18", "10, 12", "11, 13", "14, 16"],
+  "quality_criteria": [
+    "Ciąg arytmetyczny (stały krok +2 lub +1) w zakresie klasy 1.",
+    "Format „Uzupełnij: a, b, c, __, __” — bez zadań tekstowych.",
+    "Dwie luki na końcu każdego zadania.",
+    "Liczby nie przekraczają 20.",
+    "Polecenia krótkie, ten sam schemat."
+  ],
+  "structured_criteria": {
+    "max_operand": 20,
+    "max_result": 20,
+    "max_operations_per_task": 0,
+    "max_task_length": 55,
+    "forbidden_phrases": ["Ania", "kupił", "miał", "zostało"],
+    "require_format_prefix": "Uzupełnij:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

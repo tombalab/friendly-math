@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Phase 3: zakładki **Generuj / Historia / Recenzja** w Streamlit
+- Filtry historii (klasa, temat), status jakości, zapis recenzji (`review.json`)
+- Dopasowanie do kart wzorcowych (`app/review/`)
+- 18 nowych kart wzorcowych (łącznie 22, klasy 1–8)
+- Dokumenty PP 2025/2026, `docs/teacher-review.md`, `docs/phase3-decision.md`, macierz w `docs/curriculum-matrix-plan.canvas.tsx`
+
+### Changed
+- Panel jakości: baner statusu OK/uwagi/błąd, osobna sekcja walidacji zadań
+- UI v1.2.0 w stopce, layout `wide`, checklista ograniczeń MVP
+
 ---
 
 ## [1.2.0] – 2026-06-02 – Streamlit v2 jakość P1–P2
