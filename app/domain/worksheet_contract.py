@@ -12,6 +12,9 @@ if TYPE_CHECKING:
 from app.domain.topic_catalog import ResolvedTopic
 from app.generators.answers import AnswerKeyResult
 
+if TYPE_CHECKING:
+    from app.observability.events import WorksheetEvent
+
 WarningSeverity = Literal["info", "warning", "error"]
 
 
@@ -34,6 +37,7 @@ class WorksheetRequest:
     include_workspace: bool = True
     include_answers: bool = False
     optional_context: str | None = None
+    worksheet_label: str | None = None
 
 
 @dataclass(frozen=True)
@@ -69,6 +73,9 @@ class WorksheetResult:
     api_error: str | None = None
     font_available: bool = True
     pdf_ready: bool = False
+    request_id: str = ""
+    events: list["WorksheetEvent"] = field(default_factory=list)
+    history_path: Path | None = None
 
     @property
     def can_download_pdf(self) -> bool:
@@ -127,10 +134,26 @@ class WorksheetResult:
                 f"({'low-stimuli' if rl.is_low_stimuli else 'standard'})"
             )
 
+        task_quality = [w for w in self.warnings if w.code.startswith("task_quality_")]
+        if not self.tasks:
+            validation_line = "—"
+        elif not task_quality:
+            validation_line = "OK"
+        else:
+            validation_line = f"{len(task_quality)} uwag(i)"
+
+        events_line = (
+            f"{len(self.events)} zdarzeń · `{self.request_id[:8]}…`"
+            if self.request_id
+            else "—"
+        )
+
         return {
             "Temat": topic_line,
             "Profil": profile_line,
             "Źródło zadań": fallback_line,
+            "Zdarzenia": events_line,
+            "Walidacja zadań": validation_line,
             "Klucz odpowiedzi": answers_line,
             "Ilustracje": images_line,
             "Układ PDF": layout_line,

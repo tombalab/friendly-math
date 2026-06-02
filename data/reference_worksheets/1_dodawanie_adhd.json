@@ -23,5 +23,16 @@
     "Polecenia identycznej długości („Policz: a + b = ____\") – minimum dekodowania.",
     "Maks 6–8 zadań na karcie, dużo białego miejsca (layout w PDF).",
     "Brak zadań tekstowych / wieloetapowych."
-  ]
+  ],
+  "structured_criteria": {
+    "max_operand": 10,
+    "max_result": 10,
+    "allowed_operations": ["+"],
+    "max_operations_per_task": 1,
+    "max_task_length": 45,
+    "forbidden_phrases": ["Ania", "Marek", "kupił", "miał", "zostało"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
 }

@@ -303,8 +303,8 @@ def generate_tasks(profile, grade, topic, n=3):
 
         tasks_text = response.choices[0].message.content.strip()
         tasks = [line.strip() for line in tasks_text.split("\n") if line.strip()]
-        # Często model mimo zakazu numeruje – usuwamy prefiksy „1. ", „1) " itp.
-        tasks = [re.sub(r"^\s*\d+[.)]\s+", "", t) for t in tasks]
+        # Często model mimo zakazu numeruje lub używa bulletów – czyścimy prefiksy.
+        tasks = [re.sub(r"^\s*(?:\d+[.)]\s+|[-*•]\s+)", "", t) for t in tasks]
 
         # Walidacja: odrzucamy zadania wyraźnie poza zakresem klasy/blueprintu.
         tasks, dropped = _filter_tasks_by_grade(tasks, grade_str, bp)

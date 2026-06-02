@@ -71,6 +71,8 @@ def test_quality_summary_has_expected_keys():
         "Temat",
         "Profil",
         "Źródło zadań",
+        "Walidacja zadań",
+        "Zdarzenia",
         "Klucz odpowiedzi",
         "Ilustracje",
         "Układ PDF",
@@ -104,3 +106,36 @@ def test_service_success_path_mocked(mock_tasks):
     assert len(result.pdf_bytes) > 500
     assert result.answer_key is not None
     assert result.can_download_pdf is True
+
+
+@patch("app.worksheet.service.generate_tasks")
+def test_service_saves_history_mocked(mock_tasks):
+    import tempfile
+    from pathlib import Path
+
+    from app.history.store import WorksheetHistoryStore
+
+    mock_tasks.return_value = {
+        "tasks": ["Policz: 2 + 3 = ____"],
+        "profile": "standardowy",
+        "grade": "2",
+        "topic": "dodawanie do 20",
+        "topic_id": "dodawanie_do_20",
+    }
+    os.environ["OPENAI_API_KEY"] = "test-key"
+    with tempfile.TemporaryDirectory() as tmp:
+        hist = Path(tmp) / "history"
+        svc = WorksheetService(history_dir=hist)
+        req = WorksheetRequest(
+            grade=2,
+            topic_label="dodawanie do 20",
+            profile_id="standardowy",
+            number_of_tasks=1,
+            worksheet_label="test-grupa",
+        )
+        result = svc.generate(req)
+        assert result.history_path is not None
+        store = WorksheetHistoryStore(hist)
+        entries = store.list_recent()
+        assert len(entries) == 1
+        assert entries[0].worksheet_label == "test-grupa"

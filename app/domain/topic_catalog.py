@@ -86,7 +86,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="liczenie po",
         grades_min=1,
         grades_max=3,
-        capabilities=_cap("partial"),
+        capabilities=_cap("full"),
         aliases=("liczenie",),
     ),
     "porownywanie_liczb": TopicDefinition(

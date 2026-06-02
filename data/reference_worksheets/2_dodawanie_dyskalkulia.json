@@ -25,5 +25,16 @@
     "Każde polecenie w jednej linii, jeden krok.",
     "Format „Policz: a + b = ____\" konsekwentny we wszystkich zadaniach.",
     "Brak zadań tekstowych z dodatkową narracją (mniej dekodowania)."
-  ]
+  ],
+  "structured_criteria": {
+    "max_operand": 12,
+    "max_result": 20,
+    "allowed_operations": ["+"],
+    "max_operations_per_task": 1,
+    "max_task_length": 50,
+    "forbidden_phrases": ["Ania", "kupił", "miał"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
 }

@@ -7,23 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+---
+
+## [1.2.0] – 2026-06-02 – Streamlit v2 jakość P1–P2
+
 ### Added
-- `app/domain/visual_policy.py` — centralna polityka ilustracji i low-stimuli (P1.1)
-- `app/domain/worksheet_layout.py` — `ResolvedWorksheetLayout` + `resolve_worksheet_layout()` (P1.5)
-- `tests/test_layout_policy.py`
-- `WorksheetRequest` / `WorksheetResult` — kontrakty pipeline'u (P1.3)
-- `WorksheetService.generate()` — orchestracja poza Streamlit (P1.4)
-- Panel „Jakość generacji” w UI — temat, fallback, odpowiedzi, ilustracje, PDF (P1.6)
-- `tests/test_worksheet_service.py`
+- `WorksheetService`, kontrakty `WorksheetRequest`/`WorksheetResult`, panel jakości (P1.3–P1.6)
+- Centralna polityka ilustracji i jedna warstwa layoutu PDF (P1.1, P1.5)
+- Walidatory zadań wg profilu + `structured_criteria` w kartach referencyjnych (P2.1, P2.2)
+- Observability: `request_id`, zdarzenia JSON, panel debug w Streamlit (P2.4)
+- Lokalna historia kart w `data/history/<request_id>/`, sidebar z archiwum (P2.5)
+- `requirements-lock.txt`, `scripts/smoke_check.py`, `docs/install.md`, CI smoke (P2.3)
 
 ### Changed
-- `app/ui/app.py` — cienka warstwa nad serwisem; pobieranie PDF wyłączone przy blokadzie
-- `app/pdf/generator.py` — nie nadpisuje layoutu po `profile_id` (jedno źródło z resolvera)
-- `app/ai/image_generator.py` — hint low-stimuli z katalogu profili
-- `.gitignore` — `data/out/`, `data/preview/`
-
-### Planned
-- P1.5 — jedna autoratywna warstwa layoutu PDF
+- `liczenie po` — pełne wsparcie klucza odpowiedzi i osobna polityka walidacji sekwencji
+- Walidator ignoruje bullet `-` w zadaniach; generator czyści prefiksy list
+- Deduplikacja powtarzających się ostrzeżeń w `WorksheetService`
+- `README.md` — instalacja i smoke; `.gitignore` — `data/history/`
 
 ---
 

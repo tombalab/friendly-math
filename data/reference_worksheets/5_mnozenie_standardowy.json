@@ -26,5 +26,14 @@
     "Wyniki w zakresie do ~150 – mieszczą się w tabliczce + lekkie rozszerzenie.",
     "Format spójny – „Policz: a × b = ____\".",
     "Brak działań z liczbami ujemnymi."
-  ]
+  ],
+  "structured_criteria": {
+    "max_operand": 30,
+    "max_result": 150,
+    "allowed_operations": ["×", "*", "x"],
+    "max_operations_per_task": 1,
+    "max_task_length": 55,
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true
+  }
 }

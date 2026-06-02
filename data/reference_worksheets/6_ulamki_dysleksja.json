@@ -24,5 +24,16 @@
     "Polecenia identyczne i krótkie – minimum dekodowania (kluczowe dla dysleksji).",
     "Brak zadań tekstowych w stylu „Ania zjadła 1/3 ciasta…\" – tylko działania.",
     "Wynik nie wymaga upraszczania ułamków na siłę (uczeń może podać równoważną postać)."
-  ]
+  ],
+  "structured_criteria": {
+    "allow_fractions": true,
+    "max_denominator": 8,
+    "allowed_operations": ["+", "−", "-"],
+    "max_operations_per_task": 1,
+    "max_task_length": 50,
+    "forbidden_phrases": ["Ania", "ciasta", "zjadła", "kupił"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
 }

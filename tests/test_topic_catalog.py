@@ -37,6 +37,12 @@ def test_grade_filters_topics():
     assert "dodawanie do 20" not in labels_g5
 
 
+def test_liczenie_po_has_full_answer_support():
+    r = resolve_topic("liczenie po", grade=1)
+    assert r.capabilities.answer_support == "full"
+    assert not any("Klucz odpowiedzi" in w for w in r.warnings)
+
+
 def test_blueprint_for_legacy_dodawanie_grade_8():
     r = resolve_topic("dodawanie", grade=8)
     assert r.has_blueprint

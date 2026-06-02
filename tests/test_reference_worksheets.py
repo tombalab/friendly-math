@@ -18,7 +18,9 @@ from app.generators.images import (
     generate_worksheet_images_for_tasks,
 )
 from app.pdf.fonts import resolve_polish_font_path
+from app.domain.structured_criteria import StructuredQualityCriteria
 from app.pdf.generator import WorksheetMeta, build_worksheet_pdf_bytes
+from app.validators.task_validator import validate_tasks
 
 ROOT = Path(__file__).resolve().parents[1]
 REF_DIR = ROOT / "data" / "reference_worksheets"
@@ -75,6 +77,13 @@ def _validate_schema(path: Path, data: dict[str, Any]) -> None:
         f"{path.name}: każde quality_criteria musi być niepustym stringiem"
     )
 
+    structured = data.get("structured_criteria")
+    assert structured is not None, (
+        f"{path.name}: structured_criteria jest wymagane (P2.2)"
+    )
+    parsed = StructuredQualityCriteria.from_mapping(structured)
+    assert parsed is not None
+
 
 def _is_png(data: bytes) -> bool:
     return len(data) >= len(_PNG_MAGIC) and data.startswith(_PNG_MAGIC)
@@ -89,6 +98,18 @@ def test_all_reference_files_present():
 def test_all_reference_schema_integrity():
     for path in list_reference_files():
         _validate_schema(path, load_reference(path))
+
+
+def test_all_reference_structured_criteria_pass():
+    """Zadania wzorcowe spełniają własne kryteria maszynowe (P2.2)."""
+    for path in list_reference_files():
+        data = load_reference(path)
+        criteria = StructuredQualityCriteria.from_mapping(data["structured_criteria"])
+        result = validate_tasks(data["tasks"], criteria)
+        assert result.ok, (
+            f"{path.name}: naruszenie structured_criteria — "
+            + "; ".join(f"[{i.code}] {i.message}" for i in result.issues)
+        )
 
 
 def test_all_reference_answer_keys():

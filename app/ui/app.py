@@ -32,9 +32,16 @@ from app.domain.topic_catalog import (
     topic_labels_for_grade,
 )
 from app.domain.worksheet_contract import WorksheetRequest
+from app.history.store import default_history_dir
 from app.pdf.fonts import resolve_polish_font_path
+from app.ui.events_panel import record_download_event, render_events_panel
+from app.ui.history_panel import history_store_for_root, render_history_sidebar, render_history_view
 from app.ui.quality_panel import render_quality_panel
 from app.worksheet.service import WorksheetService
+
+HISTORY_DIR = default_history_dir(ROOT_DIR)
+OUT_DIR = ROOT_DIR / "data" / "out"
+_history_store = history_store_for_root(ROOT_DIR)
 
 
 def _pdf_bytes_to_images(pdf_bytes: bytes, dpi: int = 120) -> list[BytesIO]:
@@ -121,14 +128,28 @@ with st.sidebar.form("worksheet_form"):
     _selected_profile = resolve_profile(student_profile)
     st.caption(_selected_profile.profile.ui_summary)
 
+    worksheet_label = st.text_input(
+        "Etykieta karty (opcjonalnie)",
+        value="",
+        placeholder="np. grupa A, ćwiczenie 3",
+        help="Organizacja pracy — bez imion i nazwisk uczniów.",
+    )
+
     include_illustration = st.checkbox("Ilustracja w karcie", value=False)
     include_workspace = st.checkbox("Miejsce na obliczenia", value=True)
     include_answers = st.checkbox("Dołącz stronę z odpowiedziami", value=False)
     submitted = st.form_submit_button("🧠 Generuj kartę")
 
+render_history_sidebar(_history_store)
+
 st.title("🧮 Friendly Math")
 
+_history_view_id = st.session_state.get("fm_history_view")
+
 if submitted:
+    st.session_state.pop("fm_history_view", None)
+
+    _label = worksheet_label.strip() or None
     request = WorksheetRequest(
         grade=_grade_int,
         topic_label=topic,
@@ -137,12 +158,18 @@ if submitted:
         include_illustration=include_illustration,
         include_workspace=include_workspace,
         include_answers=include_answers,
+        worksheet_label=_label,
     )
 
-    service = WorksheetService(output_dir=ROOT_DIR / "data" / "out")
+    service = WorksheetService(output_dir=OUT_DIR, history_dir=HISTORY_DIR)
     result = service.generate(request)
+    st.session_state["fm_last_result"] = result
+
+    if result.history_path:
+        st.success(f"Zapisano w historii: `{result.history_path.name}`")
 
     render_quality_panel(result)
+    render_events_panel(result)
 
     if result.blocked:
         st.stop()
@@ -174,9 +201,18 @@ if submitted:
             file_name="worksheet.pdf",
             mime="application/pdf",
             disabled=not result.can_download_pdf,
+            on_click=record_download_event,
+            args=(result,),
         )
     else:
         st.caption("PDF niedostępny.")
+
+elif _history_view_id:
+    render_history_view(
+        _history_store,
+        _history_view_id,
+        pdf_to_images=_pdf_bytes_to_images,
+    )
 
 st.divider()
 st.caption("Friendly Math v1.1 — generator kart pracy dla szkoły podstawowej")

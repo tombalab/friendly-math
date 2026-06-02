@@ -42,3 +42,13 @@ def test_summary_pl_counts():
     )
     assert "1/2" in key.summary_pl()
     assert "ręcznej" in key.summary_pl()
+
+
+def test_liczenie_po_sequence_supported():
+    key = compute_answer_key(
+        ["Uzupełnij: 2, 4, 6, __, __"],
+        topic_label="liczenie po",
+        grade=1,
+    )
+    assert key.supported_count == 1
+    assert key.items[0].value == "8, 10"

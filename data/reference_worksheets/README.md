@@ -32,9 +32,21 @@ Każdy plik to jeden JSON. Konwencja nazwy: `{grade}_{topic}_{profile}.json`
     "Liczby w zakresie klasy.",
     "Polecenia krótkie, jeden krok.",
     "..."
-  ]
+  ],
+  "structured_criteria": {
+    "max_operand": 12,
+    "max_result": 20,
+    "allowed_operations": ["+"],
+    "max_operations_per_task": 1,
+    "max_task_length": 50,
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true
+  }
 }
 ```
+
+Pole `structured_criteria` (P2.2) uzupełnia listę tekstową — te same progi sprawdza
+`app/validators/task_validator.py` w testach referencyjnych i po generacji w `WorksheetService`.
 
 ## Po co to teraz
 
