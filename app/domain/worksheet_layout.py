@@ -6,6 +6,7 @@ from typing import Any
 
 from app.ai.layout_generator import generate_layout
 from app.domain.profile_catalog import ResolvedProfile
+from app.domain.profile_pedagogy import layout_overrides_for_pedagogy, low_stimuli_boost_for_profile
 
 PDF_PRINT_DEFAULTS: dict[str, Any] = {
     "title_font_size": 22,
@@ -166,8 +167,15 @@ def resolve_worksheet_layout(
             values[key] = profile_layout[key]
     source = "profile_layout"
 
+    pedagogy_layout = layout_overrides_for_pedagogy(resolved_profile.profile_id)
+    for key in _TYPOGRAPHY_KEYS:
+        if key in pedagogy_layout:
+            values[key] = pedagogy_layout[key]
+    if pedagogy_layout:
+        source = "profile_pedagogy"
+
     if resolved_profile.is_low_stimuli:
-        values.update(LOW_STIMULI_PDF_BOOST)
+        values.update(low_stimuli_boost_for_profile(resolved_profile.profile_id))
         source = "low_stimuli_boost"
 
     values = _apply_grade_readability(values, grade)

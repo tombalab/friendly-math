@@ -70,6 +70,7 @@ def test_quality_summary_has_expected_keys():
     assert keys == {
         "Temat",
         "Profil",
+        "Spełnienie profilu",
         "Źródło zadań",
         "Walidacja zadań",
         "Zdarzenia",

@@ -55,9 +55,10 @@ class DysleksjaProfile(StudentProfile):
     )
 
     layout_overrides = {
-        # Trochę większy task_font + line_spacing dla czytelności,
-        # bez wymuszania szarego tła.
         "task_font_size": 13,
-        "line_spacing": 18,
-        "task_spacing": 10,
+        "line_spacing": 22,
+        "task_spacing": 12,
+        "section_spacing": 20,
+        "text_color": "#111111",
+        "background_color": "#FFFFFF",
     }

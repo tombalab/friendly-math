@@ -10,6 +10,7 @@ from app.domain.profile_catalog import resolve_profile
 from app.domain.topic_catalog import resolve_topic
 from app.domain.worksheet_contract import (
     ImageCoverageSummary,
+    TaskImageCoverageEntry,
     WorksheetRequest,
     WorksheetResult,
     WorksheetWarning,
@@ -18,8 +19,9 @@ from app.domain.worksheet_contract import (
 from app.generators.answers import compute_answer_key
 from app.generators.images import (
     generate_worksheet_image,
-    generate_worksheet_images_for_tasks,
+    generate_worksheet_images_for_tasks_with_diagnostics,
 )
+from app.validators.profile_enforcement import enforce_tasks_for_profile
 from app.observability.events import (
     EVENT_ANSWER_COVERAGE,
     EVENT_FALLBACK_PADDING,
@@ -213,6 +215,19 @@ def generate_worksheet(
         )
 
     tasks = list(task_payload.get("tasks", []))
+
+    tasks, replaced, enforce_msgs = enforce_tasks_for_profile(
+        tasks,
+        profile_id=resolved_profile.profile_id,
+        grade=request.grade,
+        topic_id=resolved_topic.topic_id,
+    )
+    for msg in enforce_msgs:
+        warnings.append(
+            WorksheetWarning("profile_enforcement", msg, "info"),
+        )
+    if replaced:
+        trace.emit(EVENT_TASK_VALIDATION, profile_replaced=replaced)
 
     validation = validate_tasks_for_profile(
         tasks,
@@ -479,11 +494,20 @@ def _resolve_images(
     per_task = resolved_profile.illustration_mode == "per_task"
     if per_task:
         try:
-            images = generate_worksheet_images_for_tasks(
+            img_result = generate_worksheet_images_for_tasks_with_diagnostics(
                 tasks=tasks,
                 topic=resolved_topic.blueprint_key,
                 profile=resolved_profile.profile_id,
                 grade=request.grade,
+            )
+            images = img_result.image_bytes_list
+            per_task_entries = tuple(
+                TaskImageCoverageEntry(
+                    task_index=s.task_index,
+                    rendered=s.rendered,
+                    skip_reason=s.skip_reason,
+                )
+                for s in img_result.slots
             )
         except Exception as exc:
             warnings.append(
@@ -501,12 +525,18 @@ def _resolve_images(
                 detail_pl="błąd generatora ilustracji per zadanie",
             )
         rendered = sum(1 for img in images if img)
+        skipped_n = len(tasks) - rendered
+        detail = (
+            f"{rendered}/{len(tasks)} zadań z ilustracją"
+            + (f"; {skipped_n} pominięto (liczby poza zakresem profilu)" if skipped_n else "")
+        )
         return None, images, ImageCoverageSummary(
             mode="per_task",
             requested=True,
             rendered_count=rendered,
             total_slots=len(tasks),
-            detail_pl=f"{rendered}/{len(tasks)} zadań z ilustracją (bezpieczny zakres liczb)",
+            detail_pl=detail,
+            per_task=per_task_entries,
         )
 
     try:

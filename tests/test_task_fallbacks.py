@@ -47,6 +47,13 @@ def _codes(result: dict) -> set[str]:
     }
 
 
+def test_profile_fallbacks_differ_for_dodawanie_do_20():
+    std = fallback_tasks_for_topic("dodawanie_do_20", grade=1, n=5, profile_id="standardowy")
+    adhd = fallback_tasks_for_topic("dodawanie_do_20", grade=1, n=5, profile_id="ADHD")
+    assert std is not None and adhd is not None
+    assert std != adhd
+
+
 def test_direct_ulamki_fallback_preserves_topic():
     tasks = fallback_tasks_for_topic("ulamki", grade=3, n=3)
     assert tasks is not None

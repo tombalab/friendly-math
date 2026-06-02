@@ -191,7 +191,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="pieniądze",
         grades_min=2,
         grades_max=3,
-        capabilities=_cap("partial"),
+        capabilities=_cap("partial", "pieniądze"),
     ),
     "czas": TopicDefinition(
         topic_id="czas",
@@ -199,7 +199,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="czas",
         grades_min=1,
         grades_max=3,
-        capabilities=_cap("partial"),
+        capabilities=_cap("partial", "czas"),
     ),
     "pomiary_dlugosci": TopicDefinition(
         topic_id="pomiary_dlugosci",
@@ -215,7 +215,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="obwody",
         grades_min=2,
         grades_max=3,
-        capabilities=_cap("partial"),
+        capabilities=_cap("partial", "obwody"),
     ),
     "zadania_tekstowe": TopicDefinition(
         topic_id="zadania_tekstowe",

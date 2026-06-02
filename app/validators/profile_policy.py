@@ -61,6 +61,7 @@ def policy_for_profile(
         forbidden = _forbidden_phrases_for_topic(topic)
         max_sentences = _max_word_problem_sentences_for_topic(topic, grade)
         max_len = _max_task_length_for_topic(topic, grade, pid, default=55)
+        has_fractions = "ulam" in topic or "ułam" in topic
         return StructuredQualityCriteria(
             max_operand=max_operand,
             max_result=max_result,
@@ -70,6 +71,8 @@ def policy_for_profile(
             forbidden_phrases=forbidden,
             require_format_prefix=prefix,
             require_format_consistent=prefix is not None,
+            allow_fractions=has_fractions,
+            max_denominator=6 if has_fractions else None,
             max_word_problem_sentences=max_sentences,
         )
 
@@ -122,6 +125,7 @@ def policy_for_profile(
     max_operand, max_result = _numeric_caps_for_topic(topic, grade, pid)
     max_len = _max_task_length_for_topic(topic, grade, pid, default=80 if grade >= 5 else 65)
     max_sentences = _max_word_problem_sentences_for_topic(topic, grade)
+    has_fractions = "ulam" in topic or "ułam" in topic
     return StructuredQualityCriteria(
         max_operand=max_operand,
         max_result=max_result,
@@ -129,6 +133,8 @@ def policy_for_profile(
         max_operations_per_task=2 if grade >= 5 else 1,
         max_task_length=max_len,
         max_word_problem_sentences=max_sentences,
+        allow_fractions=has_fractions,
+        max_denominator=8 if has_fractions and grade <= 6 else None,
     )
 
 

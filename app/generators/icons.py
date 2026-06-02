@@ -42,6 +42,12 @@ PIZZA_CRUST = "#d7a86e"
 
 OUTLINE = "#7b7b7b"
 OP_COLOR = "#424242"
+COIN_GOLD = "#ffc107"
+COIN_EDGE = "#f9a825"
+CLOCK_FACE = "#ffffff"
+CLOCK_HAND = "#37474f"
+SHAPE_FILL = "#e3f2fd"
+SHAPE_EDGE = "#1976d2"
 
 
 def draw_apple(draw, cx: int, cy: int, size: int, color: str = APPLE_RED) -> None:
@@ -197,6 +203,65 @@ def draw_pizza(
     draw.ellipse(bbox, outline=PIZZA_CRUST, width=crust_thickness)
 
 
+def draw_coin(draw, cx: int, cy: int, size: int, color: str = COIN_GOLD) -> None:
+    """Moneta — koło ze środkiem jaśniejszym (plan: pieniądze jako monety)."""
+    r = max(4, size // 2)
+    draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=color, outline=COIN_EDGE, width=2)
+    inner = max(2, r // 3)
+    draw.ellipse(
+        [cx - inner, cy - inner, cx + inner, cy + inner],
+        fill=COIN_EDGE,
+        outline=OUTLINE,
+        width=1,
+    )
+
+
+def draw_clock_face(draw, cx: int, cy: int, size: int, hour: int = 3) -> None:
+    """Prosty zegar analogowy — godzina całkowita (mała wskazówka na `hour`, duża na 12)."""
+    r = max(12, size // 2)
+    bbox = [cx - r, cy - r, cx + r, cy + r]
+    draw.ellipse(bbox, fill=CLOCK_FACE, outline=CLOCK_HAND, width=2)
+    # Ticks co godzinę
+    for h in range(12):
+        ang = math.radians(-90 + h * 30)
+        x1 = cx + int((r - 4) * math.cos(ang))
+        y1 = cy + int((r - 4) * math.sin(ang))
+        x2 = cx + int((r - 10) * math.cos(ang))
+        y2 = cy + int((r - 10) * math.sin(ang))
+        draw.line([(x1, y1), (x2, y2)], fill=CLOCK_HAND, width=2 if h % 3 == 0 else 1)
+    hour = max(1, min(12, hour))
+    # Mała wskazówka
+    ha = math.radians(-90 + hour * 30)
+    draw.line(
+        [(cx, cy), (cx + int(r * 0.45 * math.cos(ha)), cy + int(r * 0.45 * math.sin(ha)))],
+        fill=CLOCK_HAND,
+        width=3,
+    )
+    # Duża na 12
+    draw.line([(cx, cy), (cx, cy - int(r * 0.65))], fill=CLOCK_HAND, width=2)
+
+
+def draw_labeled_rect(
+    draw,
+    cx: int,
+    cy: int,
+    width: int,
+    height: int,
+    *,
+    fill: str = SHAPE_FILL,
+    outline: str = SHAPE_EDGE,
+) -> None:
+    """Prostokąt / kwadrat do obwodów — gotowy model bryły."""
+    x0 = cx - width // 2
+    y0 = cy - height // 2
+    draw.rectangle(
+        [x0, y0, x0 + width, y0 + height],
+        fill=fill,
+        outline=outline,
+        width=2,
+    )
+
+
 def draw_op(draw, cx: int, cy: int, size: int, op: str, color: str = OP_COLOR) -> None:
     """Rysuje znak działania (+, −, ×, ÷, =) w punkcie (cx, cy) o szerokości `size`."""
     s = max(6, size)
@@ -260,6 +325,9 @@ TOPIC_THEMES: Dict[str, dict] = {
     "odejmowanie": {"left": "cookie", "right": "cookie_bitten", "op": "−"},
     "mnożenie": {"grid": "star_gold", "op": "×"},
     "dzielenie": {"left": "fish_blue", "right": "fish_orange", "op": "÷"},
+    "pieniądze": {"kind": "coins"},
+    "czas": {"kind": "clock"},
+    "obwody": {"kind": "shape"},
     "default": {"left": "apple_red", "right": "apple_green", "op": "+"},
 }
 

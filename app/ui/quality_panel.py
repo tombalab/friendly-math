@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import streamlit as st
 
+from app.domain.profile_pedagogy import teacher_hint_for_profile
 from app.domain.worksheet_contract import WorksheetResult, WorksheetWarning
 
 
@@ -11,6 +12,9 @@ def render_quality_panel(result: WorksheetResult) -> None:
     st.subheader("📊 Jakość generacji")
 
     _render_status_banner(result)
+
+    if result.resolved_profile:
+        st.caption(teacher_hint_for_profile(result.resolved_profile.profile_id))
 
     summary = result.quality_summary_pl()
     cols = st.columns(2)

@@ -1,6 +1,8 @@
 """Deterministic topic-preserving task fallbacks (P0.2)."""
 from __future__ import annotations
 
+from app.ai.profile_fallback_banks import apply_profile_to_standard_bank
+
 def _cycle_take(items: list[str], n: int) -> list[str]:
     if n <= 0:
         return []
@@ -27,12 +29,13 @@ def fallback_tasks_for_topic(
     """
     Return deterministic tasks that preserve the requested topic.
 
-    `profile_id` is accepted intentionally: future profile-specific banks can be
-    added without changing the generator contract. Current banks keep wording
-    short enough for low-stimuli profiles.
+  Profile-specific banks (topic × grade × profile_group) override or transform
+    the standard bank when defined in `profile_fallback_banks`.
     """
-    del profile_id  # profile-specific templates are planned, not needed yet.
     bank = _bank_for(topic_id, grade)
+    if not bank:
+        return None
+    bank = apply_profile_to_standard_bank(bank, topic_id, grade, profile_id)
     if not bank:
         return None
     return _cycle_take(bank, n)

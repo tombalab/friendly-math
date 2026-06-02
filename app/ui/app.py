@@ -26,6 +26,7 @@ from app.domain.profile_catalog import (
     profile_selectbox_labels,
     resolve_profile,
 )
+from app.domain.profile_pedagogy import teacher_hint_for_profile
 from app.domain.topic_catalog import (
     answer_key_expectation_pl,
     default_topic_label_for_grade,
@@ -123,7 +124,7 @@ with st.sidebar.form("worksheet_form"):
         index=_profile_ids.index(_default_pid) if _default_pid in _profile_ids else 0,
         format_func=lambda pid: _profile_labels.get(pid, pid),
     )
-    st.caption(resolve_profile(student_profile).profile.ui_summary)
+    st.caption(teacher_hint_for_profile(student_profile))
     worksheet_label = st.text_input(
         "Etykieta karty (opcjonalnie)",
         placeholder="np. grupa A",
