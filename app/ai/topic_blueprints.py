@@ -71,6 +71,20 @@ TOPIC_BLUEPRINTS: dict[str, dict[int, Blueprint]] = {
             ),
             "max_result": 20,
         },
+        3: {
+            "instruction": (
+                "Powtórka i automatyzacja dodawania w zakresie 0–20 dla klasy 3. "
+                "Krótkie przykłady pamięciowe, jeden krok, w tym przekroczenie progu 10. "
+                "Format: „Policz: a + b = ____”."
+            ),
+            "examples": _ex(
+                "Policz: 8 + 7 = ____",
+                "Policz: 9 + 8 = ____",
+                "Policz: 12 + 6 = ____",
+                "Policz: 14 + 5 = ____",
+            ),
+            "max_result": 20,
+        },
     },
 
     "dodawanie do 100": {
@@ -144,6 +158,20 @@ TOPIC_BLUEPRINTS: dict[str, dict[int, Blueprint]] = {
                 "Policz: 15 − 8 = ____",
                 "Policz: 11 − 4 = ____",
                 "Policz: 17 − 9 = ____",
+            ),
+            "max_result": 20,
+        },
+        3: {
+            "instruction": (
+                "Powtórka i automatyzacja odejmowania w zakresie 0–20 dla klasy 3. "
+                "Krótkie przykłady pamięciowe, jeden krok, w tym przekroczenie progu 10. "
+                "Wynik zawsze ≥ 0."
+            ),
+            "examples": _ex(
+                "Policz: 16 − 7 = ____",
+                "Policz: 18 − 9 = ____",
+                "Policz: 14 − 6 = ____",
+                "Policz: 20 − 8 = ____",
             ),
             "max_result": 20,
         },

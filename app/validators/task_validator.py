@@ -133,7 +133,8 @@ def validate_tasks(
                 )
 
         if criteria.max_word_problem_sentences is not None:
-            sentences = [s for s in re.split(r"[.!?]+", task) if s.strip()]
+            sentence_text = re.sub(r"_+", "", task).strip()
+            sentences = [s for s in re.split(r"[.!?]+", sentence_text) if s.strip()]
             if len(sentences) > criteria.max_word_problem_sentences:
                 issues.append(
                     TaskValidationIssue(

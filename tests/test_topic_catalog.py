@@ -48,6 +48,15 @@ def test_answer_key_expectation_for_money():
     assert answer_key_expectation_pl("dodawanie do 20", 2) is None
 
 
+def test_grade3_basic_arithmetic_topics_are_exact_review_scope():
+    add = resolve_topic("dodawanie do 20", grade=3)
+    sub = resolve_topic("odejmowanie do 20", grade=3)
+
+    assert add.blueprint_status == "exact"
+    assert sub.blueprint_status == "exact"
+    assert not any("użyto wersji dla klasy" in w for w in add.warnings + sub.warnings)
+
+
 def test_grade_filters_topics():
     labels_g2 = topic_labels_for_grade(2)
     assert "dodawanie do 20" in labels_g2

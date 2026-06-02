@@ -147,6 +147,13 @@ def _bank_for(topic_id: str, grade: int) -> list[str] | None:
             "Uzupełnij okienko: ☐ − 3 = 6",
         ]
     if topic_id == "ulamki":
+        if grade >= 4:
+            return [
+                "Policz: 1/4 + 2/4 = ____",
+                "Policz: 2/5 + 1/5 = ____",
+                "Policz: 5/8 − 1/8 = ____",
+                "Policz: 3/6 + 2/6 = ____",
+            ]
         return {
             1: [
                 "Zaznacz połowę: pokoloruj 1 z 2 części koła.",

@@ -1,6 +1,7 @@
 """Profile-aware task validators (P2.1 / P2.2)."""
 from __future__ import annotations
 
+from app.ai.fallback_tasks import fallback_tasks_for_topic
 from app.domain.structured_criteria import StructuredQualityCriteria
 from app.validators.profile_policy import policy_for_profile
 from app.validators.task_validator import validate_tasks, validate_tasks_for_profile
@@ -47,6 +48,73 @@ def test_liczenie_po_rejects_wrong_prefix():
     policy = policy_for_profile("standardowy", grade=2, topic_id="liczenie_po")
     result = validate_tasks(["Policz: 10, 20, 30, __, __"], policy)
     assert any(i.code == "format_prefix" for i in result.issues)
+
+
+def test_adhd_grade5_multiplication_allows_topic_range():
+    policy = policy_for_profile("ADHD", grade=5, topic_id="mnozenie")
+    result = validate_tasks(
+        [
+            "Policz: 32 × 5 = ____",
+            "Policz: 47 × 2 = ____",
+            "Policz: 54 × 7 = ____",
+        ],
+        policy,
+    )
+    codes = {i.code for i in result.issues}
+    assert "operand_too_large" not in codes
+    assert "result_too_large" not in codes
+
+
+def test_adhd_grade5_multiplication_still_rejects_extreme_result():
+    policy = policy_for_profile("ADHD", grade=5, topic_id="mnozenie")
+    result = validate_tasks(["Policz: 99 × 99 = ____"], policy)
+    codes = {i.code for i in result.issues}
+    assert "operand_too_large" in codes
+    assert "result_too_large" in codes
+
+
+def test_porownywanie_uses_topic_specific_prefix_and_range():
+    policy = policy_for_profile("ADHD", grade=2, topic_id="porownywanie_liczb")
+    result = validate_tasks(["Wstaw znak < , > lub =: 45 __ 54"], policy)
+    codes = {i.code for i in result.issues}
+    assert "format_prefix" not in codes
+    assert "operand_too_large" not in codes
+
+
+def test_rowania_use_solve_prefix_for_support_profiles():
+    policy = policy_for_profile("dyskalkulia", grade=5, topic_id="rownania")
+    result = validate_tasks(["Rozwiąż: 72 : ☐ = 8"], policy)
+    assert not any(i.code == "format_prefix" for i in result.issues)
+
+
+def test_zadania_tekstowe_allow_narrative_phrases():
+    policy = policy_for_profile("ADHD", grade=1, topic_id="zadania_tekstowe")
+    result = validate_tasks(
+        ["Ania miała 5 jabłek. Kupiła 4 jabłka. Ile ma jabłek? Odpowiedź: ____"],
+        policy,
+    )
+    codes = {i.code for i in result.issues}
+    assert "forbidden_phrase" not in codes
+    assert "format_prefix" not in codes
+    assert "word_problem_load" not in codes
+
+
+def test_zadania_tekstowe_fallback_passes_adhd_validation():
+    from app.ai.fallback_tasks import fallback_tasks_for_topic
+    from app.validators.task_validator import validate_tasks_for_profile
+
+    tasks = fallback_tasks_for_topic("zadania_tekstowe", 1, 5)
+    result = validate_tasks_for_profile(
+        tasks, profile_id="ADHD", grade=1, topic_id="zadania_tekstowe"
+    )
+    assert not any(i.code == "word_problem_load" for i in result.issues)
+
+
+def test_upper_grade_fraction_fallback_uses_fraction_format():
+    tasks = fallback_tasks_for_topic("ulamki", grade=5, n=4)
+    assert tasks is not None
+    assert all(task.startswith("Policz:") for task in tasks)
+    assert all("/" in task for task in tasks)
 
 
 def test_dysleksja_rejects_narrative_phrase():
