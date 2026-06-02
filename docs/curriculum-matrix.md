@@ -102,7 +102,7 @@ Szczegóły wierszy 5–8: `python scripts/curriculum_matrix_report.py --markdow
 |------|------|----------------|
 | **0. Uczciwość MVP** | Zrobione | Równania ☐, baner 4–8, ostrzeżenia klucza; walidatory profil×temat |
 | **1. Macierz PP** | Ten dokument | Utrzymywać przy zmianach katalogu; raport: `curriculum_matrix_report.py` |
-| **2. Domknięcie 1–3** | W toku | Wzorce + parser klucza: pieniądze, czas, pomiary, obwody, zadania tekstowe |
+| **2. Domknięcie 1–3** | Zrobione (rdzeń) | 35 wzorców; dalsze luki: geometria, masa, kl. 1 czas/pomiary |
 | **3. Stabilizacja 4–6** | Plan | Blueprinty per klasa (nie downgrade) |
 | **4. Decyzja 7–8** | Plan | Zawęzić UI lub dodać zakres egzaminacyjny |
 | **5. Curriculum smoke** | Częściowo | `curriculum_fallback_audit.py` (CI — do podpięcia) |
@@ -118,7 +118,7 @@ Brak kart JSON (klasa × temat) — najpierw:
 3. **Ułamki intuicyjne:** `ulamki` (kl. 2–3, partial key)
 4. **Uzupełnienie rachunku:** porównywanie kl. 1/3, tabliczka, dzielenie kl. 3, równania z okienkiem kl. 1/3
 
-Aktualnie **30** wzorców (Faza 2 w toku); docelowo: **≥35** dla rdzenia I–III.
+Aktualnie **35** wzorców dla rdzenia I–III (Faza 2 — minimum osiągnięte).
 
 ---
 

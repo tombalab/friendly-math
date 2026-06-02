@@ -249,6 +249,8 @@ def _answer_simple_narrative(raw: str, low: str) -> str | None:
         return str(nums[-2] + nums[-1])
     if "zostało" in low or "zabrano" in low or "sprzedano" in low:
         return str(nums[0] - nums[1])
+    if "zjedzono" in low:
+        return str(nums[0] - nums[1])
     if "dodano" in low or "dostał" in low or "dostała" in low:
         return str(nums[0] + nums[1])
     if "kupi" in low or ("ile ma" in low and "jabł" in low):

@@ -229,7 +229,7 @@ export default function CurriculumMatrixPlan() {
       <Grid columns={4} gap={12}>
         <Stat value="1–3" label="klasy blisko pokrycia rachunkowego" tone="success" />
         <Stat value="4–8" label="klasy wymagające zawężenia lub rozbudowy" tone="warning" />
-        <Stat value="22" label="aktualne wzorce referencyjne" tone="info" />
+        <Stat value="35" label="aktualne wzorce referencyjne" tone="info" />
         <Stat value="P0" label="najważniejsze: równania i odpowiedzi" tone="danger" />
       </Grid>
 

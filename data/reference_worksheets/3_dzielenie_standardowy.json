@@ -1,0 +1,39 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 3 – dzielenie (standardowy)",
+    "grade": 3,
+    "topic": "dzielenie",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Dzielenie w zakresie tabliczki — wynik całkowity, bez reszty."
+  },
+  "tasks": [
+    "Policz: 12 : 3 = ____",
+    "Policz: 20 : 4 = ____",
+    "Policz: 18 : 6 = ____",
+    "Policz: 24 : 8 = ____",
+    "Policz: 15 : 5 = ____",
+    "Policz: 21 : 7 = ____",
+    "Policz: 16 : 2 = ____"
+  ],
+  "answers": ["4", "5", "3", "3", "3", "3", "8"],
+  "quality_criteria": [
+    "Dzielenie dokładne (bez reszty).",
+    "Dzielna i dzielnik z typowej tabliczki.",
+    "Format „Policz: a : b = ____”.",
+    "Jedna operacja na zadanie.",
+    "Brak zadań tekstowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 24,
+    "max_result": 10,
+    "allowed_operations": ["÷", "/", ":"],
+    "max_operations_per_task": 1,
+    "max_task_length": 65,
+    "forbidden_phrases": ["Ania", "kupił", "miał"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

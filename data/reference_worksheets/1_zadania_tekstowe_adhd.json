@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 1 – zadania tekstowe (ADHD)",
+    "grade": 1,
+    "topic": "zadania tekstowe",
+    "profile": "ADHD",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Bardzo krótkie zadania, liczby do 10, jedna operacja. Mało zadań na stronie."
+  },
+  "tasks": [
+    "Ania miała 3 jabłka. Dostała 2. Ile ma? Odpowiedź: ____",
+    "Na talerzu było 8 ciastek. Zjedzono 3. Ile zostało? Odpowiedź: ____",
+    "Tomek ma 4 klocki. Kasia ma 3. Ile razem? Odpowiedź: ____",
+    "W koszyku było 7 guzików. Zabrano 2. Ile zostało? Odpowiedź: ____"
+  ],
+  "answers": ["5", "5", "7", "5"],
+  "quality_criteria": [
+    "Liczby ≤ 10, wynik ≤ 10.",
+    "Jedna operacja na zadanie.",
+    "Maks. 4–6 zadań na karcie.",
+    "Krótkie zdania, luka na końcu.",
+    "Bez dodatkowych warunków w treści."
+  ],
+  "structured_criteria": {
+    "max_operand": 10,
+    "max_result": 10,
+    "max_operations_per_task": 1,
+    "max_task_length": 120,
+    "forbidden_phrases": [],
+    "max_word_problem_sentences": null
+  }
+}

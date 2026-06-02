@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
-- Faza 2 (w toku): 8 kart wzorcowych I–III (porównywanie, czas, pieniądze, pomiary, obwody, zadania tekstowe); parsery klucza dla tematów praktycznych
+- Faza 2: 35 kart wzorcowych (rdzeń I–III) — m.in. równania z okienkiem kl. 1, ułamki kl. 2, tabliczka/dzielenie kl. 3; parsery klucza dla tematów praktycznych i zadań tekstowych
 - Faza 1: `docs/curriculum-matrix.md` — kontrakt topic_id × klasa × blueprint × klucz × wzorzec
 - Skrypty `scripts/curriculum_fallback_audit.py`, `scripts/curriculum_matrix_report.py`; test audytu
 - Faza 0: komunikat MVP dla klas 4–8, ostrzeżenia przy „Dołącz odpowiedzi” (tematy partial/none)
