@@ -662,17 +662,20 @@ TOPIC_BLUEPRINTS: dict[str, dict[int, Blueprint]] = {
         },
     },
     "równania": {
-        # Klasy 4+: równania algebraiczne z x
+        # Klasy 4+: jednokrokowe równania z okienkiem ☐ (zgodne z kluczem odpowiedzi)
         4: {
             "instruction": (
-                "Proste równania z niewiadomą x: x + a = b lub x − a = b, "
-                "a × x = b z liczbami całkowitymi."
+                f"Proste równania jednokrokowe z niewiadomą w okienku {_BOX}. "
+                "Format: „Rozwiąż: … = …” — bez litery x. "
+                "Dozwolone działania: +, −, ×, : (dzielenie bez reszty)."
             ),
             "examples": _ex(
-                "Rozwiąż: x + 8 = 15. x = ____",
-                "Rozwiąż: 4 × x = 24. x = ____",
-                "Rozwiąż: x − 12 = 7. x = ____",
+                f"Rozwiąż: {_BOX} + 8 = 15",
+                f"Rozwiąż: 4 × {_BOX} = 24",
+                f"Rozwiąż: {_BOX} − 12 = 7",
+                f"Rozwiąż: 72 : {_BOX} = 8",
             ),
+            "max_result": 100,
         },
     },
 }

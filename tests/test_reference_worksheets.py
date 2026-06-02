@@ -212,7 +212,7 @@ def test_visual_skip_for_algebraic_equations_topic():
         grade=5,
     )
     per_task = generate_worksheet_images_for_tasks(
-        ["Rozwiąż: x + 8 = 15. x = ____"],
+        ["Rozwiąż: ☐ + 8 = 15"],
         topic="równania",
         profile="dyskalkulia",
         grade=5,

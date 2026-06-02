@@ -44,6 +44,17 @@ def test_summary_pl_counts():
     assert "ręcznej" in key.summary_pl()
 
 
+def test_rownania_box_equations_supported():
+    tasks = [
+        "Rozwiąż: ☐ + 18 = 45",
+        "Rozwiąż: 6 × ☐ = 54",
+        "Rozwiąż: 72 : ☐ = 8",
+    ]
+    key = compute_answer_key(tasks, topic_label="równania", grade=5)
+    assert key.supported_count == len(tasks)
+    assert [i.value for i in key.items] == ["27", "9", "9"]
+
+
 def test_liczenie_po_sequence_supported():
     key = compute_answer_key(
         ["Uzupełnij: 2, 4, 6, __, __"],

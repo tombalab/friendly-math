@@ -196,8 +196,9 @@ def _bank_for(topic_id: str, grade: int) -> list[str] | None:
         ]
     if topic_id == "rownania":
         return [
-            "Rozwiąż: x + 8 = 15. x = ____",
-            "Rozwiąż: 4 × x = 24. x = ____",
-            "Rozwiąż: x − 12 = 7. x = ____",
+            "Rozwiąż: ☐ + 8 = 15",
+            "Rozwiąż: 4 × ☐ = 24",
+            "Rozwiąż: ☐ − 12 = 7",
+            "Rozwiąż: 72 : ☐ = 8",
         ]
     return None

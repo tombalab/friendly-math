@@ -24,7 +24,28 @@ def test_scoped_topic_maps_visual_family():
 def test_rowania_skip_images():
     r = resolve_topic("równania", grade=5)
     assert r.capabilities.skip_images is True
+    assert r.capabilities.answer_support == "full"
     assert visual_family_for_topic("równania") is None
+
+
+def test_rowania_no_partial_answer_warning():
+    r = resolve_topic("równania", grade=5)
+    assert not any("Klucz odpowiedzi" in w and "części" in w.lower() for w in r.warnings)
+
+
+def test_upper_grades_mvp_caption():
+    from app.domain.topic_catalog import upper_grades_mvp_caption_pl
+
+    assert upper_grades_mvp_caption_pl(3) is None
+    assert upper_grades_mvp_caption_pl(4) is not None
+    assert "MVP" in upper_grades_mvp_caption_pl(5)
+
+
+def test_answer_key_expectation_for_money():
+    from app.domain.topic_catalog import answer_key_expectation_pl
+
+    assert answer_key_expectation_pl("pieniądze", 2) is not None
+    assert answer_key_expectation_pl("dodawanie do 20", 2) is None
 
 
 def test_grade_filters_topics():

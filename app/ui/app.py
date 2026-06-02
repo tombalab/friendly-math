@@ -27,8 +27,10 @@ from app.domain.profile_catalog import (
     resolve_profile,
 )
 from app.domain.topic_catalog import (
+    answer_key_expectation_pl,
     default_topic_label_for_grade,
     topic_labels_for_grade,
+    upper_grades_mvp_caption_pl,
 )
 from app.domain.worksheet_contract import WorksheetRequest
 from app.history.store import default_history_dir
@@ -87,18 +89,30 @@ grade = st.sidebar.selectbox(
     key="fm_grade",
 )
 _grade_int = int(grade)
+_mvp_caption = upper_grades_mvp_caption_pl(_grade_int)
+if _mvp_caption:
+    st.sidebar.info(_mvp_caption)
+
 _topic_options = topic_labels_for_grade(_grade_int)
 _default_topic = default_topic_label_for_grade(_grade_int)
 _topic_index = (
     _topic_options.index(_default_topic) if _default_topic in _topic_options else 0
 )
 
+topic = st.sidebar.selectbox(
+    "Zakres materiału",
+    options=_topic_options,
+    index=_topic_index,
+    key="fm_topic",
+)
+
+include_answers = st.sidebar.checkbox("Dołącz stronę z odpowiedziami", value=False)
+if include_answers:
+    _key_hint = answer_key_expectation_pl(topic, _grade_int)
+    if _key_hint:
+        st.sidebar.warning(_key_hint)
+
 with st.sidebar.form("worksheet_form"):
-    topic = st.selectbox(
-        "Zakres materiału",
-        options=_topic_options,
-        index=_topic_index,
-    )
     number_of_tasks = st.number_input("Liczba zadań", min_value=1, max_value=30, value=5, step=1)
     _profile_ids = profile_ids_for_ui()
     _profile_labels = profile_selectbox_labels()
@@ -116,7 +130,6 @@ with st.sidebar.form("worksheet_form"):
     )
     include_illustration = st.checkbox("Ilustracja w karcie", value=False)
     include_workspace = st.checkbox("Miejsce na obliczenia", value=True)
-    include_answers = st.checkbox("Dołącz stronę z odpowiedziami", value=False)
     submitted = st.form_submit_button("🧠 Generuj kartę", use_container_width=True)
 
 render_history_sidebar(_history_store)
@@ -173,8 +186,8 @@ if page == "Generuj":
             st.markdown(
                 """
 - Wymaga `OPENAI_API_KEY` w `.env` lub Secrets (Streamlit Cloud).
-- Klasy 1–3: max 15 zadań.
-- Klucz odpowiedzi działa dla wybranych formatów zadań.
+- Klasy 1–3: max 15 zadań; klasy 4–8: wąski zakres rachunkowy (nie pełna PP).
+- Klucz odpowiedzi: pełny, częściowy lub ręczny — zależnie od tematu (podpowiedź przy checkboxie).
 - Historia i recenzje są **lokalne** na tym komputerze (bez kont użytkowników).
                 """
             )

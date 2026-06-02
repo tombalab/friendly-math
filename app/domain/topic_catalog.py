@@ -255,7 +255,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="równania",
         grades_min=4,
         grades_max=8,
-        capabilities=_cap("partial", skip_images=True),
+        capabilities=_cap("full", skip_images=True),
     ),
 }
 
@@ -423,3 +423,30 @@ def visual_family_for_topic(topic_input: str) -> Optional[str]:
 def should_skip_images(topic_input: str) -> bool:
     resolved = resolve_topic(topic_input, grade=2)
     return resolved.capabilities.skip_images
+
+
+def upper_grades_mvp_caption_pl(grade: int) -> str | None:
+    """Komunikat UI: klasy 4–8 to wąski zakres rachunkowy (Faza 0)."""
+    if grade >= 4:
+        return (
+            "Klasy 4–8 (MVP): głównie ćwiczenia rachunkowe — dodawanie, odejmowanie, "
+            "mnożenie, dzielenie, ułamki, równania z okienkiem ☐. "
+            "To nie jest pełne pokrycie podstawy programowej dla tych klas."
+        )
+    return None
+
+
+def answer_key_expectation_pl(topic_input: str, grade: int) -> str | None:
+    """Krótka informacja przy włączeniu strony odpowiedzi (Faza 0)."""
+    support = resolve_topic(topic_input, grade).capabilities.answer_support
+    if support == "full":
+        return None
+    if support == "partial":
+        return (
+            "Klucz częściowy — automatycznie tylko wybrane formaty (np. działania, "
+            "ułamki o tym samym mianowniku). Reszta: ręczna weryfikacja."
+        )
+    return (
+        "Brak automatycznego klucza dla tego tematu — strona odpowiedzi wymaga "
+        "ręcznej weryfikacji (np. zadania tekstowe, pieniądze, czas)."
+    )
