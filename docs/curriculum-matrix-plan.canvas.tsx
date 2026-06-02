@@ -33,6 +33,16 @@ function StatusPill({ status }: { status: Status }) {
   );
 }
 
+function rowToneForStatus(status: Status) {
+  return status === "Dobre"
+    ? "success"
+    : status === "Częściowe"
+      ? "warning"
+      : status === "Ryzyko"
+        ? "info"
+        : "neutral";
+}
+
 const earlyRows = [
   [
     "Liczby i własności liczb",
@@ -98,7 +108,7 @@ const olderRows = [
     "dodawanie, odejmowanie, mnożenie, dzielenie",
     "4–8",
     "Częściowe",
-    "UI ma ćwiczenia rachunkowe, ale blueprinty dla 5–8 korzystają z downgrade'u zamiast zakresów per klasa.",
+    "Klasy 4–6 mają blueprinty per klasa; 7–8 nadal są ograniczone do rachunkowego MVP i korzystają z downgrade'u.",
   ],
   [
     "Liczby całkowite",
@@ -125,8 +135,8 @@ const olderRows = [
     "Algebra i równania",
     "równania",
     "4–8",
-    "Ryzyko",
-    "Blueprint i fallback używają x, a parser/wzorce preferują okienko. To rozjeżdża UI, PDF i klucz odpowiedzi.",
+    "Częściowe",
+    "Generator używa okienka ☐ zgodnego z kluczem odpowiedzi. Dla 7–8 nadal brakuje pełnego zakresu algebry.",
   ],
   [
     "Geometria płaska i przestrzenna",
@@ -152,11 +162,11 @@ const olderRows = [
 ] as const;
 
 const uiRisks = [
-  ["Równania", "x w generatorze vs ☐ w parserze i wzorcach", "wysokie"],
+  ["Równania", "okienko ☐ działa, ale 7–8 nie ma pełnej algebry", "średnie"],
   ["Odpowiedzi", "checkbox odpowiedzi przy tematach partial/none", "wysokie"],
-  ["Klasy 4–8", "6 tematów ogólnych, downgrade blueprintów", "wysokie"],
+  ["Klasy 7–8", "6 tematów ogólnych, downgrade blueprintów z kl. 6", "wysokie"],
   ["Klasa 3", "tematy do 20 jako normalna opcja zamiast powtórki", "średnie"],
-  ["Wzorce", "22 JSON-y pomagają recenzji, ale nie są mapą PP", "średnie"],
+  ["Wzorce", "35 JSON-ów pomagają recenzji, ale nie zamykają całej PP", "średnie"],
 ] as const;
 
 const phaseRows = [
@@ -180,9 +190,9 @@ const phaseRows = [
   ],
   [
     "3. Stabilizacja klas 4–6",
-    "4–7 dni",
-    "Blueprinty per klasa dla działań, ułamków dziesiętnych, liczb całkowitych, procentów i pól/obwodów.",
-    "UI 4–6 przestaje być tylko powtórką rachunkową.",
+    "zrobione: blueprinty",
+    "Dodane blueprinty per klasa dla 6 tematów UI: działania, dzielenie, ułamki i równania.",
+    "UI 4–6 nie pokazuje już downgrade dla podstawowych tematów rachunkowych.",
   ],
   [
     "4. Decyzja o 7–8",
@@ -239,9 +249,7 @@ export default function CurriculumMatrixPlan() {
           <Table
             headers={["Obszar PP", "Opcje / tematy", "Klasy", "Status", "Wniosek"]}
             rows={earlyTableRows}
-            rowTone={earlyRows.map((r) =>
-              r[3] === "Dobre" ? "success" : r[3] === "Częściowe" ? "warning" : r[3] === "Ryzyko" ? "info" : "neutral"
-            )}
+            rowTone={earlyRows.map((r) => rowToneForStatus(r[3] as Status))}
             striped
             stickyHeader
           />
@@ -270,9 +278,7 @@ export default function CurriculumMatrixPlan() {
           <Table
             headers={["Blok PP", "Opcje / tematy", "Klasy", "Status", "Wniosek"]}
             rows={olderTableRows}
-            rowTone={olderRows.map((r) =>
-              r[3] === "Dobre" ? "success" : r[3] === "Częściowe" ? "warning" : r[3] === "Ryzyko" ? "info" : "neutral"
-            )}
+            rowTone={olderRows.map((r) => rowToneForStatus(r[3] as Status))}
             striped
             stickyHeader
           />

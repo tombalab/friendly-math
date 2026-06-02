@@ -309,6 +309,48 @@ TOPIC_BLUEPRINTS: dict[str, dict[int, Blueprint]] = {
             ),
             "max_result": 100,
         },
+        4: {
+            "instruction": (
+                "Dzielenie liczb naturalnych w zakresie typowym dla klasy 4: tabliczka "
+                "mnożenia, dzielenie przez liczby jednocyfrowe i przez 10/100. "
+                "Wynik całkowity, bez reszty. Format: „Policz: a : b = ____”."
+            ),
+            "examples": _ex(
+                "Policz: 144 : 12 = ____",
+                "Policz: 360 : 10 = ____",
+                "Policz: 225 : 5 = ____",
+                "Policz: 480 : 6 = ____",
+            ),
+            "max_result": 1000,
+        },
+        5: {
+            "instruction": (
+                "Dzielenie liczb naturalnych i prostych liczb dziesiętnych. "
+                "Dobieraj przykłady z wynikiem skończonym i czytelnym dla klasy 5. "
+                "Format: „Policz: a : b = ____”."
+            ),
+            "examples": _ex(
+                "Policz: 1250 : 25 = ____",
+                "Policz: 4,8 : 2 = ____",
+                "Policz: 3,6 : 0,6 = ____",
+                "Policz: 720 : 9 = ____",
+            ),
+            "max_result": 10000,
+        },
+        6: {
+            "instruction": (
+                "Dzielenie liczb naturalnych, dziesiętnych i prostych ułamków "
+                "w zadaniach jednokrokowych. Unikaj długich rachunków pisemnych. "
+                "Format: „Policz: a : b = ____”."
+            ),
+            "examples": _ex(
+                "Policz: 15,6 : 3 = ____",
+                "Policz: 2,4 : 0,4 = ____",
+                "Policz: 3/4 : 3 = ____",
+                "Policz: 1250 : 50 = ____",
+            ),
+            "max_result": 10000,
+        },
     },
 
     # ----- Liczby i porównywanie -----
@@ -477,6 +519,35 @@ TOPIC_BLUEPRINTS: dict[str, dict[int, Blueprint]] = {
                 "Policz: 3/8 + 2/8 = ____",
                 "Policz: 5/6 − 2/6 = ____",
             ),
+        },
+        5: {
+            "instruction": (
+                "Ułamki zwykłe i dziesiętne dla klasy 5: porównywanie, skracanie, "
+                "rozszerzanie oraz dodawanie i odejmowanie prostych ułamków. "
+                "Jeśli generujesz automatyczny klucz, preferuj ten sam mianownik."
+            ),
+            "examples": _ex(
+                "Policz: 3/8 + 2/8 = ____",
+                "Policz: 7/10 − 3/10 = ____",
+                "Skróć ułamek: 6/12 = ____",
+                "Zapisz dziesiętnie: 3/10 = ____",
+            ),
+            "max_result": 100,
+        },
+        6: {
+            "instruction": (
+                "Ułamki zwykłe, dziesiętne i liczby mieszane dla klasy 6. "
+                "Zadania jednokrokowe: dodawanie, odejmowanie, mnożenie przez liczbę "
+                "naturalną lub proste dzielenie. Preferuj formaty możliwe do ręcznej "
+                "weryfikacji, a dla automatycznego klucza — ten sam mianownik."
+            ),
+            "examples": _ex(
+                "Policz: 5/12 + 4/12 = ____",
+                "Policz: 1,25 + 0,75 = ____",
+                "Policz: 3 × 2/7 = ____",
+                "Policz: 7/8 − 3/8 = ____",
+            ),
+            "max_result": 100,
         },
     },
 
@@ -662,22 +733,81 @@ TOPIC_BLUEPRINTS: dict[str, dict[int, Blueprint]] = {
 
     # ----- Stare tematy (zachowane dla klas 4+) -----
     "dodawanie": {
-        # Fallback dla starych klas (4-8) – tu zachowujemy stary behavior.
         4: {
-            "instruction": "Dodawanie liczb wielocyfrowych odpowiednio do klasy.",
+            "instruction": (
+                "Dodawanie liczb naturalnych wielocyfrowych dla klasy 4. "
+                "Jedno działanie w linii, format: „Policz: a + b = ____”."
+            ),
             "examples": _ex(
                 "Policz: 234 + 156 = ____",
                 "Policz: 1245 + 678 = ____",
             ),
+            "max_result": 10000,
+        },
+        5: {
+            "instruction": (
+                "Dodawanie liczb naturalnych i prostych liczb dziesiętnych dla klasy 5. "
+                "Jedno działanie, bez zadań tekstowych."
+            ),
+            "examples": _ex(
+                "Policz: 2345 + 678 = ____",
+                "Policz: 12,5 + 3,75 = ____",
+                "Policz: 4800 + 1250 = ____",
+                "Policz: 6,2 + 4,8 = ____",
+            ),
+            "max_result": 20000,
+        },
+        6: {
+            "instruction": (
+                "Dodawanie liczb naturalnych, dziesiętnych i prostych liczb ujemnych "
+                "dla klasy 6. Jedno działanie w linii."
+            ),
+            "examples": _ex(
+                "Policz: 12,75 + 8,25 = ____",
+                "Policz: 5600 + 3400 = ____",
+                "Policz: -7 + 12 = ____",
+                "Policz: 3,4 + 0,65 = ____",
+            ),
+            "max_result": 50000,
         },
     },
     "odejmowanie": {
         4: {
-            "instruction": "Odejmowanie liczb wielocyfrowych odpowiednio do klasy.",
+            "instruction": (
+                "Odejmowanie liczb naturalnych wielocyfrowych dla klasy 4. "
+                "Wynik nieujemny, jedno działanie w linii."
+            ),
             "examples": _ex(
                 "Policz: 456 − 178 = ____",
                 "Policz: 1000 − 345 = ____",
             ),
+            "max_result": 10000,
+        },
+        5: {
+            "instruction": (
+                "Odejmowanie liczb naturalnych i prostych liczb dziesiętnych dla klasy 5. "
+                "Wynik nieujemny, jedno działanie."
+            ),
+            "examples": _ex(
+                "Policz: 2450 − 875 = ____",
+                "Policz: 12,5 − 3,75 = ____",
+                "Policz: 7000 − 2680 = ____",
+                "Policz: 9,4 − 2,8 = ____",
+            ),
+            "max_result": 20000,
+        },
+        6: {
+            "instruction": (
+                "Odejmowanie liczb naturalnych, dziesiętnych i prostych liczb ujemnych "
+                "dla klasy 6. Jedno działanie w linii."
+            ),
+            "examples": _ex(
+                "Policz: 15,5 − 7,25 = ____",
+                "Policz: 9000 − 4750 = ____",
+                "Policz: -3 − 8 = ____",
+                "Policz: 4,2 − 6,5 = ____",
+            ),
+            "max_result": 50000,
         },
     },
     "mnożenie": {
@@ -687,6 +817,33 @@ TOPIC_BLUEPRINTS: dict[str, dict[int, Blueprint]] = {
                 "Policz: 24 × 3 = ____",
                 "Policz: 56 × 4 = ____",
             ),
+            "max_result": 1000,
+        },
+        5: {
+            "instruction": (
+                "Mnożenie liczb naturalnych i prostych dziesiętnych dla klasy 5. "
+                "Jedno działanie, wynik możliwy do sprawdzenia w kluczu."
+            ),
+            "examples": _ex(
+                "Policz: 125 × 8 = ____",
+                "Policz: 24 × 15 = ____",
+                "Policz: 3,5 × 4 = ____",
+                "Policz: 12 × 0,5 = ____",
+            ),
+            "max_result": 10000,
+        },
+        6: {
+            "instruction": (
+                "Mnożenie liczb naturalnych, dziesiętnych i prostych ułamków dla klasy 6. "
+                "Jedno działanie w linii."
+            ),
+            "examples": _ex(
+                "Policz: 2,4 × 3 = ____",
+                "Policz: 15 × 24 = ____",
+                "Policz: 3 × 2/5 = ____",
+                "Policz: 0,6 × 0,7 = ____",
+            ),
+            "max_result": 20000,
         },
     },
     "równania": {
@@ -704,6 +861,33 @@ TOPIC_BLUEPRINTS: dict[str, dict[int, Blueprint]] = {
                 f"Rozwiąż: 72 : {_BOX} = 8",
             ),
             "max_result": 100,
+        },
+        5: {
+            "instruction": (
+                f"Równania jednokrokowe z okienkiem {_BOX} dla klasy 5. "
+                "Używaj liczb naturalnych i prostych dziesiętnych, bez litery x. "
+                "Format: „Rozwiąż: … = …”."
+            ),
+            "examples": _ex(
+                f"Rozwiąż: {_BOX} + 25 = 80",
+                f"Rozwiąż: 6 × {_BOX} = 54",
+                f"Rozwiąż: {_BOX} − 12,5 = 7,5",
+                f"Rozwiąż: 120 : {_BOX} = 10",
+            ),
+            "max_result": 1000,
+        },
+        6: {
+            "instruction": (
+                f"Równania jednokrokowe z okienkiem {_BOX} dla klasy 6, także "
+                "z prostymi liczbami ujemnymi i dziesiętnymi. Bez litery x."
+            ),
+            "examples": _ex(
+                f"Rozwiąż: {_BOX} + 7 = -3",
+                f"Rozwiąż: 2,5 × {_BOX} = 10",
+                f"Rozwiąż: {_BOX} − 4,5 = 8",
+                f"Rozwiąż: 3 × {_BOX} = 2,4",
+            ),
+            "max_result": 1000,
         },
     },
 }

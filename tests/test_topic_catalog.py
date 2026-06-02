@@ -79,6 +79,15 @@ def test_blueprint_for_legacy_dodawanie_grade_8():
     assert r.blueprint_status in ("exact", "downgraded")
 
 
+def test_grade_4_6_arithmetic_topics_have_exact_blueprints():
+    topics = ("dodawanie", "odejmowanie", "mnożenie", "dzielenie", "ułamki", "równania")
+
+    for grade in (4, 5, 6):
+        for topic in topics:
+            resolved = resolve_topic(topic, grade=grade)
+            assert resolved.blueprint_status == "exact", (grade, topic, resolved.warnings)
+
+
 def test_unknown_topic():
     r = resolve_topic("nieistniejący temat", grade=2)
     assert r.blueprint_status == "unknown"
