@@ -191,7 +191,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="pieniądze",
         grades_min=2,
         grades_max=3,
-        capabilities=_cap("none"),
+        capabilities=_cap("partial"),
     ),
     "czas": TopicDefinition(
         topic_id="czas",
@@ -199,7 +199,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="czas",
         grades_min=1,
         grades_max=3,
-        capabilities=_cap("none"),
+        capabilities=_cap("partial"),
     ),
     "pomiary_dlugosci": TopicDefinition(
         topic_id="pomiary_dlugosci",
@@ -207,7 +207,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="pomiary długości",
         grades_min=1,
         grades_max=3,
-        capabilities=_cap("none"),
+        capabilities=_cap("partial"),
     ),
     "obwody": TopicDefinition(
         topic_id="obwody",
@@ -215,7 +215,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="obwody",
         grades_min=2,
         grades_max=3,
-        capabilities=_cap("none"),
+        capabilities=_cap("partial"),
     ),
     "zadania_tekstowe": TopicDefinition(
         topic_id="zadania_tekstowe",
@@ -223,7 +223,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="zadania tekstowe",
         grades_min=1,
         grades_max=3,
-        capabilities=_cap("none"),
+        capabilities=_cap("partial"),
     ),
     "dodawanie": TopicDefinition(
         topic_id="dodawanie",
@@ -448,5 +448,5 @@ def answer_key_expectation_pl(topic_input: str, grade: int) -> str | None:
         )
     return (
         "Brak automatycznego klucza dla tego tematu — strona odpowiedzi wymaga "
-        "ręcznej weryfikacji (np. zadania tekstowe, pieniądze, czas)."
+        "ręcznej weryfikacji."
     )

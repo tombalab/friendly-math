@@ -118,7 +118,7 @@ Brak kart JSON (klasa × temat) — najpierw:
 3. **Ułamki intuicyjne:** `ulamki` (kl. 2–3, partial key)
 4. **Uzupełnienie rachunku:** porównywanie kl. 1/3, tabliczka, dzielenie kl. 3, równania z okienkiem kl. 1/3
 
-Aktualnie **22** wzorce; docelowo Faza 2: **≥35** dla rdzenia I–III.
+Aktualnie **30** wzorców (Faza 2 w toku); docelowo: **≥35** dla rdzenia I–III.
 
 ---
 

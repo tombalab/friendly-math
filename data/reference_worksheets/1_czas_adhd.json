@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 1 – czas (ADHD)",
+    "grade": 1,
+    "topic": "czas",
+    "profile": "ADHD",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Krótkie polecenia o godzinie. Klucz częściowy — tylko proste wzorce zegara."
+  },
+  "tasks": [
+    "Która godzina, gdy mała wskazówka pokazuje 3, a duża 12? ____",
+    "Która godzina, gdy mała wskazówka pokazuje 6, a duża 12? ____",
+    "Która godzina, gdy mała wskazówka pokazuje 9, a duża 12? ____",
+    "Która godzina, gdy mała wskazówka pokazuje 1, a duża 12? ____"
+  ],
+  "answers": ["3", "6", "9", "1"],
+  "quality_criteria": [
+    "Jedno krótkie pytanie na zadanie.",
+    "Bez zadań tekstowych z imionami.",
+    "Godziny całkowite (wskazówka mała na liczbie, duża na 12).",
+    "Maks. 6 zadań na karcie.",
+    "Format spójny w całej karcie."
+  ],
+  "structured_criteria": {
+    "max_task_length": 85,
+    "forbidden_phrases": ["Ania", "Marek", "kupił"],
+    "max_word_problem_sentences": 2
+  }
+}

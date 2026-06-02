@@ -1,0 +1,34 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 2 – obwody (standardowy)",
+    "grade": 2,
+    "topic": "obwody",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Obwód kwadratu i prostokąta — wzór 4×bok lub 2×(a+b)."
+  },
+  "tasks": [
+    "Oblicz obwód kwadratu o boku 4 cm. Obwód = ____ cm",
+    "Oblicz obwód kwadratu o boku 5 cm. Obwód = ____ cm",
+    "Oblicz obwód prostokąta o bokach 3 cm i 5 cm. Obwód = ____ cm",
+    "Oblicz obwód prostokąta o bokach 2 cm i 6 cm. Obwód = ____ cm",
+    "Oblicz obwód kwadratu o boku 10 cm. Obwód = ____ cm"
+  ],
+  "answers": ["16", "20", "16", "16", "40"],
+  "quality_criteria": [
+    "Figury podane wprost — bez zadań tekstowych.",
+    "Jedna figura na zadanie.",
+    "Wynik w centymetrach.",
+    "Liczby całkowite, typowe dla klasy 2.",
+    "Spójny zapis „Obwód = ____ cm”."
+  ],
+  "structured_criteria": {
+    "max_operand": 20,
+    "max_result": 100,
+    "max_operations_per_task": 2,
+    "max_task_length": 95,
+    "forbidden_phrases": ["Ania", "kupił"],
+    "max_word_problem_sentences": 2
+  }
+}

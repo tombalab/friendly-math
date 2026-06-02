@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 3 – pieniądze (dyskalkulia)",
+    "grade": 3,
+    "topic": "pieniądze",
+    "profile": "dyskalkulia",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Większe kwoty do 50 zł / 5000 gr. Ten sam format co klasa 2."
+  },
+  "tasks": [
+    "Ile to razem? 12 zł + 8 zł = ____ zł",
+    "Ile to razem? 25 zł + 15 zł = ____ zł",
+    "Zamień: 5 zł = ____ gr",
+    "Zamień: 10 zł = ____ gr",
+    "Ile reszty z 50 zł, gdy zapłacono 32 zł? ____ zł",
+    "Ile reszty z 30 zł, gdy zapłacono 18 zł? ____ zł"
+  ],
+  "answers": ["20", "40", "500", "1000", "18", "12"],
+  "quality_criteria": [
+    "Jedna operacja na zadanie.",
+    "Kwoty całkowite w złotówkach.",
+    "Bez zadań ze sklepem wieloetapowego.",
+    "Format identyczny w całej karcie.",
+    "Wynik w jednostce z pytania."
+  ],
+  "structured_criteria": {
+    "max_operand": 50,
+    "max_result": 5000,
+    "max_operations_per_task": 1,
+    "max_task_length": 95,
+    "forbidden_phrases": [],
+    "max_word_problem_sentences": 2
+  }
+}

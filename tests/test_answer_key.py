@@ -11,12 +11,37 @@ from app.generators.answers import (
 def test_topic_none_skips_automatic_answers():
     key = compute_answer_key(
         ["Policz: 2 + 3 = ____"],
-        topic_id="zadania_tekstowe",
+        topic_label="nieznany temat testowy",
         grade=2,
     )
     assert key.items[0].status == "unsupported"
     assert key.items[0].reason is not None
     assert "temat bez" in key.items[0].reason.lower()
+
+
+def test_practical_topic_answers():
+    key = compute_answer_key(
+        ["Ile to razem? 5 zł + 2 zł = ____ zł", "Zamień: 3 zł = ____ gr"],
+        topic_id="pieniadze",
+        grade=2,
+    )
+    assert key.supported_count == 2
+    assert key.items[0].value == "7"
+    assert key.items[1].value == "300"
+
+    key2 = compute_answer_key(
+        ["Zamień: 2 m = ____ cm"],
+        topic_id="pomiary_dlugosci",
+        grade=2,
+    )
+    assert key2.items[0].value == "200"
+
+    key3 = compute_answer_key(
+        ["Ania miała 5 jabłek. Kupiła 4 jabłka. Ile ma jabłek? Odpowiedź: ____"],
+        topic_id="zadania_tekstowe",
+        grade=2,
+    )
+    assert key3.items[0].value == "9"
 
 
 def test_display_text_explains_unsupported():

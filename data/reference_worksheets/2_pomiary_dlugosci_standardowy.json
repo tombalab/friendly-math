@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 2 – pomiary długości (standardowy)",
+    "grade": 2,
+    "topic": "pomiary długości",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Zamiana m↔cm i cm↔mm oraz proste przeliczenie metrów na centymetry."
+  },
+  "tasks": [
+    "Zamień: 2 m = ____ cm",
+    "Zamień: 5 m = ____ cm",
+    "Zamień: 1 cm = ____ mm",
+    "Zamień: 3 cm = ____ mm",
+    "Ile cm to 5 m? ____",
+    "Ile cm to 2 m? ____"
+  ],
+  "answers": ["200", "500", "10", "30", "500", "200"],
+  "quality_criteria": [
+    "Wyłącznie zamiana jednostek lub jedno przeliczenie.",
+    "Liczby całkowite, bez ułamków.",
+    "Brak zadań tekstowych z narracją.",
+    "Format krótki, jedna luka na wynik.",
+    "Wynik w jednostce wskazanej w pytaniu."
+  ],
+  "structured_criteria": {
+    "max_operand": 10,
+    "max_result": 1000,
+    "max_operations_per_task": 1,
+    "max_task_length": 95,
+    "forbidden_phrases": ["Ania", "kupił"],
+    "max_word_problem_sentences": 2
+  }
+}
