@@ -28,6 +28,16 @@ PDF_PRINT_DEFAULTS: dict[str, Any] = {
     "header_image_width_pt": 160,
     "header_image_height_pt": 90,
     "task_image_aspect": 100 / 480,
+    "card_padding": 12,
+    "section_gap": 18,
+    "block_gap": 12,
+    "answer_box_height": 34,
+    "border_color": "#DDDDDD",
+    "accent_color": "#3f51b5",
+    "soft_color": "#f6f7fb",
+    "template_id": "classic",
+    "progress_markers": False,
+    "visual_cue_style": "label",
 }
 
 LOW_STIMULI_PDF_BOOST: dict[str, Any] = {
@@ -65,6 +75,16 @@ _TYPOGRAPHY_KEYS = frozenset(
         "text_color",
         "muted_color",
         "background_color",
+    "card_padding",
+    "section_gap",
+    "block_gap",
+    "answer_box_height",
+    "border_color",
+    "accent_color",
+    "soft_color",
+    "template_id",
+    "progress_markers",
+    "visual_cue_style",
     }
 )
 
@@ -92,6 +112,16 @@ class ResolvedWorksheetLayout:
     header_image_width_pt: float
     header_image_height_pt: float
     task_image_aspect: float
+    card_padding: int
+    section_gap: int
+    block_gap: int
+    answer_box_height: int
+    border_color: str
+    accent_color: str
+    soft_color: str
+    template_id: str
+    progress_markers: bool
+    visual_cue_style: str
     is_low_stimuli: bool
     source: str
 
@@ -116,6 +146,16 @@ class ResolvedWorksheetLayout:
             "header_image_width_pt": self.header_image_width_pt,
             "header_image_height_pt": self.header_image_height_pt,
             "task_image_aspect": self.task_image_aspect,
+            "card_padding": self.card_padding,
+            "section_gap": self.section_gap,
+            "block_gap": self.block_gap,
+            "answer_box_height": self.answer_box_height,
+            "border_color": self.border_color,
+            "accent_color": self.accent_color,
+            "soft_color": self.soft_color,
+            "template_id": self.template_id,
+            "progress_markers": self.progress_markers,
+            "visual_cue_style": self.visual_cue_style,
         }
 
     @classmethod
@@ -142,6 +182,16 @@ class ResolvedWorksheetLayout:
             header_image_width_pt=float(values.get("header_image_width_pt", 160)),
             header_image_height_pt=float(values.get("header_image_height_pt", 90)),
             task_image_aspect=float(values.get("task_image_aspect", 100 / 480)),
+            card_padding=int(values.get("card_padding", 12)),
+            section_gap=int(values.get("section_gap", 18)),
+            block_gap=int(values.get("block_gap", 12)),
+            answer_box_height=int(values.get("answer_box_height", 34)),
+            border_color=str(values.get("border_color", "#DDDDDD")),
+            accent_color=str(values.get("accent_color", "#3f51b5")),
+            soft_color=str(values.get("soft_color", "#f6f7fb")),
+            template_id=str(values.get("template_id", "classic")),
+            progress_markers=bool(values.get("progress_markers", False)),
+            visual_cue_style=str(values.get("visual_cue_style", "label")),
             is_low_stimuli=is_low_stimuli,
             source=source,
         )
@@ -154,6 +204,7 @@ def resolve_worksheet_layout(
     *,
     include_workspace: bool = True,
     per_task_images_requested: bool = False,
+    worksheet_plan=None,
 ) -> ResolvedWorksheetLayout:
     values = dict(PDF_PRINT_DEFAULTS)
     source = "pdf_defaults"
@@ -178,6 +229,25 @@ def resolve_worksheet_layout(
     if resolved_profile.is_low_stimuli:
         values.update(low_stimuli_boost_for_profile(resolved_profile.profile_id))
         source = "low_stimuli_boost"
+
+    if worksheet_plan is not None:
+        values.update(
+            {
+                "template_id": worksheet_plan.template.template_id,
+                "accent_color": worksheet_plan.template.accent_color,
+                "soft_color": worksheet_plan.template.soft_color,
+                "border_color": worksheet_plan.template.border_color,
+                "progress_markers": worksheet_plan.strategy.progress_markers,
+            }
+        )
+        group = worksheet_plan.strategy.profile_group
+        if group == "dyskalkulia":
+            values.update({"card_padding": 16, "section_gap": 22, "block_gap": 18, "answer_box_height": 44})
+        elif group == "adhd":
+            values.update({"card_padding": 12, "section_gap": 18, "block_gap": 14, "answer_box_height": 34})
+        elif group == "grafomotoryka":
+            values.update({"card_padding": 16, "section_gap": 22, "block_gap": 18, "answer_box_height": 54})
+        source = f"{source}+worksheet_plan"
 
     values = _apply_grade_readability(values, grade)
 

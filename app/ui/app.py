@@ -20,6 +20,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 import streamlit as st
+from app.domain.educational_strategy import available_templates
 from app.domain.profile_catalog import (
     default_profile_id,
     profile_ids_for_ui,
@@ -125,6 +126,12 @@ with st.sidebar.form("worksheet_form"):
         format_func=lambda pid: _profile_labels.get(pid, pid),
     )
     st.caption(teacher_hint_for_profile(student_profile))
+    _templates = available_templates()
+    visual_template_id = st.selectbox(
+        "Szablon wizualny",
+        options=list(_templates.keys()),
+        format_func=lambda tid: _templates.get(tid, tid),
+    )
     worksheet_label = st.text_input(
         "Etykieta karty (opcjonalnie)",
         placeholder="np. grupa A",
@@ -167,6 +174,7 @@ if submitted:
         include_workspace=include_workspace,
         include_answers=include_answers,
         worksheet_label=worksheet_label.strip() or None,
+        visual_template_id=visual_template_id,
     )
     service = WorksheetService(output_dir=OUT_DIR, history_dir=HISTORY_DIR)
     with st.spinner("Generowanie karty…"):

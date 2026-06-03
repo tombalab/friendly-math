@@ -17,6 +17,7 @@ PROFILE_DISPLAY_ORDER: tuple[str, ...] = (
     "dyskalkulia",
     "dysleksja",
     "trudności w nauce",
+    "trudności grafomotoryczne",
     "ADHD",
     "zdolny",
 )

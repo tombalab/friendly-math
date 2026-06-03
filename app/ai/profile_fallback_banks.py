@@ -509,12 +509,12 @@ def apply_profile_to_standard_bank(
         if enriched:
             return enriched
 
-    if topic_id == "ulamki" and pg in ("adhd", "dyskalkulia", "trudnosci"):
+    if topic_id == "ulamki" and pg in ("adhd", "dyskalkulia", "trudnosci", "grafomotoryka"):
         shrunk = _shrink_fraction_bank(bank, pg, grade)
         if shrunk:
             return shrunk
 
-    if pg in ("adhd", "dyskalkulia", "trudnosci"):
+    if pg in ("adhd", "dyskalkulia", "trudnosci", "grafomotoryka"):
         shrunk = _shrink_arithmetic_bank(bank, pg, grade)
         if shrunk:
             return shrunk
@@ -607,7 +607,7 @@ def _shrink_fraction_bank(
     for t in bank:
         fracs = re.findall(r"(\d+)\s*/\s*(\d+)", t)
         if not fracs:
-            if pg in ("adhd", "trudnosci") and any(
+            if pg in ("adhd", "trudnosci", "grafomotoryka") and any(
                 w in t.casefold() for w in ("połowa", "ćwierć", "pokoloruj", "zaznacz")
             ):
                 out.append(t)
