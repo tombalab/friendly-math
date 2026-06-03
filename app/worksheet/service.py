@@ -254,14 +254,32 @@ def generate_worksheet(
             )
         )
 
+    header_image, task_images, image_coverage = _resolve_images(
+        request, tasks, resolved_topic, resolved_profile, warnings
+    )
+    if image_coverage is not None:
+        trace.emit(
+            EVENT_IMAGE_COVERAGE,
+            mode=image_coverage.mode,
+            requested=image_coverage.requested,
+            rendered_count=image_coverage.rendered_count,
+            total_slots=image_coverage.total_slots,
+        )
+
     resolved_layout: ResolvedWorksheetLayout
     layout_source = "resolver"
+    per_task_images_requested = bool(
+        image_coverage is not None
+        and image_coverage.requested
+        and image_coverage.mode == "per_task"
+    )
     try:
         resolved_layout = resolve_worksheet_layout(
             resolved_profile,
             request.grade,
             request.number_of_tasks,
             include_workspace=request.include_workspace,
+            per_task_images_requested=per_task_images_requested,
         )
         layout_source = resolved_layout.source
     except Exception as exc:
@@ -274,8 +292,16 @@ def generate_worksheet(
         )
         from app.domain.worksheet_layout import PDF_PRINT_DEFAULTS
 
+        fallback_values = dict(PDF_PRINT_DEFAULTS)
+        if not request.include_workspace:
+            fallback_values["workspace_lines"] = 0
+        elif per_task_images_requested:
+            fallback_values["workspace_lines"] = min(
+                int(fallback_values.get("workspace_lines", 0)),
+                2,
+            )
         resolved_layout = ResolvedWorksheetLayout.from_mapping(
-            PDF_PRINT_DEFAULTS,
+            fallback_values,
             is_low_stimuli=resolved_profile.is_low_stimuli,
             source="fallback",
         )
@@ -287,18 +313,6 @@ def generate_worksheet(
         task_font_size=resolved_layout.task_font_size,
         is_low_stimuli=resolved_layout.is_low_stimuli,
     )
-
-    header_image, task_images, image_coverage = _resolve_images(
-        request, tasks, resolved_topic, resolved_profile, warnings
-    )
-    if image_coverage is not None:
-        trace.emit(
-            EVENT_IMAGE_COVERAGE,
-            mode=image_coverage.mode,
-            requested=image_coverage.requested,
-            rendered_count=image_coverage.rendered_count,
-            total_slots=image_coverage.total_slots,
-        )
 
     answer_key = None
     if request.include_answers:
@@ -498,6 +512,7 @@ def _resolve_images(
                 tasks=tasks,
                 topic=resolved_topic.blueprint_key,
                 profile=resolved_profile.profile_id,
+                size=(960, 220),
                 grade=request.grade,
             )
             images = img_result.image_bytes_list
@@ -526,11 +541,41 @@ def _resolve_images(
             )
         rendered = sum(1 for img in images if img)
         skipped_n = len(tasks) - rendered
+        coverage_ratio = rendered / len(tasks) if tasks else 1.0
+        header: bytes | None = None
+        if coverage_ratio < 0.5:
+            warnings.append(
+                WorksheetWarning(
+                    "images_low_coverage",
+                    (
+                        "Mniej niż połowa zadań ma ilustrację per zadanie — "
+                        "dodano małą ilustrację w nagłówku."
+                    ),
+                    "warning",
+                )
+            )
+            try:
+                header = generate_worksheet_image(
+                    topic=resolved_topic.blueprint_key,
+                    profile=resolved_profile.profile_id,
+                    size=(320, 150),
+                    grade=request.grade,
+                )
+            except Exception as exc:
+                warnings.append(
+                    WorksheetWarning(
+                        "images_low_coverage_header_failed",
+                        f"Nie udało się dodać ilustracji nagłówka ({exc}).",
+                        "warning",
+                    )
+                )
         detail = (
             f"{rendered}/{len(tasks)} zadań z ilustracją"
             + (f"; {skipped_n} pominięto (liczby poza zakresem profilu)" if skipped_n else "")
         )
-        return None, images, ImageCoverageSummary(
+        if header:
+            detail += "; dodano mały nagłówek"
+        return header if header else None, images, ImageCoverageSummary(
             mode="per_task",
             requested=True,
             rendered_count=rendered,

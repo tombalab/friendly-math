@@ -45,7 +45,7 @@ HISTORY_DIR = default_history_dir(ROOT_DIR)
 OUT_DIR = ROOT_DIR / "data" / "out"
 _history_store = history_store_for_root(ROOT_DIR)
 
-APP_VERSION = "1.2.0"
+APP_VERSION = "1.3.0"
 
 
 def _pdf_bytes_to_images(pdf_bytes: bytes, dpi: int = 120) -> list[BytesIO]:

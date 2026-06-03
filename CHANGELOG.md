@@ -33,6 +33,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.0] – 2026-06-03 – PDF quality i ilustracje profilowe
+
+### Added
+- `resolve_worksheet_layout(..., per_task_images_requested=True)` — ciaśniejszy układ przy ilustracjach per zadanie (max 2 linijki workspace)
+- Ostrzeżenie `images_low_coverage` i mały nagłówek, gdy pokrycie ilustracji per zadanie poniżej 50%
+- Historia: `images.per_task[]` z `skip_reason` per zadanie w `meta.json`
+- Test layoutu: `per_task_images_requested` → `workspace_lines <= 2`
+
+### Changed
+- Pipeline karty: najpierw `_resolve_images`, potem layout (layout reaguje na tryb per-task)
+- PNG per zadanie renderowane w 960×220 (ostrzejsze po wstawieniu do PDF)
+- PDF: zawijanie tekstu po szerokości fontu (`_wrap_text_by_width`), łamanie strony przed całym blokiem zadania (tekst + grafika + workspace)
+- PDF: nagłówek ilustracji także przy trybie per-task (mniejszy), `preserveAspectRatio` na obrazkach
+- UI: stopka i sidebar `v1.3.0`
+
+---
+
 ## [1.2.0] – 2026-06-02 – Streamlit v2 jakość P1–P2
 
 ### Added

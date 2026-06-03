@@ -153,6 +153,7 @@ def resolve_worksheet_layout(
     number_of_tasks: int,
     *,
     include_workspace: bool = True,
+    per_task_images_requested: bool = False,
 ) -> ResolvedWorksheetLayout:
     values = dict(PDF_PRINT_DEFAULTS)
     source = "pdf_defaults"
@@ -182,6 +183,12 @@ def resolve_worksheet_layout(
 
     if not include_workspace:
         values["workspace_lines"] = 0
+    elif per_task_images_requested:
+        values["workspace_lines"] = min(int(values.get("workspace_lines", 0)), 2)
+        values["task_spacing"] = max(int(values.get("task_spacing", 10)), 14)
+        values["header_image_width_pt"] = min(float(values.get("header_image_width_pt", 160)), 120.0)
+        values["header_image_height_pt"] = min(float(values.get("header_image_height_pt", 90)), 58.0)
+        source = f"{source}+per_task_images"
 
     values["answer_font_size"] = values.get("answer_font_size", values["task_font_size"])
 

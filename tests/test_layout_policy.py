@@ -103,6 +103,16 @@ def test_workspace_disabled():
     assert layout.workspace_lines == 0
 
 
+def test_per_task_images_reduce_workspace_lines():
+    layout = resolve_worksheet_layout(
+        resolve_profile("ADHD"),
+        grade=2,
+        number_of_tasks=5,
+        per_task_images_requested=True,
+    )
+    assert layout.workspace_lines <= 2
+
+
 def test_low_stimuli_boost_keys_present():
     layout = resolve_worksheet_layout(
         resolve_profile("ADHD"), grade=3, number_of_tasks=4

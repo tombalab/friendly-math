@@ -186,6 +186,15 @@ class WorksheetHistoryStore:
                 "total_slots": ic.total_slots,
                 "detail_pl": ic.detail_pl,
             }
+            if ic.per_task:
+                images["per_task"] = [
+                    {
+                        "task_index": entry.task_index,
+                        "rendered": entry.rendered,
+                        "skip_reason": entry.skip_reason,
+                    }
+                    for entry in ic.per_task
+                ]
 
         label = (worksheet_label or "").strip() or None
 

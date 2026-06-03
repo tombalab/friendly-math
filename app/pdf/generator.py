@@ -211,15 +211,27 @@ def build_worksheet_pdf_bytes(
         pass
     y -= L["metadata_spacing"]
 
-    # --- Opcjonalna ilustracja u góry ---
     tasks_list = list(tasks)
     has_task_images = bool(task_images) and len(task_images or []) == len(tasks_list)
-    if not has_task_images and image_bytes:
+
+    # --- Opcjonalna ilustracja u góry ---
+    if image_bytes:
         try:
             img_reader = ImageReader(BytesIO(image_bytes))
-            header_w = L.get("header_image_width_pt", 160)
-            header_h = L.get("header_image_height_pt", 90)
-            c.drawImage(img_reader, margin, y - header_h, width=header_w, height=header_h)
+            header_w = float(L.get("header_image_width_pt", 160))
+            header_h = float(L.get("header_image_height_pt", 90))
+            if has_task_images:
+                header_w = min(header_w, 120)
+                header_h = min(header_h, 58)
+            c.drawImage(
+                img_reader,
+                margin,
+                y - header_h,
+                width=header_w,
+                height=header_h,
+                preserveAspectRatio=True,
+                mask="auto",
+            )
             y -= header_h + 14
         except Exception:
             pass
@@ -239,61 +251,81 @@ def build_worksheet_pdf_bytes(
     workspace_gap = L["workspace_line_gap"]
 
     available_width = width - 2 * margin
-    chars_per_pt = 6.0 if task_font <= 12 else 5.5  # większa czcionka = mniej znaków/linia
-    max_chars = max(45, min(int(available_width / (chars_per_pt * 0.18)), 75))
 
     task_img_width_pt = available_width
     task_aspect = L.get("task_image_aspect", 100 / 480)
     task_img_height_pt = max(60, int(task_img_width_pt * task_aspect))
 
-    # Minimum miejsca potrzebnego na 1 zadanie (do decyzji o nowej stronie)
-    min_block_h = line_spacing + workspace_lines * workspace_gap + task_spacing
+    footer_reserved = 40
+    page_body_h = height - 2 * margin - footer_reserved
 
-    def _new_page_if_needed(y_now: float) -> tuple[float, int]:
+    def _start_new_page() -> float:
         nonlocal page_num
-        if y_now < margin + 40:  # 40 na stopkę
-            _draw_footer(c, width, margin, page_num, base_font, text_color)
-            c.showPage()
-            page_num += 1
-            _draw_page_background(c, width, height, bg_color)
-            try:
-                c.setFillColor(HexColor(text_color))
-            except Exception:
-                pass
-            return height - margin, page_num
-        return y_now, page_num
+        _draw_footer(c, width, margin, page_num, base_font, text_color)
+        c.showPage()
+        page_num += 1
+        _draw_page_background(c, width, height, bg_color)
+        try:
+            c.setFillColor(HexColor(text_color))
+        except Exception:
+            pass
+        return height - margin
+
+    def _new_page_if_block_will_not_fit(y_now: float, block_h: float) -> float:
+        if y_now - block_h < margin + footer_reserved and block_h <= page_body_h:
+            return _start_new_page()
+        if y_now < margin + footer_reserved:
+            return _start_new_page()
+        return y_now
 
     for i, task in enumerate(tasks_list, start=1):
+        prefix = f"{i}."
+        prefix_w = _string_width(prefix, base_font, task_font) + 6
+        indent = _string_width("99.", base_font, task_font) + 6
+        lines = _wrap_text_by_width(
+            task,
+            max_width=available_width - prefix_w,
+            font_name=base_font,
+            font_size=task_font,
+            continuation_width=available_width - indent,
+        )
+        has_current_image = bool(has_task_images and task_images[i - 1])
+        image_block_h = task_img_height_pt + 8 if has_current_image else 0
+        workspace_block_h = 4 + workspace_lines * workspace_gap if workspace_lines > 0 else 0
+        block_h = image_block_h + len(lines) * line_spacing + workspace_block_h + task_spacing
+        y = _new_page_if_block_will_not_fit(y, block_h)
+
         # 1) Ilustracja per zadanie (jeśli mamy)
-        if has_task_images and task_images[i - 1]:
+        if has_current_image:
             try:
                 img_reader = ImageReader(BytesIO(task_images[i - 1]))
                 c.drawImage(
                     img_reader,
                     margin, y - task_img_height_pt,
                     width=task_img_width_pt, height=task_img_height_pt,
+                    preserveAspectRatio=True,
+                    mask="auto",
                 )
                 y -= task_img_height_pt + 8
             except Exception:
                 pass
 
         # 2) Linia zadania: pogrubiony numer „1." + zwykła treść.
-        lines = _wrap_text(task, max_chars=max_chars)
         for line_idx, line in enumerate(lines):
-            y, page_num = _new_page_if_needed(y)
+            if y < margin + footer_reserved:
+                y = _start_new_page()
             if line_idx == 0:
-                prefix = f"{i}."
                 _draw_bold(c, margin, y, prefix, base_font, task_font)
-                prefix_w = _string_width(prefix, base_font, task_font) + 6
                 _draw_task_content(c, margin + prefix_w, y, line, base_font, task_font)
             else:
                 # Wcięcie kontynuacji – wyrównane do treści, nie do numeru.
-                indent = _string_width("99.", base_font, task_font) + 6
                 _draw_task_content(c, margin + indent, y, line, base_font, task_font)
             y -= line_spacing
 
         # 3) Miejsce na obliczenia (kropkowane linijki)
         if workspace_lines > 0:
+            if y - workspace_block_h < margin + footer_reserved:
+                y = _start_new_page()
             y -= 4  # mały oddech między tekstem zadania a linijkami
             y = _draw_workspace_lines(
                 c,
@@ -303,9 +335,6 @@ def build_worksheet_pdf_bytes(
             )
 
         y -= task_spacing
-        # Sprawdź czy zmieści się kolejne zadanie – jeśli nie, łam stronę.
-        if i < len(tasks_list) and y - min_block_h < margin + 40:
-            y, page_num = _new_page_if_needed(margin + 30)
 
     _draw_footer(c, width, margin, page_num, base_font, text_color)
     c.showPage()
@@ -400,6 +429,65 @@ def _draw_task_content(c, x: float, y: float, line: str,
     else:
         c.setFont(font_name, font_size)
         c.drawString(x, y, line)
+
+
+def _wrap_text_by_width(
+    text: str,
+    *,
+    max_width: float,
+    font_name: str,
+    font_size: float,
+    continuation_width: float | None = None,
+) -> list[str]:
+    """Zawija tekst według realnej szerokości w PDF, nie liczby znaków."""
+    words = text.split()
+    if not words:
+        return [""]
+
+    lines: list[str] = []
+    current = ""
+    continuation_width = continuation_width or max_width
+
+    def limit_for_current_line() -> float:
+        return max_width if not lines else continuation_width
+
+    def fits(value: str) -> bool:
+        return _string_width(value, font_name, font_size) <= limit_for_current_line()
+
+    def split_long_word(word: str) -> list[str]:
+        pieces: list[str] = []
+        current_piece = ""
+        for ch in word:
+            candidate = current_piece + ch
+            if current_piece and not fits(candidate):
+                pieces.append(current_piece)
+                current_piece = ch
+            else:
+                current_piece = candidate
+        if current_piece:
+            pieces.append(current_piece)
+        return pieces or [word]
+
+    for word in words:
+        candidate = f"{current} {word}".strip()
+        if fits(candidate):
+            current = candidate
+            continue
+
+        if current:
+            lines.append(current)
+            current = ""
+
+        if fits(word):
+            current = word
+        else:
+            parts = split_long_word(word)
+            lines.extend(parts[:-1])
+            current = parts[-1]
+
+    if current:
+        lines.append(current)
+    return lines
 
 
 def _wrap_text(text: str, max_chars: int) -> list[str]:
