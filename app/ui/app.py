@@ -49,6 +49,34 @@ _history_store = history_store_for_root(ROOT_DIR)
 APP_VERSION = "1.3.0"
 
 
+def _build_worksheet_request(
+    *,
+    grade: int,
+    topic_label: str,
+    profile_id: str,
+    number_of_tasks,
+    include_illustration: bool,
+    include_workspace: bool,
+    include_answers: bool,
+    worksheet_label: str | None,
+    visual_template_id: str | None,
+) -> WorksheetRequest:
+    """Buduje WorksheetRequest z bezpieczną konwersją typów z widgetów Streamlit."""
+    kwargs: dict = {
+        "grade": int(grade),
+        "topic_label": str(topic_label),
+        "profile_id": str(profile_id),
+        "number_of_tasks": int(number_of_tasks),
+        "include_illustration": bool(include_illustration),
+        "include_workspace": bool(include_workspace),
+        "include_answers": bool(include_answers),
+        "worksheet_label": (worksheet_label or "").strip() or None,
+    }
+    if "visual_template_id" in WorksheetRequest.__dataclass_fields__:
+        kwargs["visual_template_id"] = visual_template_id or None
+    return WorksheetRequest(**kwargs)
+
+
 def _pdf_bytes_to_images(pdf_bytes: bytes, dpi: int = 120) -> list[BytesIO]:
     out: list[BytesIO] = []
     if fitz is None:
@@ -114,11 +142,23 @@ if include_answers:
     if _key_hint:
         st.sidebar.warning(_key_hint)
 
+_profile_ids = profile_ids_for_ui()
+_profile_labels = profile_selectbox_labels()
+_default_pid = default_profile_id()
+_template_labels = available_templates()
+_template_ids = list(_template_labels.keys())
+_default_template = _template_ids[0] if _template_ids else "classic"
+
+number_of_tasks = 5
+student_profile = _default_pid
+visual_template_id = _default_template
+worksheet_label = ""
+include_illustration = False
+include_workspace = True
+submitted = False
+
 with st.sidebar.form("worksheet_form"):
     number_of_tasks = st.number_input("Liczba zadań", min_value=1, max_value=30, value=5, step=1)
-    _profile_ids = profile_ids_for_ui()
-    _profile_labels = profile_selectbox_labels()
-    _default_pid = default_profile_id()
     student_profile = st.selectbox(
         "Profil ucznia",
         options=_profile_ids,
@@ -126,11 +166,10 @@ with st.sidebar.form("worksheet_form"):
         format_func=lambda pid: _profile_labels.get(pid, pid),
     )
     st.caption(teacher_hint_for_profile(student_profile))
-    _templates = available_templates()
     visual_template_id = st.selectbox(
         "Szablon wizualny",
-        options=list(_templates.keys()),
-        format_func=lambda tid: _templates.get(tid, tid),
+        options=_template_ids,
+        format_func=lambda tid: _template_labels[tid],
     )
     worksheet_label = st.text_input(
         "Etykieta karty (opcjonalnie)",
@@ -165,15 +204,15 @@ page = st.radio(
 )
 
 if submitted:
-    request = WorksheetRequest(
+    request = _build_worksheet_request(
         grade=_grade_int,
         topic_label=topic,
         profile_id=student_profile,
-        number_of_tasks=int(number_of_tasks),
+        number_of_tasks=number_of_tasks,
         include_illustration=include_illustration,
         include_workspace=include_workspace,
         include_answers=include_answers,
-        worksheet_label=worksheet_label.strip() or None,
+        worksheet_label=worksheet_label,
         visual_template_id=visual_template_id,
     )
     service = WorksheetService(output_dir=OUT_DIR, history_dir=HISTORY_DIR)

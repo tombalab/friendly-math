@@ -271,7 +271,7 @@ def generate_worksheet(
         tasks=tasks,
         resolved_profile=resolved_profile,
         resolved_topic=resolved_topic,
-        template_id=request.visual_template_id,
+        template_id=getattr(request, "visual_template_id", None),
     )
 
     resolved_layout: ResolvedWorksheetLayout
