@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 1 – odejmowanie do 20 (dyskalkulia)",
+    "grade": 1,
+    "topic": "odejmowanie do 20",
+    "profile": "dyskalkulia",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Odejmowanie w zakresie 0–10, jeden krok, krótkie polecenie."
+  },
+  "tasks": [
+    "Policz: 9 − 3 = ____",
+    "Policz: 8 − 2 = ____",
+    "Policz: 10 − 4 = ____",
+    "Policz: 7 − 1 = ____",
+    "Policz: 6 − 2 = ____",
+    "Policz: 5 − 3 = ____"
+  ],
+  "answers": ["6", "6", "6", "6", "4", "2"],
+  "quality_criteria": [
+    "Wszystkie liczby w zakresie 1–10.",
+    "Wynik nieujemny i ≤ 10 (klasa 1).",
+    "Jedna operacja odejmowania na zadanie.",
+    "Format „Policz: a − b = ____” konsekwentny.",
+    "Brak zadań tekstowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 12,
+    "max_result": 10,
+    "allowed_operations": ["−", "-"],
+    "max_operations_per_task": 1,
+    "max_task_length": 50,
+    "forbidden_phrases": ["Ania", "kupił", "miał"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

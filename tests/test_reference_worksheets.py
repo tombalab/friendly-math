@@ -92,7 +92,7 @@ def _is_png(data: bytes) -> bool:
 def test_all_reference_files_present():
     files = list_reference_files()
     assert files, "Brak plików JSON w data/reference_worksheets/"
-    assert len(files) >= 4
+    assert len(files) >= 38
 
 
 def test_all_reference_schema_integrity():
@@ -212,7 +212,7 @@ def test_visual_skip_for_algebraic_equations_topic():
         grade=5,
     )
     per_task = generate_worksheet_images_for_tasks(
-        ["Rozwiąż: x + 8 = 15. x = ____"],
+        ["Rozwiąż: ☐ + 8 = 15"],
         topic="równania",
         profile="dyskalkulia",
         grade=5,

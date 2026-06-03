@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 8 – równania (standardowy)",
+    "grade": 8,
+    "topic": "równania",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Równania jednokrokowe z okienkiem jako wzorzec możliwy do automatycznej walidacji."
+  },
+  "tasks": [
+    "Rozwiąż: ☐ + 36 = 90",
+    "Rozwiąż: 12 × ☐ = 96",
+    "Rozwiąż: ☐ − 28 = 64",
+    "Rozwiąż: 144 : ☐ = 12",
+    "Rozwiąż: 75 + ☐ = 120",
+    "Rozwiąż: ☐ : 9 = 11"
+  ],
+  "answers": ["54", "8", "92", "12", "45", "99"],
+  "quality_criteria": [
+    "Jedna niewiadoma w okienku.",
+    "Równania jednokrokowe z czterema działaniami.",
+    "Liczby naturalne, wynik dodatni.",
+    "Format „Rozwiąż: … = …” — jedna linia na zadanie.",
+    "Brak zadań tekstowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 150,
+    "max_result": 150,
+    "allowed_operations": ["+", "−", "-", "×", "*", ":", "/", "÷"],
+    "max_operations_per_task": 1,
+    "max_task_length": 45,
+    "forbidden_phrases": ["Ania", "Marek", "kupił", "miał", "zostało"],
+    "require_format_prefix": "Rozwiąż:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

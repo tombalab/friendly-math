@@ -1,0 +1,39 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 3 – tabliczka mnożenia (standardowy)",
+    "grade": 3,
+    "topic": "tabliczka mnożenia",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Mnożenie do 10×10. Format jak w banku fallbacków."
+  },
+  "tasks": [
+    "Policz: 7 × 8 = ____",
+    "Policz: 6 × 9 = ____",
+    "Policz: 4 × 7 = ____",
+    "Policz: 8 × 5 = ____",
+    "Policz: 9 × 3 = ____",
+    "Policz: 5 × 6 = ____",
+    "Policz: 3 × 8 = ____"
+  ],
+  "answers": ["56", "54", "28", "40", "27", "30", "24"],
+  "quality_criteria": [
+    "Czynniki z tabliczki do 10.",
+    "Jedno mnożenie na zadanie.",
+    "Format „Policz: a × b = ____”.",
+    "Brak zadań tekstowych.",
+    "Wynik ≤ 100."
+  ],
+  "structured_criteria": {
+    "max_operand": 10,
+    "max_result": 100,
+    "allowed_operations": ["×", "*", "x"],
+    "max_operations_per_task": 1,
+    "max_task_length": 65,
+    "forbidden_phrases": ["Ania", "kupił", "miał"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

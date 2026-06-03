@@ -13,10 +13,10 @@
     "Policz: 4 + 1 = ____",
     "Policz: 5 + 2 = ____",
     "Policz: 6 + 3 = ____",
-    "Policz: 1 + 8 = ____",
+    "Policz: 3 + 4 = ____",
     "Policz: 4 + 5 = ____"
   ],
-  "answers": ["5", "5", "7", "9", "9", "9"],
+  "answers": ["5", "5", "7", "9", "7", "9"],
   "quality_criteria": [
     "Wszystkie liczby ≤ 10.",
     "Wynik ≤ 10 (klasa 1, bez przekroczenia dziesiątki).",

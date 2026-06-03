@@ -24,3 +24,6 @@ jobs:
 
       - name: Offline smoke check
         run: python scripts/smoke_check.py
+
+      - name: Curriculum fallback audit
+        run: python scripts/curriculum_fallback_audit.py

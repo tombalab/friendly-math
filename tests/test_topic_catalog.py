@@ -24,7 +24,39 @@ def test_scoped_topic_maps_visual_family():
 def test_rowania_skip_images():
     r = resolve_topic("równania", grade=5)
     assert r.capabilities.skip_images is True
+    assert r.capabilities.answer_support == "full"
     assert visual_family_for_topic("równania") is None
+
+
+def test_rowania_no_partial_answer_warning():
+    r = resolve_topic("równania", grade=5)
+    assert not any("Klucz odpowiedzi" in w and "części" in w.lower() for w in r.warnings)
+
+
+def test_upper_grades_mvp_caption():
+    from app.domain.topic_catalog import upper_grades_mvp_caption_pl
+
+    assert upper_grades_mvp_caption_pl(3) is None
+    assert upper_grades_mvp_caption_pl(5) is not None
+    assert "4–6" in upper_grades_mvp_caption_pl(5)
+    assert upper_grades_mvp_caption_pl(7) is not None
+    assert "procenty" in upper_grades_mvp_caption_pl(7)
+
+
+def test_answer_key_expectation_for_money():
+    from app.domain.topic_catalog import answer_key_expectation_pl
+
+    assert answer_key_expectation_pl("pieniądze", 2) is not None
+    assert answer_key_expectation_pl("dodawanie do 20", 2) is None
+
+
+def test_grade3_basic_arithmetic_topics_are_exact_review_scope():
+    add = resolve_topic("dodawanie do 20", grade=3)
+    sub = resolve_topic("odejmowanie do 20", grade=3)
+
+    assert add.blueprint_status == "exact"
+    assert sub.blueprint_status == "exact"
+    assert not any("użyto wersji dla klasy" in w for w in add.warnings + sub.warnings)
 
 
 def test_grade_filters_topics():
@@ -47,6 +79,41 @@ def test_blueprint_for_legacy_dodawanie_grade_8():
     r = resolve_topic("dodawanie", grade=8)
     assert r.has_blueprint
     assert r.blueprint_status in ("exact", "downgraded")
+
+
+def test_grade_4_6_arithmetic_topics_have_exact_blueprints():
+    topics = ("dodawanie", "odejmowanie", "mnożenie", "dzielenie", "ułamki", "równania")
+
+    for grade in (4, 5, 6):
+        for topic in topics:
+            resolved = resolve_topic(topic, grade=grade)
+            assert resolved.blueprint_status == "exact", (grade, topic, resolved.warnings)
+
+
+def test_grade_7_8_expanded_topics_in_ui():
+    labels_g7 = topic_labels_for_grade(7)
+    assert "procenty" in labels_g7
+    assert "potęgi" in labels_g7
+    assert "pitagoras" in labels_g7
+    assert "procenty" not in topic_labels_for_grade(6)
+
+
+def test_grade_7_8_topics_have_exact_blueprints():
+    topics = (
+        "dodawanie",
+        "odejmowanie",
+        "mnożenie",
+        "dzielenie",
+        "ulamki",
+        "rownania",
+        "procenty",
+        "potegi",
+        "pitagoras",
+    )
+    for grade in (7, 8):
+        for topic in topics:
+            resolved = resolve_topic(topic, grade=grade)
+            assert resolved.blueprint_status == "exact", (grade, topic, resolved.warnings)
 
 
 def test_unknown_topic():

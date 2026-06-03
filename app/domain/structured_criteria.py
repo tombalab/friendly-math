@@ -1,7 +1,7 @@
 """Machine-readable quality criteria for reference worksheets (P2.2)."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass
 from typing import Any
 
 
@@ -22,6 +22,13 @@ class StructuredQualityCriteria:
     allow_fractions: bool = False
     max_denominator: int | None = None
     max_word_problem_sentences: int | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """JSON-friendly representation for Streamlit/debug panels."""
+        raw = asdict(self)
+        raw["allowed_operations"] = list(self.allowed_operations)
+        raw["forbidden_phrases"] = list(self.forbidden_phrases)
+        return raw
 
     @classmethod
     def from_mapping(cls, raw: dict[str, Any] | None) -> StructuredQualityCriteria | None:

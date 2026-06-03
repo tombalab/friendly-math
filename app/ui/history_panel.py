@@ -1,7 +1,8 @@
-"""Local worksheet history UI (P2.5)."""
+"""Local worksheet history UI (P2.5 / Phase 3)."""
 from __future__ import annotations
 
-from pathlib import Path
+from collections.abc import Callable
+from io import BytesIO
 
 import streamlit as st
 
@@ -9,44 +10,90 @@ from app.history.store import WorksheetHistoryStore
 from app.ui.events_panel import record_download_event
 
 
-def render_history_sidebar(store: WorksheetHistoryStore) -> str | None:
-    """
-    Lista ostatnich kart w sidebarze.
-    Zwraca request_id do podglądu lub None.
-    """
-    entries = store.list_recent(limit=15)
+def render_history_sidebar(store: WorksheetHistoryStore) -> None:
+    """Filtry i skróty historii w sidebarze."""
+    entries = store.list_recent(limit=30)
     if not entries:
         st.sidebar.caption("Historia pusta — wygeneruj pierwszą kartę.")
-        return None
+        return
 
     st.sidebar.divider()
-    st.sidebar.subheader("📁 Historia (lokalna)")
-    st.sidebar.caption(
-        "Zapis w `data/history/` na tym komputerze. Bez imion uczniów — opcjonalna etykieta grupy."
+    st.sidebar.subheader("📁 Historia")
+    filter_grade = st.sidebar.selectbox(
+        "Filtr: klasa",
+        options=["wszystkie"] + sorted({str(e.grade) for e in entries}),
+        key="fm_hist_filter_grade",
+    )
+    filter_topic = st.sidebar.text_input(
+        "Filtr: temat",
+        placeholder="np. dodawanie",
+        key="fm_hist_filter_topic",
     )
 
-    by_id = {e.request_id: e for e in entries}
+    grade_val = None if filter_grade == "wszystkie" else int(filter_grade)
+    filtered = store.list_recent(
+        limit=15,
+        grade=grade_val,
+        topic_query=filter_topic or None,
+    )
+
+    if not filtered:
+        st.sidebar.caption("Brak wpisów dla filtra.")
+        return
+
+    by_id = {e.request_id: e for e in filtered}
     selected = st.sidebar.selectbox(
         "Ostatnie karty",
         options=list(by_id.keys()),
-        format_func=lambda rid: by_id[rid].display_title_pl(),
+        format_func=lambda rid: by_id[rid].display_title_pl(
+            reviewed=store.has_review(rid)
+        ),
         key="fm_history_select",
     )
 
-    if st.sidebar.button("Otwórz wybraną", key="fm_history_open"):
+    c1, c2 = st.sidebar.columns(2)
+    if c1.button("Otwórz", key="fm_history_open", use_container_width=True):
         st.session_state["fm_history_view"] = selected
-        st.session_state.pop("fm_show_last_generation", None)
+        st.session_state["fm_nav_target"] = "Historia"
+        st.rerun()
+    if c2.button("Recenzja", key="fm_history_review", use_container_width=True):
+        st.session_state["fm_history_view"] = selected
+        st.session_state["fm_nav_target"] = "Recenzja"
+        st.rerun()
 
-    if st.session_state.get("fm_history_view"):
-        return st.session_state["fm_history_view"]
-    return None
+    last = st.session_state.get("fm_last_result")
+    if last and last.request_id and st.sidebar.button("Ostatnia generacja"):
+        st.session_state.pop("fm_history_view", None)
+        st.session_state["fm_nav_target"] = "Generuj"
+        st.rerun()
+
+
+def render_history_page(
+    store: WorksheetHistoryStore,
+    request_id: str | None,
+    *,
+    pdf_to_images: Callable[[bytes], list[BytesIO]],
+) -> None:
+    """Pełnostronicowy podgląd historii."""
+    if not request_id:
+        entries = store.list_recent(limit=20)
+        if not entries:
+            st.info("Brak zapisanych kart. Wygeneruj pierwszą kartę w zakładce **Generuj**.")
+            return
+        st.caption("Wybierz kartę w panelu bocznym → **Otwórz**.")
+        for e in entries[:10]:
+            badge = e.quality_badge_pl
+            st.markdown(f"- **{e.display_title_pl(reviewed=store.has_review(e.request_id))}** — _{badge}_")
+        return
+
+    render_history_view(store, request_id, pdf_to_images=pdf_to_images)
 
 
 def render_history_view(
     store: WorksheetHistoryStore,
     request_id: str,
     *,
-    pdf_to_images,
+    pdf_to_images: Callable[[bytes], list[BytesIO]],
 ) -> None:
     """Podgląd karty z historii."""
     meta = store.load_meta(request_id)
@@ -60,8 +107,8 @@ def render_history_view(
         return
 
     st.subheader("📁 Karta z historii")
-    st.caption(meta.display_title_pl())
-    st.caption(f"`request_id`: {meta.request_id}")
+    st.caption(meta.display_title_pl(reviewed=store.has_review(request_id)))
+    st.caption(f"`request_id`: {meta.request_id} · jakość: **{meta.quality_badge_pl}**")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -82,6 +129,10 @@ def render_history_view(
             + ("…" if len(meta.warning_codes) > 8 else "")
         )
 
+    review = store.load_review(request_id)
+    if review:
+        st.success(f"Recenzja: {review.get('rating')}/5")
+
     if meta.answers.get("enabled"):
         st.markdown(f"**Klucz odpowiedzi:** {meta.answers.get('summary_pl', '—')}")
     if meta.images:
@@ -101,8 +152,6 @@ def render_history_view(
         st.caption("Podgląd niedostępny — pobierz PDF.")
 
     class _DownloadProxy:
-        """Minimalny obiekt dla record_download_event."""
-
         def __init__(self, rid: str, data: bytes) -> None:
             self.request_id = rid
             self.success = True
@@ -116,14 +165,16 @@ def render_history_view(
         mime="application/pdf",
         on_click=record_download_event,
         args=(_DownloadProxy(request_id, pdf_bytes),),
+        key=f"hist_dl_{request_id[:8]}",
     )
 
     if st.button("Zamknij podgląd historii"):
         st.session_state.pop("fm_history_view", None)
+        st.session_state["fm_nav_target"] = "Generuj"
         st.rerun()
 
 
-def history_store_for_root(project_root: Path) -> WorksheetHistoryStore:
+def history_store_for_root(project_root) -> WorksheetHistoryStore:
     from app.history.store import default_history_dir
 
     return WorksheetHistoryStore(default_history_dir(project_root))

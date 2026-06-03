@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 2 – pieniądze (standardowy)",
+    "grade": 2,
+    "topic": "pieniądze",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Suma w złotówkach, zamiana zł→gr, reszta. Klucz częściowy dla prostych formatów."
+  },
+  "tasks": [
+    "Ile to razem? 5 zł + 2 zł = ____ zł",
+    "Ile to razem? 3 zł + 4 zł = ____ zł",
+    "Zamień: 3 zł = ____ gr",
+    "Zamień: 2 zł = ____ gr",
+    "Ile reszty z 10 zł, gdy zapłacono 6 zł? ____ zł",
+    "Ile reszty z 20 zł, gdy zapłacono 15 zł? ____ zł"
+  ],
+  "answers": ["7", "7", "300", "200", "4", "5"],
+  "quality_criteria": [
+    "Kwoty w zakresie typowym dla klasy 2.",
+    "Jedna operacja na zadanie.",
+    "Bez zadań wieloetapowych ze sklepem / narracją.",
+    "Format spójny: suma, zamiana lub reszta.",
+    "Wyniki w zł lub gr zgodnie z pytaniem."
+  ],
+  "structured_criteria": {
+    "max_operand": 20,
+    "max_result": 1000,
+    "max_operations_per_task": 1,
+    "max_task_length": 95,
+    "forbidden_phrases": [],
+    "max_word_problem_sentences": 2
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 3 – odejmowanie do 1000 (dyskalkulia)",
+    "grade": 3,
+    "topic": "odejmowanie do 1000",
+    "profile": "dyskalkulia",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Odejmowanie w zakresie do 1000. Proste liczby, jeden krok, krótkie polecenie."
+  },
+  "tasks": [
+    "Policz: 350 − 50 = ____",
+    "Policz: 600 − 250 = ____",
+    "Policz: 480 − 130 = ____",
+    "Policz: 900 − 400 = ____",
+    "Policz: 500 − 100 = ____",
+    "Policz: 700 − 300 = ____"
+  ],
+  "answers": ["300", "350", "350", "500", "400", "400"],
+  "quality_criteria": [
+    "Odejmowanie w zakresie do 1000.",
+    "Wynik nieujemny w każdym zadaniu.",
+    "Jeden krok, format „Policz: a − b = ____”.",
+    "Liczby „okrągłe” (dziesiątki/setki) — łatwiejsze do obrazu.",
+    "Brak narracji tekstowej."
+  ],
+  "structured_criteria": {
+    "max_operand": 1000,
+    "max_result": 1000,
+    "allowed_operations": ["−", "-"],
+    "max_operations_per_task": 1,
+    "max_task_length": 55,
+    "forbidden_phrases": ["Ania", "kupił", "miał"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

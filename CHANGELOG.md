@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Faza 4 (opcja B): blueprinty `exact` dla klas 7–8; nowe tematy UI `procenty`, `potęgi`, `pitagoras`; `docs/phase4-decision.md`
+- 3 karty wzorcowe dla kl. 7–8 (procenty, potęgi, Pitagoras)
+- Faza 3: blueprinty `exact` dla klas 4–6 w tematach `dodawanie`, `odejmowanie`, `mnożenie`, `dzielenie`, `ułamki`, `równania`
+- Faza 2: 35 kart wzorcowych (rdzeń I–III) — m.in. równania z okienkiem kl. 1, ułamki kl. 2, tabliczka/dzielenie kl. 3; parsery klucza dla tematów praktycznych i zadań tekstowych
+- Faza 1: `docs/curriculum-matrix.md` — kontrakt topic_id × klasa × blueprint × klucz × wzorzec
+- Skrypty `scripts/curriculum_fallback_audit.py`, `scripts/curriculum_matrix_report.py`; test audytu
+- Faza 0: komunikat MVP dla klas 4–8, ostrzeżenia przy „Dołącz odpowiedzi” (tematy partial/none)
+- Phase 3: zakładki **Generuj / Historia / Recenzja** w Streamlit
+- Filtry historii (klasa, temat), status jakości, zapis recenzji (`review.json`)
+- Dopasowanie do kart wzorcowych (`app/review/`)
+- 18 nowych kart wzorcowych (łącznie 22, klasy 1–8)
+- Dokumenty PP 2025/2026, `docs/teacher-review.md`, `docs/phase3-decision.md`, macierz w `docs/curriculum-matrix-plan.canvas.tsx`
+
+### Changed
+- Baner MVP: osobny komunikat dla kl. 4–6 i rozszerzony zakres 7–8 (procenty, potęgi, Pitagoras)
+- Macierz PP: klasy 4–6 przestają raportować `downgraded`; 7–8 mają własne blueprinty zamiast downgrade z kl. 6
+- Walidatory profil×temat: limity zależne od tematu (mnożenie kl. 5, porównania, zadania tekstowe bez fałszywych `word_problem_load`)
+- Blueprinty kl. 3 dla dodawania/odejmowania do 20; ułamki 4–8 w fallbacku jako `Policz: a/b + …`
+- Temat **równania** (4–8): generator i fallback używają okienka ☐ zamiast `x`; pełny klucz odpowiedzi jak we wzorcach
+- Sidebar: temat i checkbox odpowiedzi poza formularzem — podpowiedzi reagują na wybór
+- Panel jakości: baner statusu OK/uwagi/błąd, osobna sekcja walidacji zadań
+- UI v1.2.0 w stopce, layout `wide`, checklista ograniczeń MVP
+
+---
+
+## [1.3.0] – 2026-06-03 – PDF quality i ilustracje profilowe
+
+### Added
+- `resolve_worksheet_layout(..., per_task_images_requested=True)` — ciaśniejszy układ przy ilustracjach per zadanie (max 2 linijki workspace)
+- Ostrzeżenie `images_low_coverage` i mały nagłówek, gdy pokrycie ilustracji per zadanie poniżej 50%
+- Historia: `images.per_task[]` z `skip_reason` per zadanie w `meta.json`
+- Test layoutu: `per_task_images_requested` → `workspace_lines <= 2`
+
+### Changed
+- Pipeline karty: najpierw `_resolve_images`, potem layout (layout reaguje na tryb per-task)
+- PNG per zadanie renderowane w 960×220 (ostrzejsze po wstawieniu do PDF)
+- PDF: zawijanie tekstu po szerokości fontu (`_wrap_text_by_width`), łamanie strony przed całym blokiem zadania (tekst + grafika + workspace)
+- PDF: nagłówek ilustracji także przy trybie per-task (mniejszy), `preserveAspectRatio` na obrazkach
+- UI: stopka i sidebar `v1.3.0`
+
 ---
 
 ## [1.2.0] – 2026-06-02 – Streamlit v2 jakość P1–P2

@@ -6,6 +6,7 @@ from typing import Any
 
 from app.ai.layout_generator import generate_layout
 from app.domain.profile_catalog import ResolvedProfile
+from app.domain.profile_pedagogy import layout_overrides_for_pedagogy, low_stimuli_boost_for_profile
 
 PDF_PRINT_DEFAULTS: dict[str, Any] = {
     "title_font_size": 22,
@@ -152,6 +153,7 @@ def resolve_worksheet_layout(
     number_of_tasks: int,
     *,
     include_workspace: bool = True,
+    per_task_images_requested: bool = False,
 ) -> ResolvedWorksheetLayout:
     values = dict(PDF_PRINT_DEFAULTS)
     source = "pdf_defaults"
@@ -166,14 +168,27 @@ def resolve_worksheet_layout(
             values[key] = profile_layout[key]
     source = "profile_layout"
 
+    pedagogy_layout = layout_overrides_for_pedagogy(resolved_profile.profile_id)
+    for key in _TYPOGRAPHY_KEYS:
+        if key in pedagogy_layout:
+            values[key] = pedagogy_layout[key]
+    if pedagogy_layout:
+        source = "profile_pedagogy"
+
     if resolved_profile.is_low_stimuli:
-        values.update(LOW_STIMULI_PDF_BOOST)
+        values.update(low_stimuli_boost_for_profile(resolved_profile.profile_id))
         source = "low_stimuli_boost"
 
     values = _apply_grade_readability(values, grade)
 
     if not include_workspace:
         values["workspace_lines"] = 0
+    elif per_task_images_requested:
+        values["workspace_lines"] = min(int(values.get("workspace_lines", 0)), 2)
+        values["task_spacing"] = max(int(values.get("task_spacing", 10)), 14)
+        values["header_image_width_pt"] = min(float(values.get("header_image_width_pt", 160)), 120.0)
+        values["header_image_height_pt"] = min(float(values.get("header_image_height_pt", 90)), 58.0)
+        source = f"{source}+per_task_images"
 
     values["answer_font_size"] = values.get("answer_font_size", values["task_font_size"])
 

@@ -8,13 +8,38 @@ oraz `generate_worksheet_images_for_tasks`) zachowują dotychczasową sygnaturę
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from io import BytesIO
 from typing import List, Tuple
 
 from PIL import Image, ImageDraw  # pyright: ignore[reportMissingModuleSource]
 
+from app.domain.profile_pedagogy import get_pedagogy_spec, visual_max_objects
 from app.domain.topic_catalog import resolve_topic, visual_family_for_topic
 from app.generators import icons
+
+
+@dataclass(frozen=True)
+class TaskImageSlot:
+    """Diagnostyka ilustracji per zadanie (plan naprawczy profili)."""
+
+    task_index: int
+    rendered: bool
+    image_bytes: bytes
+    skip_reason: str | None = None
+
+
+@dataclass(frozen=True)
+class TaskImagesResult:
+    slots: tuple[TaskImageSlot, ...]
+
+    @property
+    def image_bytes_list(self) -> list[bytes]:
+        return [s.image_bytes for s in self.slots]
+
+    @property
+    def rendered_count(self) -> int:
+        return sum(1 for s in self.slots if s.rendered)
 
 
 # Tło stron i ikon (jasne, neutralne – nie konkuruje z ikonami).
@@ -50,6 +75,12 @@ def generate_worksheet_image(
 
     if topic_lower == "ułamki":
         _draw_pizza_centered(draw, bx, by, aw, ah, num=1, den=2)
+    elif topic_lower == "pieniądze":
+        _draw_money_scene(draw, bx, by, aw, ah, 3, 2)
+    elif topic_lower == "czas":
+        _draw_clock_scene(draw, bx, by, aw, ah, hour=3)
+    elif topic_lower == "obwody":
+        _draw_perimeter_scene(draw, bx, by, aw, ah, width=4, height=4)
     elif topic_lower == "mnożenie":
         _draw_grid(draw, bx, by, aw, ah, rows=2, cols=3, kind="star_gold", op_kind="×")
     else:
@@ -90,10 +121,113 @@ _SAFE_LIMITS = {
     "mnożenie":    {"a_max": 5,  "b_max": 5},
     "dzielenie":   {"a_max": 12, "b_max": 3},           # a/b musi być całkowite
     "ułamki":      {"den_max": 6},
+    "pieniądze":   {"coin_max": 8},
+    "czas":        {"hour_max": 12},
+    "obwody":      {"side_max": 12},
 }
 
 
-def _is_task_safely_illustratable(task: str, topic: str) -> bool:
+def _profile_safe_limits(profile: str, family: str) -> dict | None:
+    """Profile-aware limity obiektów w ilustracji (gęstsze dla dyskalkulii)."""
+    base = _SAFE_LIMITS.get(family)
+    if not base:
+        return None
+    limits = dict(base)
+    spec = get_pedagogy_spec(profile)
+    cap = visual_max_objects(profile)
+    if family == "dodawanie":
+        limits["a_max"] = min(limits["a_max"], cap)
+        limits["b_max"] = min(limits["b_max"], cap)
+        limits["sum_max"] = min(limits.get("sum_max", 16), cap * 2)
+    elif family == "mnożenie":
+        side = max(2, int(cap**0.5))
+        limits["a_max"] = min(limits["a_max"], side)
+        limits["b_max"] = min(limits["b_max"], side)
+    elif family == "odejmowanie":
+        limits["a_max"] = min(limits["a_max"], cap + 2)
+        limits["b_max"] = min(limits["b_max"], cap)
+    elif family == "pieniądze":
+        limits["coin_max"] = min(limits["coin_max"], cap)
+    if spec.profile_group == "dyskalkulia":
+        limits["den_max"] = min(limits.get("den_max", 6), 6)
+    elif spec.profile_group == "adhd":
+        limits["den_max"] = min(limits.get("den_max", 6), 4)
+        if family == "pieniądze":
+            limits["coin_max"] = min(limits.get("coin_max", 8), cap)
+        if family == "obwody":
+            limits["side_max"] = min(limits.get("side_max", 12), 8)
+    return limits
+
+
+def _skip_reason_for_task(task: str, topic: str, profile: str) -> str | None:
+    """Powód pominięcia ilustracji — do panelu nauczyciela."""
+    resolved = resolve_topic(topic, grade=2)
+    if resolved.capabilities.skip_images:
+        return "temat bez ilustracji"
+    family = visual_family_for_topic(topic)
+    if not family:
+        return "brak rodziny wizualnej dla tematu"
+    limits = _profile_safe_limits(profile, family)
+    if not limits:
+        return "nieobsługiwany typ zadania wizualnie"
+
+    if family == "ułamki":
+        fractions = _parse_all_fractions_from_task(task)
+        if not fractions:
+            return "brak ułamka w treści zadania"
+        if any(den > limits.get("den_max", 6) for _, den in fractions):
+            return "mianownik za duży do uczciwej reprezentacji"
+        return None
+
+    if family == "pieniądze":
+        amounts = _parse_money_amounts(task)
+        cap = limits.get("coin_max", 8)
+        if len(amounts) < 1:
+            return "brak kwot do zilustrowania monetami"
+        if any(a > cap for a in amounts):
+            return "kwota za duża do ikon monet (profil)"
+        return None
+
+    if family == "czas":
+        hour = _parse_clock_hour(task)
+        if hour is None:
+            return "brak jednoznacznej godziny w zadaniu"
+        if hour > limits.get("hour_max", 12):
+            return "godzina poza zakresem zegara"
+        return None
+
+    if family == "obwody":
+        sides = _parse_shape_sides(task)
+        cap = limits.get("side_max", 12)
+        if not sides:
+            return "brak wymiarów figury w zadaniu"
+        if any(s > cap for s in sides):
+            return "bok za duży do rysunku pomocniczego"
+        return None
+
+    nums = _parse_raw_numbers(task)
+    if len(nums) < 2:
+        return "za mało liczb do zilustrowania"
+
+    a, b = nums[0], nums[1]
+    if family == "dodawanie":
+        if a > limits["a_max"] or b > limits["b_max"]:
+            return "liczby za duże do ikon (profil)"
+        if (a + b) > limits.get("sum_max", 16):
+            return "suma za duża do uczciwej reprezentacji"
+    elif family == "odejmowanie":
+        if a > limits["a_max"] or b > limits["b_max"] or b >= a:
+            return "liczby poza bezpiecznym zakresem odejmowania"
+    elif family == "mnożenie":
+        if a > limits["a_max"] or b > limits["b_max"]:
+            return "czynniki za duże do siatki ikon"
+    elif family == "dzielenie":
+        if a > limits["a_max"] or b > limits["b_max"] or b == 0 or a % b != 0:
+            return "dzielenie nie da się uczciwie pokazać ikonami"
+    return None
+
+
+def _is_task_safely_illustratable(task: str, topic: str, profile: str = "standardowy") -> bool:
     """
     Zwraca True, jeśli zadanie da się uczciwie zilustrować ikonami.
     Logika świadomie konserwatywna – wolimy odrzucić zadanie ilustrowalne,
@@ -103,7 +237,7 @@ def _is_task_safely_illustratable(task: str, topic: str) -> bool:
     if not family:
         return False
 
-    limits = _SAFE_LIMITS.get(family)
+    limits = _profile_safe_limits(profile, family)
     if not limits:
         return False
 
@@ -112,6 +246,20 @@ def _is_task_safely_illustratable(task: str, topic: str) -> bool:
         if not fractions:
             return False
         return all(2 <= den <= limits["den_max"] and 0 <= num <= den for num, den in fractions)
+
+    if family == "pieniądze":
+        amounts = _parse_money_amounts(task)
+        cap = limits.get("coin_max", 8)
+        return bool(amounts) and all(0 < a <= cap for a in amounts)
+
+    if family == "czas":
+        hour = _parse_clock_hour(task)
+        return hour is not None and 1 <= hour <= limits.get("hour_max", 12)
+
+    if family == "obwody":
+        sides = _parse_shape_sides(task)
+        cap = limits.get("side_max", 12)
+        return bool(sides) and all(0 < s <= cap for s in sides)
 
     nums = _parse_raw_numbers(task)
     if len(nums) < 2:
@@ -128,6 +276,99 @@ def _is_task_safely_illustratable(task: str, topic: str) -> bool:
         return a <= limits["a_max"] and 0 < b <= limits["b_max"] and a % b == 0
 
     return False
+
+
+def generate_worksheet_images_for_tasks_with_diagnostics(
+    tasks: List[str],
+    topic: str,
+    profile: str,
+    size: Tuple[int, int] = (480, 110),
+    grade: int = 2,
+) -> TaskImagesResult:
+    """
+    Ilustracje per zadanie z diagnostyką (rendered / skip_reason).
+    """
+    resolved = resolve_topic(topic, grade=grade)
+    if resolved.capabilities.skip_images:
+        return TaskImagesResult(
+            slots=tuple(
+                TaskImageSlot(i, False, b"", "temat bez ilustracji")
+                for i in range(len(tasks))
+            )
+        )
+
+    family = visual_family_for_topic(topic) or ""
+    slots: list[TaskImageSlot] = []
+    w, h = size
+    margin = 16
+    pad = 8
+    aw = w - 2 * margin - 2 * pad
+    ah = h - 2 * margin - 2 * pad
+    bx, by = margin + pad, margin + pad
+
+    for idx, task in enumerate(tasks):
+        reason = _skip_reason_for_task(task, topic, profile)
+        if reason or not _is_task_safely_illustratable(task, topic, profile):
+            slots.append(
+                TaskImageSlot(idx, False, b"", reason or "poza bezpiecznym zakresem")
+            )
+            continue
+
+        img = Image.new("RGB", (w, h), _BG)
+        draw = ImageDraw.Draw(img)
+
+        if family == "ułamki":
+            fractions = _parse_all_fractions_from_task(task)
+            _draw_fraction_pizzas(draw, bx, by, aw, ah, fractions[:2])
+        elif family == "pieniądze":
+            amounts = _parse_money_amounts(task)
+            if len(amounts) >= 2:
+                _draw_money_scene(draw, bx, by, aw, ah, amounts[0], amounts[1])
+            elif len(amounts) == 1:
+                _draw_money_scene(draw, bx, by, aw, ah, amounts[0], 0)
+        elif family == "czas":
+            hour = _parse_clock_hour(task) or 12
+            _draw_clock_scene(draw, bx, by, aw, ah, hour=hour)
+        elif family == "obwody":
+            sides = _parse_shape_sides(task)
+            if len(sides) >= 2:
+                _draw_perimeter_scene(draw, bx, by, aw, ah, width=sides[0], height=sides[1])
+            elif len(sides) == 1:
+                _draw_perimeter_scene(draw, bx, by, aw, ah, width=sides[0], height=sides[0])
+        elif family == "mnożenie":
+            nums = _parse_raw_numbers(task)
+            rows, cols = nums[0], nums[1]
+            _draw_grid(draw, bx, by, aw, ah, rows=rows, cols=cols, kind="star_gold", op_kind="×")
+        elif family == "odejmowanie":
+            nums = _parse_raw_numbers(task)
+            n_total, n_gone = nums[0], nums[1]
+            _draw_subtraction_row(draw, bx, by, aw, ah, n_total=n_total, n_gone=n_gone)
+        elif family == "dzielenie":
+            nums = _parse_raw_numbers(task)
+            a, b = nums[0], nums[1]
+            per_group = a // b
+            _draw_division_groups(
+                draw, bx, by, aw, ah,
+                n_groups=b, per_group=per_group,
+                kind="fish_blue",
+            )
+        else:
+            nums = _parse_raw_numbers(task)
+            n1, n2 = nums[0], nums[1]
+            theme = icons.get_theme(family)
+            _draw_two_groups(
+                draw, bx, by, aw, ah,
+                n1=n1, n2=n2,
+                left_kind=theme.get("left", "apple_red"),
+                right_kind=theme.get("right", "apple_green"),
+                op=theme.get("op", "+"),
+            )
+
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        slots.append(TaskImageSlot(idx, True, buf.getvalue(), None))
+
+    return TaskImagesResult(slots=tuple(slots))
 
 
 def generate_worksheet_images_for_tasks(
@@ -151,66 +392,9 @@ def generate_worksheet_images_for_tasks(
 
     Zwraca listę długości `len(tasks)` (puste bytes dla nieilustrowalnych zadań).
     """
-    resolved = resolve_topic(topic, grade=grade)
-    if resolved.capabilities.skip_images:
-        return [b"" for _ in tasks]
-    family = visual_family_for_topic(topic) or ""
-
-    result: List[bytes] = []
-    w, h = size
-    margin = 16
-    pad = 8
-    aw = w - 2 * margin - 2 * pad
-    ah = h - 2 * margin - 2 * pad
-    bx, by = margin + pad, margin + pad
-
-    for task in tasks:
-        if not _is_task_safely_illustratable(task, topic):
-            result.append(b"")
-            continue
-
-        img = Image.new("RGB", (w, h), _BG)
-        draw = ImageDraw.Draw(img)
-
-        if family == "ułamki":
-            fractions = _parse_all_fractions_from_task(task)
-            _draw_fraction_pizzas(draw, bx, by, aw, ah, fractions[:2])
-        elif family == "mnożenie":
-            nums = _parse_raw_numbers(task)
-            rows, cols = nums[0], nums[1]
-            _draw_grid(draw, bx, by, aw, ah, rows=rows, cols=cols, kind="star_gold", op_kind="×")
-        elif family == "odejmowanie":
-            nums = _parse_raw_numbers(task)
-            n_total, n_gone = nums[0], nums[1]
-            _draw_subtraction_row(draw, bx, by, aw, ah, n_total=n_total, n_gone=n_gone)
-        elif family == "dzielenie":
-            # Po `_is_task_safely_illustratable` wiemy, że a % b == 0
-            # i rysujemy `b` równych grup ryb po `a/b` w każdej.
-            nums = _parse_raw_numbers(task)
-            a, b = nums[0], nums[1]
-            per_group = a // b
-            _draw_division_groups(
-                draw, bx, by, aw, ah,
-                n_groups=b, per_group=per_group,
-                kind="fish_blue",
-            )
-        else:  # dodawanie
-            nums = _parse_raw_numbers(task)
-            n1, n2 = nums[0], nums[1]
-            theme = icons.get_theme(family)
-            _draw_two_groups(
-                draw, bx, by, aw, ah,
-                n1=n1, n2=n2,
-                left_kind=theme.get("left", "apple_red"),
-                right_kind=theme.get("right", "apple_green"),
-                op=theme.get("op", "+"),
-            )
-
-        buf = BytesIO()
-        img.save(buf, format="PNG")
-        result.append(buf.getvalue())
-
-    return result
+    return generate_worksheet_images_for_tasks_with_diagnostics(
+        tasks, topic, profile, size=size, grade=grade
+    ).image_bytes_list
 
 
 # --------------------------------------------------------------------
@@ -334,6 +518,67 @@ def _draw_grid(
             icons.draw_icon(draw, kind, x, y, ss)
 
 
+def _draw_money_scene(
+    draw,
+    bx: int,
+    by: int,
+    aw: int,
+    ah: int,
+    n1: int,
+    n2: int,
+) -> None:
+    """Dwie grupy monet (suma / reszta w zł)."""
+    op_w = max(24, min(int(aw * 0.08), 40))
+    side_w = (aw - op_w) // 2
+    cy = by + ah // 2
+    n_max = max(n1, n2, 1)
+    ss = _icon_size_for_row(side_w, ah, n_max, gap=4, max_size=36)
+    if n1 > 0:
+        _draw_coin_row(draw, bx, by, side_w, ah, count=n1, ss=ss)
+    if n2 > 0:
+        icons.draw_op(draw, bx + side_w + op_w // 2, cy, op_w - 6, "+")
+        _draw_coin_row(draw, bx + side_w + op_w, by, side_w, ah, count=n2, ss=ss)
+
+
+def _draw_coin_row(
+    draw,
+    bx: int,
+    by: int,
+    aw: int,
+    ah: int,
+    count: int,
+    ss: int,
+) -> None:
+    gap = 4
+    total_w = count * ss + (count - 1) * gap
+    start_x = bx + (aw - total_w) // 2 + ss // 2
+    cy = by + ah // 2
+    for i in range(count):
+        x = start_x + i * (ss + gap)
+        icons.draw_coin(draw, x, cy, ss)
+
+
+def _draw_clock_scene(draw, bx: int, by: int, aw: int, ah: int, hour: int) -> None:
+    r = max(20, min(aw, ah) // 2 - 8)
+    icons.draw_clock_face(draw, bx + aw // 2, by + ah // 2, r * 2, hour=hour)
+
+
+def _draw_perimeter_scene(
+    draw,
+    bx: int,
+    by: int,
+    aw: int,
+    ah: int,
+    width: int,
+    height: int,
+) -> None:
+    """Prostokąt wycentrowany — boki w jednostkach logicznych (skala do obszaru)."""
+    scale = min((aw - 20) // max(width, 1), (ah - 20) // max(height, 1), 18)
+    w_px = max(24, width * scale)
+    h_px = max(24, height * scale)
+    icons.draw_labeled_rect(draw, bx + aw // 2, by + ah // 2, w_px, h_px)
+
+
 def _draw_pizza_centered(draw, bx: int, by: int, aw: int, ah: int, num: int, den: int) -> None:
     """Pojedyncza pizza wycentrowana w obszarze."""
     radius = max(20, min(aw // 2 - 6, ah // 2 - 6, 60))
@@ -416,6 +661,36 @@ def _parse_fraction_from_task(task: str) -> Tuple[int, int] | None:
     den = min(den, 8)
     num = min(num, den)
     return (num, den)
+
+
+def _parse_money_amounts(task: str) -> List[int]:
+    """Kwoty w zł z treści (np. „5 zł + 2 zł”)."""
+    found = re.findall(r"(\d+)\s*zł", task.casefold().replace("zl", "zł"))
+    return [int(x) for x in found[:2]]
+
+
+def _parse_clock_hour(task: str) -> int | None:
+    """Godzina z zegara analogowego lub 14:00."""
+    m = re.search(r"pokazuje\s+(\d{1,2})", task, re.I)
+    if m:
+        return int(m.group(1))
+    m = re.search(r"(\d{1,2}):(\d{2})", task)
+    if m:
+        return int(m.group(1))
+    m = re.search(r"(\d{1,2}):00", task)
+    if m:
+        return int(m.group(1))
+    return None
+
+
+def _parse_shape_sides(task: str) -> List[int]:
+    """Boki z cm (kwadrat: jeden bok; prostokąt: dwa)."""
+    nums = [int(n) for n in re.findall(r"(\d+)\s*cm", task)]
+    if "kwadrat" in task.casefold() and nums:
+        return [nums[0]]
+    if len(nums) >= 2:
+        return nums[:2]
+    return nums[:1] if nums else []
 
 
 def _parse_all_fractions_from_task(task: str) -> List[Tuple[int, int]]:

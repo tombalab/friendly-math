@@ -1,0 +1,34 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 2 – zadania tekstowe (dyskalkulia)",
+    "grade": 2,
+    "topic": "zadania tekstowe",
+    "profile": "dyskalkulia",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Jednoetapowe zadania: dodawanie, odejmowanie, suma. Krótkie zdania, jedna operacja."
+  },
+  "tasks": [
+    "Ania miała 5 jabłek. Kupiła 4 jabłka. Ile ma jabłek? Odpowiedź: ____",
+    "W koszyku było 10 kasztanów. Zabrano 3. Ile zostało? Odpowiedź: ____",
+    "Tomek ma 7 klocków, Kasia ma 6. Ile mają razem? Odpowiedź: ____",
+    "W pudełku było 12 crayonów. Zabrano 5. Ile zostało? Odpowiedź: ____",
+    "Marek miał 8 naklejek. Dostał 3. Ile ma? Odpowiedź: ____"
+  ],
+  "answers": ["9", "7", "13", "7", "11"],
+  "quality_criteria": [
+    "Jedna operacja na zadanie.",
+    "Liczby w zakresie do 20.",
+    "Krótkie zdania — bez dodatkowych warunków.",
+    "Luka „Odpowiedź: ____” na końcu.",
+    "Brak działań wieloetapowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 20,
+    "max_result": 20,
+    "max_operations_per_task": 1,
+    "max_task_length": 140,
+    "forbidden_phrases": [],
+    "max_word_problem_sentences": null
+  }
+}

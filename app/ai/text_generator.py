@@ -18,6 +18,10 @@ from openai import OpenAI
 
 from app.ai.fallback_tasks import fallback_tasks_for_topic
 from app.ai.topic_blueprints import Blueprint, get_blueprint
+from app.domain.profile_pedagogy import (
+    build_profile_prompt_section,
+    tighten_blueprint_max_result,
+)
 from app.domain.topic_catalog import resolve_topic
 from app.generators.profiles.registry import get_profile
 
@@ -124,7 +128,11 @@ def _is_task_in_range(task: str, grade_int: int, max_result: int) -> bool:
 
 
 def _filter_tasks_by_grade(
-    tasks: list[str], grade: str, blueprint: Blueprint | None
+    tasks: list[str],
+    grade: str,
+    blueprint: Blueprint | None,
+    *,
+    profile_id: str | None = None,
 ) -> tuple[list[str], int]:
     """
     Odrzuca zadania, których wynik wykracza poza zakres klasy/blueprintu.
@@ -137,8 +145,14 @@ def _filter_tasks_by_grade(
 
     max_result = _MAX_RESULT_BY_GRADE.get(grade_int, 100000000)
     if blueprint and "max_result" in blueprint:
-        # Limit z blueprintu ma pierwszeństwo, jeśli jest bardziej restrykcyjny.
-        max_result = min(max_result, blueprint["max_result"])
+        bp_max = blueprint["max_result"]
+        if profile_id:
+            tightened = tighten_blueprint_max_result(
+                bp_max, profile_id, grade=grade_int
+            )
+            if tightened is not None:
+                bp_max = tightened
+        max_result = min(max_result, bp_max)
 
     kept: list[str] = []
     dropped = 0
@@ -189,19 +203,15 @@ def _build_prompt(grade: str, topic: str, profile_id: str, n: int) -> str:
             f"Przykłady:\n{profile.task_examples}"
         )
 
-    # Sekcja profilu – stylistyczne nakładki (skupienie, długość poleceń, itp.).
-    # Dla profilu „standardowy" `task_instruction` jest neutralne i nie dodaje nic.
-    profile_section = ""
-    if profile.id != "standardowy":
-        profile_section = (
-            f"\nStyl dopasowany do profilu ucznia ({profile.display_name}):\n"
-            f"- {profile.task_instruction}"
-        )
+    profile_section = build_profile_prompt_section(profile_id)
+
+    optional = ""
+    # optional_context hook — rozszerzalne z WorksheetRequest w przyszłości
 
     return f"""Jesteś nauczycielem matematyki edukacji wczesnoszkolnej w polskiej szkole.
 Wygeneruj DOKŁADNIE {n} zadań – po jednym w linii, BEZ numeracji, BEZ dodatkowych komentarzy.
 
-{topic_section}{profile_section}
+{topic_section}{profile_section}{optional}
 
 Reguły wspólne:
 - Liczby wyłącznie z zakresu wskazanego w wymaganiach (NIE wychodź poza zakres klasy).
@@ -307,7 +317,9 @@ def generate_tasks(profile, grade, topic, n=3):
         tasks = [re.sub(r"^\s*(?:\d+[.)]\s+|[-*•]\s+)", "", t) for t in tasks]
 
         # Walidacja: odrzucamy zadania wyraźnie poza zakresem klasy/blueprintu.
-        tasks, dropped = _filter_tasks_by_grade(tasks, grade_str, bp)
+        tasks, dropped = _filter_tasks_by_grade(
+            tasks, grade_str, bp, profile_id=str(profile)
+        )
         kept_after_validation = len(tasks)
         padded_count = 0
 

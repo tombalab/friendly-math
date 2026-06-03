@@ -64,9 +64,11 @@ Z katalogu głównego repo:
 
 ```bash
 python scripts/smoke_check.py
+python scripts/curriculum_fallback_audit.py   # 72 tematy × 6 profili, bank fallbacków
 ```
 
 Sprawdza: importy, font DejaVu, minimalny PDF z polskimi znakami, wybrane testy referencyjne (bez API).
+Macierz produktu: [curriculum-matrix.md](curriculum-matrix.md).
 
 ## Uruchomienie aplikacji
 

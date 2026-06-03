@@ -41,6 +41,15 @@ class WorksheetRequest:
 
 
 @dataclass(frozen=True)
+class TaskImageCoverageEntry:
+    """Pojedyncze zadanie — czy zilustrowano i dlaczego nie."""
+
+    task_index: int
+    rendered: bool
+    skip_reason: str | None = None
+
+
+@dataclass(frozen=True)
 class ImageCoverageSummary:
     """Podsumowanie ilustracji dla panelu jakości."""
 
@@ -49,6 +58,16 @@ class ImageCoverageSummary:
     rendered_count: int
     total_slots: int
     detail_pl: str
+    per_task: tuple[TaskImageCoverageEntry, ...] = ()
+
+    def skipped_summary_pl(self) -> str:
+        """Krótki opis pominiętych ilustracji dla nauczyciela."""
+        skipped = [e for e in self.per_task if not e.rendered and e.skip_reason]
+        if not skipped:
+            return ""
+        parts = [f"zad. {e.task_index + 1}: {e.skip_reason}" for e in skipped[:5]]
+        tail = f" (+{len(skipped) - 5})" if len(skipped) > 5 else ""
+        return "; ".join(parts) + tail
 
 
 @dataclass
@@ -121,6 +140,29 @@ class WorksheetResult:
             images_line = "—"
         else:
             images_line = img.detail_pl
+            skip = img.skipped_summary_pl()
+            if skip:
+                images_line += f" · pominięto: {skip}"
+
+        profile_fulfillment = "—"
+        if profile and self.tasks:
+            from app.validators.profile_enforcement import count_enriched_tasks
+            from app.domain.profile_pedagogy import profile_fulfillment_labels
+            from app.validators.task_validator import validate_tasks_for_profile
+
+            v = validate_tasks_for_profile(
+                self.tasks,
+                profile_id=profile.profile_id,
+                grade=self.request.grade,
+                topic_id=topic.topic_id if topic else None,
+            )
+            label, _ = profile_fulfillment_labels(
+                profile_id=profile.profile_id,
+                validation_issue_count=len(v.issues),
+                enriched_count=count_enriched_tasks(self.tasks),
+                total_tasks=len(self.tasks),
+            )
+            profile_fulfillment = label
 
         pdf_line = "gotowy do pobrania" if self.pdf_ready else "niedostępny"
         if not self.font_available:
@@ -151,6 +193,7 @@ class WorksheetResult:
         return {
             "Temat": topic_line,
             "Profil": profile_line,
+            "Spełnienie profilu": profile_fulfillment,
             "Źródło zadań": fallback_line,
             "Zdarzenia": events_line,
             "Walidacja zadań": validation_line,

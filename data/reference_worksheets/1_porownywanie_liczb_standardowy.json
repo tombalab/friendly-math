@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 1 – porównywanie liczb (standardowy)",
+    "grade": 1,
+    "topic": "porównywanie liczb",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Porównanie liczb do 20. Jeden znak w luce, bez zadań tekstowych."
+  },
+  "tasks": [
+    "Wstaw znak < , > lub =: 7 __ 9",
+    "Wstaw znak < , > lub =: 12 __ 12",
+    "Wstaw znak < , > lub =: 15 __ 8",
+    "Wstaw znak < , > lub =: 6 __ 11",
+    "Wstaw znak < , > lub =: 10 __ 4",
+    "Wstaw znak < , > lub =: 3 __ 3"
+  ],
+  "answers": ["<", "=", ">", "<", ">", "="],
+  "quality_criteria": [
+    "Wyłącznie porównanie dwóch liczb — bez działań.",
+    "Format „Wstaw znak < , > lub =: a __ b”.",
+    "Liczby w zakresie typowym dla klasy 1 (do 20).",
+    "Brak zadań tekstowych.",
+    "Jedna luka na znak porównania."
+  ],
+  "structured_criteria": {
+    "max_operand": 20,
+    "max_result": 20,
+    "max_operations_per_task": 0,
+    "max_task_length": 50,
+    "forbidden_phrases": ["Ania", "kupił", "miał"],
+    "max_word_problem_sentences": 1
+  }
+}

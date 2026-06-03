@@ -53,7 +53,7 @@ class HistoryEntryMeta:
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
-    def display_title_pl(self) -> str:
+    def display_title_pl(self, *, reviewed: bool = False) -> str:
         """Krótka etykieta do listy w UI."""
         try:
             dt = datetime.fromisoformat(self.created_at.replace("Z", "+00:00"))
@@ -61,10 +61,20 @@ class HistoryEntryMeta:
         except ValueError:
             when = self.created_at[:16]
         label = f" · {self.worksheet_label}" if self.worksheet_label else ""
+        flag = " ✓rec" if reviewed else ""
+        warn = " ⚠" if self.warning_count and not reviewed else ""
         return (
             f"{when} · kl.{self.grade} · {self.topic_label} · "
-            f"{self.profile_label}{label}"
+            f"{self.profile_label}{label}{warn}{flag}"
         )
+
+    @property
+    def quality_badge_pl(self) -> str:
+        if self.blocked:
+            return "zablokowano"
+        if self.warning_count == 0:
+            return "OK"
+        return f"{self.warning_count} uwag"
 
 
 def utc_now_iso() -> str:

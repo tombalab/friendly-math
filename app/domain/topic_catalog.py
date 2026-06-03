@@ -191,7 +191,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="pieniądze",
         grades_min=2,
         grades_max=3,
-        capabilities=_cap("none"),
+        capabilities=_cap("partial", "pieniądze"),
     ),
     "czas": TopicDefinition(
         topic_id="czas",
@@ -199,7 +199,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="czas",
         grades_min=1,
         grades_max=3,
-        capabilities=_cap("none"),
+        capabilities=_cap("partial", "czas"),
     ),
     "pomiary_dlugosci": TopicDefinition(
         topic_id="pomiary_dlugosci",
@@ -207,7 +207,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="pomiary długości",
         grades_min=1,
         grades_max=3,
-        capabilities=_cap("none"),
+        capabilities=_cap("partial"),
     ),
     "obwody": TopicDefinition(
         topic_id="obwody",
@@ -215,7 +215,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="obwody",
         grades_min=2,
         grades_max=3,
-        capabilities=_cap("none"),
+        capabilities=_cap("partial", "obwody"),
     ),
     "zadania_tekstowe": TopicDefinition(
         topic_id="zadania_tekstowe",
@@ -223,7 +223,7 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="zadania tekstowe",
         grades_min=1,
         grades_max=3,
-        capabilities=_cap("none"),
+        capabilities=_cap("partial"),
     ),
     "dodawanie": TopicDefinition(
         topic_id="dodawanie",
@@ -255,7 +255,33 @@ TOPIC_CATALOG: dict[str, TopicDefinition] = {
         blueprint_key="równania",
         grades_min=4,
         grades_max=8,
+        capabilities=_cap("full", skip_images=True),
+    ),
+    "procenty": TopicDefinition(
+        topic_id="procenty",
+        label_pl="procenty",
+        blueprint_key="procenty",
+        grades_min=7,
+        grades_max=8,
         capabilities=_cap("partial", skip_images=True),
+    ),
+    "potegi": TopicDefinition(
+        topic_id="potegi",
+        label_pl="potęgi",
+        blueprint_key="potęgi",
+        grades_min=7,
+        grades_max=8,
+        capabilities=_cap("partial", skip_images=True),
+        aliases=("potegi", "pierwiastki"),
+    ),
+    "pitagoras": TopicDefinition(
+        topic_id="pitagoras",
+        label_pl="pitagoras",
+        blueprint_key="pitagoras",
+        grades_min=7,
+        grades_max=8,
+        capabilities=_cap("partial", skip_images=True),
+        aliases=("twierdzenie pitagorasa", "pitagora"),
     ),
 }
 
@@ -283,6 +309,9 @@ TOPIC_DISPLAY_ORDER: tuple[str, ...] = (
     "odejmowanie",
     "mnozenie",
     "rownania",
+    "procenty",
+    "potegi",
+    "pitagoras",
 )
 
 
@@ -423,3 +452,36 @@ def visual_family_for_topic(topic_input: str) -> Optional[str]:
 def should_skip_images(topic_input: str) -> bool:
     resolved = resolve_topic(topic_input, grade=2)
     return resolved.capabilities.skip_images
+
+
+def upper_grades_mvp_caption_pl(grade: int) -> str | None:
+    """Komunikat UI: zakres klas 4–8 (Faza 0 + rozszerzenie 7–8)."""
+    if grade >= 7:
+        return (
+            "Klasy 7–8 (rozszerzone MVP): działania rachunkowe oraz tematy egzaminacyjne — "
+            "procenty, potęgi, Pitagoras. To nadal nie jest pełna podstawa programowa "
+            "(brak m.in. statystyki, brył, pełnej algebry)."
+        )
+    if grade >= 4:
+        return (
+            "Klasy 4–6 (MVP): ćwiczenia rachunkowe z blueprintem dopasowanym do klasy — "
+            "dodawanie, odejmowanie, mnożenie, dzielenie, ułamki, równania z okienkiem ☐. "
+            "Klasa 7–8 ma szerszy zakres tematów w osobnym komunikacie."
+        )
+    return None
+
+
+def answer_key_expectation_pl(topic_input: str, grade: int) -> str | None:
+    """Krótka informacja przy włączeniu strony odpowiedzi (Faza 0)."""
+    support = resolve_topic(topic_input, grade).capabilities.answer_support
+    if support == "full":
+        return None
+    if support == "partial":
+        return (
+            "Klucz częściowy — automatycznie tylko wybrane formaty (np. działania, "
+            "ułamki o tym samym mianowniku). Reszta: ręczna weryfikacja."
+        )
+    return (
+        "Brak automatycznego klucza dla tego tematu — strona odpowiedzi wymaga "
+        "ręcznej weryfikacji."
+    )

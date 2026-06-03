@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 3 – dodawanie do 1000 (standardowy)",
+    "grade": 3,
+    "topic": "dodawanie do 1000",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Dodawanie liczb trzycyfrowych w prostych przykładach. Jeden krok."
+  },
+  "tasks": [
+    "Policz: 250 + 50 = ____",
+    "Policz: 180 + 30 = ____",
+    "Policz: 400 + 250 = ____",
+    "Policz: 320 + 70 = ____",
+    "Policz: 150 + 150 = ____",
+    "Policz: 500 + 200 = ____"
+  ],
+  "answers": ["300", "210", "650", "390", "300", "700"],
+  "quality_criteria": [
+    "Dodawanie w zakresie do 1000 (klasa 3).",
+    "Jedna operacja na zadanie.",
+    "Format „Policz: a + b = ____”.",
+    "Można mieszać liczby trzycyfrowe z dziesiątkami.",
+    "Brak zadań tekstowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 1000,
+    "max_result": 1500,
+    "allowed_operations": ["+"],
+    "max_operations_per_task": 1,
+    "max_task_length": 55,
+    "forbidden_phrases": ["Ania", "kupił", "miał"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

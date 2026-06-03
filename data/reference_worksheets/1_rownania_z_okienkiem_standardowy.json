@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 1 – równania z okienkiem (standardowy)",
+    "grade": 1,
+    "topic": "równania z okienkiem",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Okienko ☐, liczby do 10. Dodawanie i odejmowanie w jednym kroku."
+  },
+  "tasks": [
+    "Uzupełnij okienko: 2 + ☐ = 5",
+    "Uzupełnij okienko: ☐ + 3 = 7",
+    "Uzupełnij okienko: 8 − ☐ = 5",
+    "Uzupełnij okienko: ☐ − 2 = 4",
+    "Uzupełnij okienko: 4 + ☐ = 9",
+    "Uzupełnij okienko: ☐ + 1 = 6"
+  ],
+  "answers": ["3", "4", "3", "6", "5", "5"],
+  "quality_criteria": [
+    "Jedna niewiadoma ☐ na zadanie.",
+    "Liczby i wyniki nie większe niż 10.",
+    "Format „Uzupełnij okienko:” — spójny.",
+    "Tylko dodawanie lub odejmowanie.",
+    "Brak zadań tekstowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 10,
+    "max_result": 10,
+    "allowed_operations": ["+", "−", "-"],
+    "max_operations_per_task": 1,
+    "max_task_length": 50,
+    "forbidden_phrases": ["Ania", "kupił", "miał"],
+    "require_format_prefix": "Uzupełnij okienko:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

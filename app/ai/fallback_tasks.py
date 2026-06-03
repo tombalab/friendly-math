@@ -1,6 +1,8 @@
 """Deterministic topic-preserving task fallbacks (P0.2)."""
 from __future__ import annotations
 
+from app.ai.profile_fallback_banks import apply_profile_to_standard_bank
+
 def _cycle_take(items: list[str], n: int) -> list[str]:
     if n <= 0:
         return []
@@ -27,12 +29,13 @@ def fallback_tasks_for_topic(
     """
     Return deterministic tasks that preserve the requested topic.
 
-    `profile_id` is accepted intentionally: future profile-specific banks can be
-    added without changing the generator contract. Current banks keep wording
-    short enough for low-stimuli profiles.
+  Profile-specific banks (topic × grade × profile_group) override or transform
+    the standard bank when defined in `profile_fallback_banks`.
     """
-    del profile_id  # profile-specific templates are planned, not needed yet.
     bank = _bank_for(topic_id, grade)
+    if not bank:
+        return None
+    bank = apply_profile_to_standard_bank(bank, topic_id, grade, profile_id)
     if not bank:
         return None
     return _cycle_take(bank, n)
@@ -133,6 +136,20 @@ def _bank_for(topic_id: str, grade: int) -> list[str] | None:
             "Policz: 10 × 4 = ____",
         ]
     if topic_id == "dzielenie":
+        if grade >= 7:
+            return [
+                "Policz: 256 : 16 = ____",
+                "Policz: 144 : 12 = ____",
+                "Policz: 420 : 15 = ____",
+                "Policz: 4,2 : 0,7 = ____",
+            ]
+        if grade >= 5:
+            return [
+                "Policz: 1250 : 25 = ____",
+                "Policz: 720 : 9 = ____",
+                "Policz: 144 : 12 = ____",
+                "Policz: 4,8 : 2 = ____",
+            ]
         return [
             "Policz: 10 : 2 = ____",
             "Policz: 20 : 4 = ____",
@@ -147,6 +164,20 @@ def _bank_for(topic_id: str, grade: int) -> list[str] | None:
             "Uzupełnij okienko: ☐ − 3 = 6",
         ]
     if topic_id == "ulamki":
+        if grade >= 7:
+            return [
+                "Policz: 2/3 + 1/3 = ____",
+                "Policz: 7/8 − 3/8 = ____",
+                "Policz: 3 × 2/5 = ____",
+                "Policz: 5/6 − 1/6 = ____",
+            ]
+        if grade >= 4:
+            return [
+                "Policz: 1/4 + 2/4 = ____",
+                "Policz: 2/5 + 1/5 = ____",
+                "Policz: 5/8 − 1/8 = ____",
+                "Policz: 3/6 + 2/6 = ____",
+            ]
         return {
             1: [
                 "Zaznacz połowę: pokoloruj 1 z 2 części koła.",
@@ -195,9 +226,52 @@ def _bank_for(topic_id: str, grade: int) -> list[str] | None:
             "Tomek ma 7 klocków, Kasia ma 6. Ile mają razem? Odpowiedź: ____",
         ]
     if topic_id == "rownania":
+        if grade >= 7:
+            return [
+                "Rozwiąż: ☐ + 35 = 120",
+                "Rozwiąż: 7 × ☐ = 28",
+                "Rozwiąż: ☐ − 6,5 = 2,5",
+                "Rozwiąż: 84 : ☐ = 7",
+            ]
         return [
-            "Rozwiąż: x + 8 = 15. x = ____",
-            "Rozwiąż: 4 × x = 24. x = ____",
-            "Rozwiąż: x − 12 = 7. x = ____",
+            "Rozwiąż: ☐ + 8 = 15",
+            "Rozwiąż: 4 × ☐ = 24",
+            "Rozwiąż: ☐ − 12 = 7",
+            "Rozwiąż: 72 : ☐ = 8",
+        ]
+    if topic_id == "procenty":
+        return [
+            "Policz: 10% z 200 = ____",
+            "Policz: 25% z 80 = ____",
+            "Ile to jest 15% z 60? ____",
+            "Policz: 12% z 350 = ____",
+        ]
+    if topic_id == "potegi":
+        if grade >= 8:
+            return [
+                "Policz: 2⁴ = ____",
+                "Policz: √36 = ____",
+                "Policz: √81 = ____",
+                "Policz: 5³ = ____",
+            ]
+        return [
+            "Policz: 2³ = ____",
+            "Policz: 5² = ____",
+            "Policz: 10² = ____",
+            "Policz: 3³ = ____",
+        ]
+    if topic_id == "pitagoras":
+        if grade >= 8:
+            return [
+                "Przyprostokątne 9 cm i 12 cm. Przeciwprostokątna c = ____ cm",
+                "Przyprostokątne 8 cm i 15 cm. Przeciwprostokątna c = ____ cm",
+                "Przyprostokątne 6 cm i 8 cm. Przeciwprostokątna c = ____ cm",
+                "Przeciwprostokątna 25 cm, przyprostokątna 7 cm. Druga przyprostokątna a = ____ cm",
+            ]
+        return [
+            "Przyprostokątne 3 cm i 4 cm. Przeciwprostokątna c = ____ cm",
+            "Przyprostokątne 6 cm i 8 cm. Przeciwprostokątna c = ____ cm",
+            "Przyprostokątne 5 cm i 12 cm. Przeciwprostokątna c = ____ cm",
+            "Przeciwprostokątna 13 cm, przyprostokątna 5 cm. Druga przyprostokątna a = ____ cm",
         ]
     return None

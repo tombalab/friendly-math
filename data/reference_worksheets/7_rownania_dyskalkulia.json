@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 7 – równania (dyskalkulia)",
+    "grade": 7,
+    "topic": "równania",
+    "profile": "dyskalkulia",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Równania jednokrokowe z okienkiem, ograniczony zakres liczb i powtarzalny format."
+  },
+  "tasks": [
+    "Rozwiąż: ☐ + 12 = 30",
+    "Rozwiąż: 5 × ☐ = 45",
+    "Rozwiąż: ☐ − 8 = 17",
+    "Rozwiąż: 64 : ☐ = 8",
+    "Rozwiąż: ☐ + 25 = 70",
+    "Rozwiąż: 6 × ☐ = 42"
+  ],
+  "answers": ["18", "9", "25", "8", "45", "7"],
+  "quality_criteria": [
+    "Jedna niewiadoma w okienku.",
+    "Tylko równania jednokrokowe.",
+    "Zakres liczb do 80, bez liczb ujemnych.",
+    "Format „Rozwiąż: … = …” — bez długiej narracji.",
+    "Brak zadań tekstowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 80,
+    "max_result": 80,
+    "allowed_operations": ["+", "−", "-", "×", "*", ":", "/", "÷"],
+    "max_operations_per_task": 1,
+    "max_task_length": 45,
+    "forbidden_phrases": ["Ania", "Marek", "kupił", "miał", "zostało"],
+    "require_format_prefix": "Rozwiąż:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

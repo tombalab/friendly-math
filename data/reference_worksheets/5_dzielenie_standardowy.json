@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 5 – dzielenie (standardowy)",
+    "grade": 5,
+    "topic": "dzielenie",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Dzielenie liczb naturalnych bez reszty, wciąż w krótkim formacie obliczeniowym."
+  },
+  "tasks": [
+    "Policz: 144 : 12 = ____",
+    "Policz: 96 : 8 = ____",
+    "Policz: 125 : 5 = ____",
+    "Policz: 180 : 9 = ____",
+    "Policz: 210 : 10 = ____",
+    "Policz: 132 : 11 = ____"
+  ],
+  "answers": ["12", "12", "25", "20", "21", "12"],
+  "quality_criteria": [
+    "Dzielenie bez reszty.",
+    "Jedno działanie na zadanie.",
+    "Liczby naturalne, dzielna do 250.",
+    "Format „Policz: a : b = ____”.",
+    "Brak zadań tekstowych i wieloetapowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 250,
+    "max_result": 50,
+    "allowed_operations": [":", "/", "÷"],
+    "max_operations_per_task": 1,
+    "max_task_length": 50,
+    "forbidden_phrases": ["Ania", "Marek", "kupił", "miał", "zostało"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from app.domain.profile_pedagogy import layout_overrides_for_pedagogy
 from app.generators.profiles.registry import get_profile
 
 load_dotenv()
@@ -143,6 +144,8 @@ def _build_layout_from_profile(profile, grade: str) -> dict:
     layout = _base_defaults()
     if profile.layout_overrides:
         layout.update(profile.layout_overrides)
+    pedagogy = layout_overrides_for_pedagogy(profile.id)
+    layout.update(pedagogy)
     return _apply_grade_constraints(layout, grade)
 
 

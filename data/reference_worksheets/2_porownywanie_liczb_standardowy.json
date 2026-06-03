@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 2 – porównywanie liczb (standardowy)",
+    "grade": 2,
+    "topic": "porównywanie liczb",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Porównanie liczb dwucyfrowych. Znak <, > lub = w jednej luce."
+  },
+  "tasks": [
+    "Wstaw znak < , > lub =: 45 __ 54",
+    "Wstaw znak < , > lub =: 80 __ 80",
+    "Wstaw znak < , > lub =: 36 __ 63",
+    "Wstaw znak < , > lub =: 28 __ 19",
+    "Wstaw znak < , > lub =: 50 __ 42",
+    "Wstaw znak < , > lub =: 17 __ 21"
+  ],
+  "answers": ["<", "=", "<", ">", ">", "<"],
+  "quality_criteria": [
+    "Wyłącznie porównanie dwóch liczb — bez działań.",
+    "Format „Wstaw znak < , > lub =: a __ b”.",
+    "Liczby w zakresie typowym dla klasy 2 (do 100).",
+    "Brak zadań tekstowych.",
+    "Jedna luka na znak porównania."
+  ],
+  "structured_criteria": {
+    "max_operand": 100,
+    "max_result": 100,
+    "max_operations_per_task": 0,
+    "max_task_length": 55,
+    "forbidden_phrases": ["Ania", "kupił", "miał"],
+    "max_word_problem_sentences": 1
+  }
+}

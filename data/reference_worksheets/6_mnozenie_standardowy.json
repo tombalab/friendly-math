@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 6 – mnożenie (standardowy)",
+    "grade": 6,
+    "topic": "mnożenie",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Mnożenie liczb naturalnych w prostych przykładach, jeden krok."
+  },
+  "tasks": [
+    "Policz: 24 × 12 = ____",
+    "Policz: 35 × 11 = ____",
+    "Policz: 48 × 10 = ____",
+    "Policz: 26 × 15 = ____",
+    "Policz: 40 × 18 = ____",
+    "Policz: 32 × 20 = ____"
+  ],
+  "answers": ["288", "385", "480", "390", "720", "640"],
+  "quality_criteria": [
+    "Jedno mnożenie na zadanie.",
+    "Czynniki dwucyfrowe, bez zadań tekstowych.",
+    "Wyniki poniżej 1000.",
+    "Format „Policz: a × b = ____”.",
+    "Zadania krótkie i jednorodne."
+  ],
+  "structured_criteria": {
+    "max_operand": 50,
+    "max_result": 1000,
+    "allowed_operations": ["×", "*", "x"],
+    "max_operations_per_task": 1,
+    "max_task_length": 50,
+    "forbidden_phrases": ["Ania", "Marek", "kupił", "miał", "zostało"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

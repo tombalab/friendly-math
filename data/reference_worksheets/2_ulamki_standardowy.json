@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 2 – ułamki (standardowy)",
+    "grade": 2,
+    "topic": "ułamki",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Połowa i ćwierć liczby naturalnej do 20. Zadania liczbowe z jedną odpowiedzią."
+  },
+  "tasks": [
+    "Ile to jest połowa z 10? ____",
+    "Ile to jest ćwierć z 8? ____",
+    "Ile to jest połowa z 12? ____",
+    "Ile to jest ćwierć z 12? ____",
+    "Ile to jest połowa z 16? ____",
+    "Ile to jest ćwierć z 20? ____"
+  ],
+  "answers": ["5", "2", "6", "3", "8", "5"],
+  "quality_criteria": [
+    "Połowa i ćwierć bez zapisu ułamka a/b.",
+    "Liczby parzyste, wynik całkowity.",
+    "Jedna luka na odpowiedź.",
+    "Brak zadań tekstowych z narracją.",
+    "Brak działań na ułamkach zapisanych jako a/b."
+  ],
+  "structured_criteria": {
+    "allow_fractions": true,
+    "max_denominator": 4,
+    "max_operations_per_task": 1,
+    "max_task_length": 45,
+    "forbidden_phrases": ["Ania", "ciasta", "zjadła"],
+    "max_word_problem_sentences": 2
+  }
+}

@@ -8,6 +8,7 @@ Zwraca status per zadanie: supported | unsupported | ambiguous | error.
 """
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 from typing import Literal, Optional
@@ -122,6 +123,18 @@ def _answer_for_task_structured(
     raw = task.strip()
     low = raw.lower()
 
+    practical = _answer_practical_task(raw, low)
+    if practical is not None:
+        return TaskAnswer(status="supported", value=practical)
+
+    exam = _answer_exam_formats(raw, low)
+    if exam is not None:
+        return TaskAnswer(status="supported", value=exam)
+
+    narrative = _answer_simple_narrative(raw, low)
+    if narrative is not None:
+        return TaskAnswer(status="supported", value=narrative)
+
     if _looks_like_word_problem(low):
         return TaskAnswer(status="unsupported", reason=_REASON_UNSUPPORTED)
 
@@ -173,6 +186,129 @@ def _looks_like_word_problem(low: str) -> bool:
 # --------------------------------------------------------------------
 # Parsery / kalkulatory poszczególnych typów
 # --------------------------------------------------------------------
+
+
+def _answer_practical_task(raw: str, low: str) -> str | None:
+    """Pieniądze, czas, jednostki długości, obwód — proste wzorce z banku fallbacków."""
+    if "zł" in low and "gr" in low and "zamień" in low:
+        m = re.search(r"(\d+)\s*zł", low)
+        if m:
+            return str(int(m.group(1)) * 100)
+
+    if "ile to razem" in low and "zł" in low:
+        nums = [int(n) for n in re.findall(r"(\d+)\s*zł", low)]
+        if len(nums) >= 2:
+            return str(sum(nums[:2]))
+
+    if "reszty" in low and "zł" in low:
+        nums = [int(n) for n in re.findall(r"(\d+)\s*zł", low)]
+        if len(nums) >= 2:
+            return str(nums[0] - nums[1])
+
+    if "godzin od" in low:
+        times = re.findall(r"(\d+):(\d+)", raw)
+        if len(times) >= 2:
+            h1, h2 = int(times[0][0]), int(times[1][0])
+            return str(h2 - h1)
+
+    if "zegar elektroniczny" in low or "14:00" in raw:
+        m = re.search(r"(\d+):(\d+)", raw)
+        if m:
+            return m.group(1)
+
+    if "wskazówka" in low and "godzina" in low:
+        nums = [int(n) for n in re.findall(r"pokazuje\s+(\d+)", low)]
+        if nums:
+            return str(nums[0])
+
+    if re.search(r"(\d+)\s*m\s*=\s*_{2,}\s*cm", low) or "ile cm to" in low:
+        m = re.search(r"(\d+)\s*m", low)
+        if m:
+            return str(int(m.group(1)) * 100)
+
+    if re.search(r"(\d+)\s*cm\s*=\s*_{2,}\s*mm", low):
+        m = re.search(r"(\d+)\s*cm", low)
+        if m:
+            return str(int(m.group(1)) * 10)
+
+    if "obwód kwadratu" in low:
+        m = re.search(r"boku\s+(\d+)\s*cm", low)
+        if m:
+            side = int(m.group(1))
+            return str(4 * side)
+
+    if "obwód prostokąta" in low:
+        sides = [int(n) for n in re.findall(r"(\d+)\s*cm", low)]
+        if len(sides) >= 2:
+            return str(2 * (sides[0] + sides[1]))
+
+    return None
+
+
+def _answer_exam_formats(raw: str, low: str) -> str | None:
+    """Procenty, potęgi, Pitagoras — proste formaty z banków fallbacków (kl. 7–8)."""
+    m = re.search(r"(\d+)\s*%\s*z\s*(\d+)", low)
+    if m:
+        p, n = int(m.group(1)), int(m.group(2))
+        return str(p * n // 100)
+
+    m = re.search(r"ile to jest\s*(\d+)\s*%\s*z\s*(\d+)", low)
+    if m:
+        p, n = int(m.group(1)), int(m.group(2))
+        return str(p * n // 100)
+
+    m = re.search(r"policz:\s*(\d+)([²³⁴])", low)
+    if m:
+        base = int(m.group(1))
+        exp = {"²": 2, "³": 3, "⁴": 4}[m.group(2)]
+        return str(base**exp)
+
+    m = re.search(r"policz:\s*√(\d+)", low)
+    if m:
+        n = int(m.group(1))
+        root = math.isqrt(n)
+        if root * root == n:
+            return str(root)
+
+    if "przyprostokątne" in low and "przeciwprostokątna" in low:
+        legs = [int(x) for x in re.findall(r"(\d+)\s*cm", raw)]
+        if len(legs) >= 2:
+            a, b = legs[0], legs[1]
+            hyp = math.isqrt(a * a + b * b)
+            if hyp * hyp == a * a + b * b:
+                return str(hyp)
+
+    if "przeciwprostokątna" in low and "przyprostokątna" in low:
+        nums = [int(x) for x in re.findall(r"(\d+)\s*cm", raw)]
+        if len(nums) >= 2:
+            c, a = nums[0], nums[1]
+            leg_sq = c * c - a * a
+            if leg_sq >= 0:
+                leg = math.isqrt(leg_sq)
+                if leg * leg == leg_sq:
+                    return str(leg)
+
+    return None
+
+
+def _answer_simple_narrative(raw: str, low: str) -> str | None:
+    """Jednoetapowe zadania tekstowe z banku (dodawanie / odejmowanie / suma)."""
+    nums = [int(n) for n in re.findall(r"\b(\d+)\b", raw)]
+    if len(nums) < 2:
+        return None
+    if "razem" in low:
+        return str(nums[-2] + nums[-1])
+    if "zostało" in low or "zabrano" in low or "sprzedano" in low:
+        return str(nums[0] - nums[1])
+    if "zjedzono" in low:
+        return str(nums[0] - nums[1])
+    if "dodano" in low or "dostał" in low or "dostała" in low:
+        return str(nums[0] + nums[1])
+    if "kupi" in low or ("ile ma" in low and "jabł" in low):
+        return str(nums[0] + nums[1])
+    if "ile jest teraz" in low:
+        return str(nums[0] + nums[1])
+    return None
 
 
 def _answer_compare(task: str) -> str | None:

@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 8 – potęgi (standardowy)",
+    "grade": 8,
+    "topic": "potęgi",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Potęgi naturalne i pierwiastki kwadratowe z liczb całkowitych."
+  },
+  "tasks": [
+    "Policz: 2⁴ = ____",
+    "Policz: √36 = ____",
+    "Policz: √81 = ____",
+    "Policz: 5³ = ____",
+    "Policz: 3³ = ____"
+  ],
+  "answers": ["16", "6", "9", "125", "27"],
+  "quality_criteria": [
+    "Jedno działanie na zadanie.",
+    "Wykładnik naturalny lub pierwiastek z kwadratu liczby całkowitej.",
+    "Format „Policz: … = ____”.",
+    "Bez ułamkowych wykładników.",
+    "Wyniki całkowite."
+  ],
+  "structured_criteria": {
+    "max_operand": 100,
+    "max_result": 10000,
+    "max_operations_per_task": 1,
+    "max_task_length": 65,
+    "forbidden_phrases": ["Ania", "kupił"],
+    "require_format_prefix": "Policz:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

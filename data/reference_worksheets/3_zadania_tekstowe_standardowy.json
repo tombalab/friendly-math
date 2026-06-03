@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 3 – zadania tekstowe (standardowy)",
+    "grade": 3,
+    "topic": "zadania tekstowe",
+    "profile": "standardowy",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Zadania tekstowe do 1000 — nadal jeden krok rachunkowy."
+  },
+  "tasks": [
+    "W skrzyni było 120 klocków. Dodano 45. Ile jest teraz? Odpowiedź: ____",
+    "Na półce było 200 książek. Zabrano 75. Ile zostało? Odpowiedź: ____",
+    "Pierwsza grupa ma 150 uczniów, druga 120. Ile razem? Odpowiedź: ____",
+    "W magazynie było 500 kg ryżu. Sprzedano 180 kg. Ile zostało? Odpowiedź: ____"
+  ],
+  "answers": ["165", "125", "270", "320"],
+  "quality_criteria": [
+    "Jedna operacja na zadanie.",
+    "Liczby zgodne z zakresem klasy 3.",
+    "Bez ułamków i procentów.",
+    "Jedna luka na odpowiedź.",
+    "Treść zrozumiała bez dodatkowych warunków."
+  ],
+  "structured_criteria": {
+    "max_operand": 1000,
+    "max_result": 1000,
+    "max_operations_per_task": 1,
+    "max_task_length": 160,
+    "forbidden_phrases": [],
+    "max_word_problem_sentences": null
+  }
+}

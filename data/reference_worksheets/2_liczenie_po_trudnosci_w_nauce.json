@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 2 – liczenie po (trudności w nauce)",
+    "grade": 2,
+    "topic": "liczenie po",
+    "profile": "trudności w nauce",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Ciągi po 5 i po 10 w zakresie 0–100. Krótkie polecenia, jeden krok."
+  },
+  "tasks": [
+    "Uzupełnij: 10, 20, 30, __, __",
+    "Uzupełnij: 5, 10, 15, __, __",
+    "Uzupełnij: 20, 30, 40, __, __",
+    "Uzupełnij: 50, 60, 70, __, __",
+    "Uzupełnij: 12, 14, 16, __, __"
+  ],
+  "answers": ["40, 50", "20, 25", "50, 60", "80, 90", "18, 20"],
+  "quality_criteria": [
+    "Ciągi arytmetyczne z krokiem +5 lub +10 (ew. +2 dla małych liczb).",
+    "Zakres liczb adekwatny do klasy 2 (do 100).",
+    "Format „Uzupełnij:” — bez narracji.",
+    "Dwie luki na końcu.",
+    "Polecenia w jednej linii."
+  ],
+  "structured_criteria": {
+    "max_operand": 100,
+    "max_result": 100,
+    "max_operations_per_task": 0,
+    "max_task_length": 60,
+    "forbidden_phrases": ["Ania", "kupił", "miał"],
+    "require_format_prefix": "Uzupełnij:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

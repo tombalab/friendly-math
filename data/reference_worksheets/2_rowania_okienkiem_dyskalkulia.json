@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "title": "Karta pracy – klasa 2 – równania z okienkiem (dyskalkulia)",
+    "grade": 2,
+    "topic": "równania z okienkiem",
+    "profile": "dyskalkulia",
+    "author": "Tomasz Balabuch",
+    "source": "własna",
+    "notes": "Niewiadoma w okienku ☐. Liczby do 20, jeden krok."
+  },
+  "tasks": [
+    "Uzupełnij okienko: 3 + ☐ = 7",
+    "Uzupełnij okienko: ☐ + 5 = 10",
+    "Uzupełnij okienko: 12 − ☐ = 4",
+    "Uzupełnij okienko: ☐ − 3 = 6",
+    "Uzupełnij okienko: 8 + ☐ = 15",
+    "Uzupełnij okienko: ☐ + 2 = 9"
+  ],
+  "answers": ["4", "5", "8", "9", "7", "7"],
+  "quality_criteria": [
+    "Jedna niewiadoma w okienku ☐ na zadanie.",
+    "Liczby w zakresie 1–20, wynik zrozumiały dla klasy 2.",
+    "Format „Uzupełnij okienko:” — konsekwentny.",
+    "Dodawanie lub odejmowanie — nie mieszać wielu kroków.",
+    "Brak zadań tekstowych."
+  ],
+  "structured_criteria": {
+    "max_operand": 20,
+    "max_result": 20,
+    "allowed_operations": ["+", "−", "-"],
+    "max_operations_per_task": 1,
+    "max_task_length": 55,
+    "forbidden_phrases": ["Ania", "kupił", "miał"],
+    "require_format_prefix": "Uzupełnij okienko:",
+    "require_format_consistent": true,
+    "max_word_problem_sentences": 1
+  }
+}

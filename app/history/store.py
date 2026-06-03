@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 META_FILENAME = "meta.json"
 PDF_FILENAME = "worksheet.pdf"
 EVENTS_FILENAME = "events.jsonl"
+REVIEW_FILENAME = "review.json"
 
 
 def default_history_dir(project_root: Path | None = None) -> Path:
@@ -68,10 +69,17 @@ class WorksheetHistoryStore:
 
         return entry_dir
 
-    def list_recent(self, limit: int = 20) -> list[HistoryEntryMeta]:
+    def list_recent(
+        self,
+        limit: int = 20,
+        *,
+        grade: int | None = None,
+        topic_query: str | None = None,
+    ) -> list[HistoryEntryMeta]:
         if not self.root.is_dir():
             return []
 
+        q = (topic_query or "").strip().casefold()
         entries: list[HistoryEntryMeta] = []
         for child in self.root.iterdir():
             if not child.is_dir():
@@ -81,12 +89,51 @@ class WorksheetHistoryStore:
                 continue
             try:
                 raw = json.loads(meta_path.read_text(encoding="utf-8"))
-                entries.append(HistoryEntryMeta.from_dict(raw))
+                entry = HistoryEntryMeta.from_dict(raw)
             except (json.JSONDecodeError, KeyError, TypeError, ValueError):
                 continue
+            if grade is not None and entry.grade != grade:
+                continue
+            if q and q not in entry.topic_label.casefold() and q not in entry.profile_label.casefold():
+                continue
+            entries.append(entry)
 
         entries.sort(key=lambda e: e.created_at, reverse=True)
         return entries[:limit]
+
+    def save_review(
+        self,
+        request_id: str,
+        *,
+        rating: int,
+        notes: str,
+        reference_file: str | None = None,
+    ) -> Path:
+        entry_dir = self.entry_dir(request_id)
+        if not entry_dir.is_dir():
+            raise FileNotFoundError(f"Brak wpisu historii: {request_id}")
+        payload = {
+            "rating": rating,
+            "notes": notes.strip(),
+            "reviewed_at": utc_now_iso(),
+            "reference_file": reference_file,
+        }
+        path = entry_dir / REVIEW_FILENAME
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        return path
+
+    def load_review(self, request_id: str) -> dict | None:
+        path = self.entry_dir(request_id) / REVIEW_FILENAME
+        if not path.is_file():
+            return None
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            return raw if isinstance(raw, dict) else None
+        except (json.JSONDecodeError, OSError):
+            return None
+
+    def has_review(self, request_id: str) -> bool:
+        return (self.entry_dir(request_id) / REVIEW_FILENAME).is_file()
 
     def load_meta(self, request_id: str) -> HistoryEntryMeta | None:
         meta_path = self.entry_dir(request_id) / META_FILENAME
@@ -139,6 +186,15 @@ class WorksheetHistoryStore:
                 "total_slots": ic.total_slots,
                 "detail_pl": ic.detail_pl,
             }
+            if ic.per_task:
+                images["per_task"] = [
+                    {
+                        "task_index": entry.task_index,
+                        "rendered": entry.rendered,
+                        "skip_reason": entry.skip_reason,
+                    }
+                    for entry in ic.per_task
+                ]
 
         label = (worksheet_label or "").strip() or None
 
