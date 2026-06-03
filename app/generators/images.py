@@ -15,6 +15,7 @@ from typing import List, Tuple
 from PIL import Image, ImageDraw  # pyright: ignore[reportMissingModuleSource]
 
 from app.domain.profile_pedagogy import get_pedagogy_spec, visual_max_objects
+from app.domain.educational_strategy import visual_theme_for_topic
 from app.domain.topic_catalog import resolve_topic, visual_family_for_topic
 from app.generators import icons
 
@@ -44,6 +45,23 @@ class TaskImagesResult:
 
 # Tło stron i ikon (jasne, neutralne – nie konkuruje z ikonami).
 _BG = "#fbfbf8"
+_GROUP_BG = "#ffffff"
+_GROUP_EDGE = "#d6d6d0"
+_ACTION_EDGE = "#78909c"
+_TAKEN_BG = "#fff3e0"
+
+
+def visual_prompt_for_topic(topic: str, *, grade: int = 2) -> dict[str, str]:
+    """Topic -> visual motif -> image prompt, for diagnostics and future image APIs."""
+    resolved = resolve_topic(topic, grade=grade)
+    theme = visual_theme_for_topic(resolved)
+    return {
+        "topic_id": resolved.topic_id,
+        "visual_family": theme.family,
+        "motif": theme.motif,
+        "learning_role_pl": theme.learning_role_pl,
+        "prompt_pl": theme.prompt_pl,
+    }
 
 
 def generate_worksheet_image(
@@ -427,17 +445,22 @@ def _draw_two_groups(
     op_w = max(28, min(int(aw * 0.10), 56))
     side_w = (aw - op_w) // 2
     cy = by + ah // 2
+    box_pad = 4
+    label_h = 14
+
+    _draw_group_panel(draw, bx, by, side_w - box_pad, ah, "pierwsza grupa")
+    _draw_group_panel(draw, bx + side_w + op_w + box_pad, by, side_w - box_pad, ah, "dodajemy")
 
     # Pojedyncza ikona: max ze strony niech zmieści n1 lub n2 (ten większy)
     n_max = max(n1, n2, 1)
-    ss = _icon_size_for_row(side_w, ah, n_max, gap=6, max_size=44)
+    ss = _icon_size_for_row(side_w - 2 * box_pad, ah - label_h, n_max, gap=6, max_size=42)
 
     if n1 > 0:
-        _draw_icon_row(draw, bx, by, side_w, ah, count=n1, kind=left_kind, ss=ss, gap=6)
+        _draw_icon_row(draw, bx + box_pad, by + label_h, side_w - 2 * box_pad, ah - label_h, count=n1, kind=left_kind, ss=ss, gap=6)
     if op:
         icons.draw_op(draw, bx + side_w + op_w // 2, cy, op_w - 8, op)
     if n2 > 0:
-        _draw_icon_row(draw, bx + side_w + op_w, by, side_w, ah, count=n2, kind=right_kind, ss=ss, gap=6)
+        _draw_icon_row(draw, bx + side_w + op_w + box_pad, by + label_h, side_w - 2 * box_pad, ah - label_h, count=n2, kind=right_kind, ss=ss, gap=6)
 
 
 def _draw_division_groups(
@@ -476,18 +499,52 @@ def _draw_subtraction_row(
     n_total: int,
     n_gone: int,
 ) -> None:
-    """Rząd ciastek: ostatnie `n_gone` mają odgryzienia (bitten=True). Bez znaku „−"."""
-    cy = by + ah // 2
-    ss = _icon_size_for_row(aw, ah, n_total, gap=8, max_size=44)
-    total_w = n_total * ss + (n_total - 1) * 8
-    start_x = bx + (aw - total_w) // 2 + ss // 2
+    """Wizualizacja odejmowania: zostaje / zabieramy, z przekreśleniem zabranych."""
+    label_h = 14
+    remaining = max(0, n_total - n_gone)
+    op_w = max(28, min(int(aw * 0.10), 52))
+    left_w = int((aw - op_w) * 0.62)
+    right_w = aw - op_w - left_w
+    _draw_group_panel(draw, bx, by, left_w, ah, "zostaje")
+    _draw_group_panel(draw, bx + left_w + op_w, by, right_w, ah, "zabieramy", fill=_TAKEN_BG)
+    icons.draw_op(draw, bx + left_w + op_w // 2, by + ah // 2, op_w - 8, "−")
+
+    cy = by + label_h + (ah - label_h) // 2
+    if remaining > 0:
+        ss_left = _icon_size_for_row(left_w - 10, ah - label_h, remaining, gap=8, max_size=42)
+        _draw_icon_row(draw, bx + 5, by + label_h, left_w - 10, ah - label_h, count=remaining, kind="cookie", ss=ss_left, gap=8)
+    if n_gone <= 0:
+        return
+    ss = _icon_size_for_row(right_w - 10, ah - label_h, n_gone, gap=8, max_size=42)
+    total_w = n_gone * ss + (n_gone - 1) * 8
+    start_x = bx + left_w + op_w + 5 + ((right_w - 10) - total_w) // 2 + ss // 2
     n_visible = n_total - n_gone
-    for i in range(n_total):
+    for i in range(n_gone):
         x = start_x + i * (ss + 8)
-        if i < n_visible:
-            icons.draw_icon(draw, "cookie", x, cy, ss)
-        else:
-            icons.draw_icon(draw, "cookie_bitten", x, cy, ss)
+        icons.draw_icon(draw, "cookie_bitten", x, cy, ss)
+        r = ss // 2 + 3
+        draw.line([(x - r, cy - r), (x + r, cy + r)], fill="#c62828", width=2)
+        draw.line([(x - r, cy + r), (x + r, cy - r)], fill="#c62828", width=2)
+
+
+def _draw_group_panel(
+    draw,
+    x: int,
+    y: int,
+    w: int,
+    h: int,
+    label: str,
+    *,
+    fill: str = _GROUP_BG,
+) -> None:
+    draw.rounded_rectangle(
+        [x, y, x + max(1, w), y + max(1, h)],
+        radius=10,
+        fill=fill,
+        outline=_GROUP_EDGE,
+        width=1,
+    )
+    draw.text((x + 8, y + 3), label, fill="#455a64")
 
 
 def _draw_grid(

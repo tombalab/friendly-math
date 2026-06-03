@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 from app.domain.worksheet_layout import ResolvedWorksheetLayout, resolve_worksheet_layout
+from app.domain.educational_strategy import build_worksheet_plan
 from app.ai.text_generator import generate_tasks, warning_messages
 from app.domain.profile_catalog import resolve_profile
 from app.domain.topic_catalog import resolve_topic
@@ -266,6 +267,13 @@ def generate_worksheet(
             total_slots=image_coverage.total_slots,
         )
 
+    worksheet_plan = build_worksheet_plan(
+        tasks=tasks,
+        resolved_profile=resolved_profile,
+        resolved_topic=resolved_topic,
+        template_id=request.visual_template_id,
+    )
+
     resolved_layout: ResolvedWorksheetLayout
     layout_source = "resolver"
     per_task_images_requested = bool(
@@ -280,6 +288,7 @@ def generate_worksheet(
             request.number_of_tasks,
             include_workspace=request.include_workspace,
             per_task_images_requested=per_task_images_requested,
+            worksheet_plan=worksheet_plan,
         )
         layout_source = resolved_layout.source
     except Exception as exc:
@@ -354,6 +363,7 @@ def generate_worksheet(
         task_images=task_images,
         answer_key=answer_key,
         include_workspace=request.include_workspace,
+        worksheet_plan=worksheet_plan,
     )
 
     for pw in pdf_result.warnings:
@@ -390,6 +400,7 @@ def generate_worksheet(
                 resolved_topic=resolved_topic,
                 resolved_profile=resolved_profile,
                 answer_key=answer_key,
+                worksheet_plan=worksheet_plan,
                 image_coverage=image_coverage,
                 pdf_bytes=pdf_bytes,
                 warnings=clean_warnings,
@@ -419,6 +430,7 @@ def generate_worksheet(
         resolved_topic=resolved_topic,
         resolved_profile=resolved_profile,
         resolved_layout=resolved_layout,
+        worksheet_plan=worksheet_plan,
         answer_key=answer_key,
         header_image=header_image,
         task_images=task_images,
@@ -456,6 +468,7 @@ def _result_for_history(
     resolved_topic,
     resolved_profile,
     answer_key,
+    worksheet_plan,
     image_coverage,
     pdf_bytes: bytes,
     warnings: list[WorksheetWarning],
@@ -471,6 +484,7 @@ def _result_for_history(
         resolved_topic=resolved_topic,
         resolved_profile=resolved_profile,
         answer_key=answer_key,
+        worksheet_plan=worksheet_plan,
         image_coverage=image_coverage,
         pdf_bytes=pdf_bytes,
         warnings=warnings,

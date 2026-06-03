@@ -9,6 +9,7 @@ from app.domain.profile_catalog import ResolvedProfile
 
 if TYPE_CHECKING:
     from app.domain.worksheet_layout import ResolvedWorksheetLayout
+    from app.domain.educational_strategy import WorksheetPlan
 from app.domain.topic_catalog import ResolvedTopic
 from app.generators.answers import AnswerKeyResult
 
@@ -38,6 +39,7 @@ class WorksheetRequest:
     include_answers: bool = False
     optional_context: str | None = None
     worksheet_label: str | None = None
+    visual_template_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -81,6 +83,7 @@ class WorksheetResult:
     resolved_topic: ResolvedTopic | None = None
     resolved_profile: ResolvedProfile | None = None
     resolved_layout: "ResolvedWorksheetLayout | None" = None
+    worksheet_plan: "WorksheetPlan | None" = None
     answer_key: AnswerKeyResult | None = None
     header_image: bytes | None = None
     task_images: list[bytes] | None = None
@@ -173,7 +176,8 @@ class WorksheetResult:
             rl = self.resolved_layout
             layout_line = (
                 f"task {rl.task_font_size} pt, margines {rl.margin} pt "
-                f"({'low-stimuli' if rl.is_low_stimuli else 'standard'})"
+                f"({'low-stimuli' if rl.is_low_stimuli else 'standard'}), "
+                f"szablon {rl.template_id}"
             )
 
         task_quality = [w for w in self.warnings if w.code.startswith("task_quality_")]

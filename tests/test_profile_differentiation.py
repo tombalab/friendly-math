@@ -3,9 +3,15 @@ from __future__ import annotations
 
 from app.ai.fallback_tasks import fallback_tasks_for_topic
 from app.domain.profile_pedagogy import get_pedagogy_spec
+from app.domain.educational_strategy import build_worksheet_plan
 from app.domain.worksheet_layout import resolve_worksheet_layout
 from app.domain.profile_catalog import resolve_profile
-from app.generators.images import _skip_reason_for_task, generate_worksheet_images_for_tasks_with_diagnostics
+from app.domain.topic_catalog import resolve_topic
+from app.generators.images import (
+    _skip_reason_for_task,
+    generate_worksheet_images_for_tasks_with_diagnostics,
+    visual_prompt_for_topic,
+)
 from app.validators.profile_enforcement import count_enriched_tasks
 
 
@@ -135,3 +141,55 @@ def test_image_diagnostics_reports_skip_reason():
     assert result.rendered_count == 1
     assert result.slots[0].skip_reason
     assert result.slots[1].rendered
+
+
+def test_adhd_plan_uses_sections_progress_and_activity_changes():
+    topic = resolve_topic("dodawanie do 20", 1)
+    plan = build_worksheet_plan(
+        tasks=[
+            "Policz: 2 + 3 = ____",
+            "Policz: 4 + 1 = ____",
+            "Policz: 5 + 2 = ____",
+            "Policz: 3 + 4 = ____",
+        ],
+        resolved_profile=resolve_profile("ADHD"),
+        resolved_topic=topic,
+        template_id="detective",
+    )
+    assert plan.template.template_id == "detective"
+    assert [s.section_id for s in plan.sections] == ["A", "B", "C", "D"]
+    task_blocks = [b for s in plan.sections for b in s.blocks if b.task_index is not None]
+    assert len({b.activity_type for b in task_blocks}) >= 3
+    assert all(b.progress_label for b in task_blocks)
+
+
+def test_dyskalkulia_plan_has_micro_steps_and_large_write():
+    topic = resolve_topic("dodawanie do 20", 1)
+    plan = build_worksheet_plan(
+        tasks=["Policz: 2 + 3 = ____", "Policz: 4 + 1 = ____"],
+        resolved_profile=resolve_profile("dyskalkulia"),
+        resolved_topic=topic,
+    )
+    blocks = [b for s in plan.sections for b in s.blocks if b.task_index is not None]
+    assert blocks
+    assert all("Popatrz na obrazek." in b.instructions for b in blocks)
+    assert all(b.answer_mode in ("large_write", "circle") for b in blocks)
+
+
+def test_grafomotoryka_profile_prefers_marking_and_connecting():
+    topic = resolve_topic("dodawanie do 20", 1)
+    plan = build_worksheet_plan(
+        tasks=["Policz: 2 + 3 = ____", "Policz: 4 + 1 = ____", "Policz: 5 + 2 = ____"],
+        resolved_profile=resolve_profile("trudności grafomotoryczne"),
+        resolved_topic=topic,
+    )
+    blocks = [b for s in plan.sections for b in s.blocks if b.task_index is not None]
+    assert {b.answer_mode for b in blocks} >= {"checkbox", "connect", "large_write"}
+    assert all(b.answer_box_lines >= 2 for b in blocks)
+
+
+def test_visual_prompt_maps_topic_to_learning_role():
+    prompt = visual_prompt_for_topic("ułamki", grade=4)
+    assert prompt["visual_family"] == "ułamki"
+    assert "częścią całości" in prompt["learning_role_pl"]
+    assert "dekoracji" not in prompt["prompt_pl"].casefold()

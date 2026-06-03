@@ -16,6 +16,7 @@ ProfileGroup = Literal[
     "dyskalkulia",
     "dysleksja",
     "trudnosci",
+    "grafomotoryka",
     "zdolny",
 ]
 
@@ -164,6 +165,29 @@ _PROFILE_SPECS: dict[str, ProfilePedagogySpec] = {
         teacher_hint_pl="Wolniejsze tempo, prostsze liczby; ilustracja przy zadaniu (gdy włączona).",
         max_icon_count=7,
     ),
+    "trudności grafomotoryczne": ProfilePedagogySpec(
+        profile_id="trudności grafomotoryczne",
+        profile_group="grafomotoryka",
+        display_name="Trudności grafomotoryczne",
+        goal_pl="Mniej pisania, duże pola odpowiedzi, wybór i łączenie zamiast przepisywania.",
+        task_shape="one_step_compact",
+        max_steps_default=1,
+        wording="brief_precise",
+        visual_support="per_task_sparse",
+        layout_density="spacious",
+        validation_mode="enforce_with_fallback",
+        numeric_scale=0.8,
+        max_task_length_default=58,
+        forbid_word_problems=True,
+        require_enriched_ratio=0.0,
+        prompt_positive=(
+            "Krótkie polecenia, jedna odpowiedź na zadanie, minimalne pisanie; "
+            "preferuj wybór wyniku, zaznaczanie lub wpisanie pojedynczej liczby."
+        ),
+        prompt_negative="Bez przepisywania treści, długich odpowiedzi i kilku działań w jednym zadaniu.",
+        teacher_hint_pl="Duże pola odpowiedzi, mniej pisania, więcej zaznaczania/wyboru.",
+        max_icon_count=7,
+    ),
     "zdolny": ProfilePedagogySpec(
         profile_id="zdolny",
         profile_group="zdolny",
@@ -274,6 +298,16 @@ def low_stimuli_boost_for_profile(profile_input: str | None) -> dict:
             "section_spacing": 28,
             "workspace_lines": 3,
         }
+    if spec.profile_group == "grafomotoryka":
+        return {
+            **common,
+            "task_font_size": 16,
+            "task_spacing": 20,
+            "line_spacing": 25,
+            "section_spacing": 28,
+            "workspace_lines": 1,
+            "workspace_line_gap": 30,
+        }
     if spec.profile_group == "dyskalkulia":
         return {
             **common,
@@ -335,6 +369,10 @@ def layout_overrides_for_pedagogy(profile_input: str | None) -> dict:
     elif spec.profile_group == "dyskalkulia":
         base["background_color"] = "#fafafa"
         base["workspace_lines"] = max(base.get("workspace_lines", 4), 5)
+    elif spec.profile_group == "grafomotoryka":
+        base["background_color"] = "#fbfbf8"
+        base["workspace_lines"] = min(base.get("workspace_lines", 1), 1)
+        base["workspace_line_gap"] = max(base.get("workspace_line_gap", 24), 30)
     elif spec.profile_group == "trudnosci":
         base["background_color"] = "#fafafa"
 

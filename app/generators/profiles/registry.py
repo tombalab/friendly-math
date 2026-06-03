@@ -12,6 +12,7 @@ from .base import StudentProfile
 from .adhd import ADHDProfile
 from .dyskalkulia import DyskalkuliaProfile
 from .dysleksja import DysleksjaProfile
+from .grafomotoryka import GrafomotorykaProfile
 from .standardowy import StandardowyProfile
 from .trudnosci import TrudnosciProfile
 from .zdolny import ZdolnyProfile
@@ -25,6 +26,7 @@ _PROFILES: Dict[str, StudentProfile] = {
         ADHDProfile(),
         DysleksjaProfile(),
         TrudnosciProfile(),
+        GrafomotorykaProfile(),
         ZdolnyProfile(),
     )
 }

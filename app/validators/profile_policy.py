@@ -104,6 +104,23 @@ def policy_for_profile(
             max_word_problem_sentences=max_sentences,
         )
 
+    if pid in ("trudności grafomotoryczne", "trudnosci grafomotoryczne"):
+        max_operand, max_result = _numeric_caps_for_topic(topic, grade, pid)
+        prefix = _format_prefix_for_topic(topic, grade)
+        forbidden = _forbidden_phrases_for_topic(topic)
+        max_sentences = _max_word_problem_sentences_for_topic(topic, grade)
+        max_len = _max_task_length_for_topic(topic, grade, pid, default=58)
+        return StructuredQualityCriteria(
+            max_operand=max_operand,
+            max_result=max_result,
+            max_operations_per_task=1,
+            max_task_length=max_len,
+            forbidden_phrases=forbidden,
+            require_format_prefix=prefix,
+            require_format_consistent=prefix is not None,
+            max_word_problem_sentences=max_sentences,
+        )
+
     if pid in ("trudności w nauce", "trudnosci w nauce"):
         max_operand, max_result = _numeric_caps_for_topic(topic, grade, pid)
         prefix = _format_prefix_for_topic(topic, grade)
@@ -156,7 +173,14 @@ def _counting_sequence_policy(profile_id: str, grade: int) -> StructuredQualityC
 
 def _numeric_caps_for_topic(topic_id: str, grade: int, profile_id: str) -> tuple[int, int]:
     """Zakresy walidacji zależne od tematu; profile PPP nadal mają ciaśniejsze limity."""
-    low_support = profile_id in ("adhd", "dyskalkulia", "trudności w nauce", "trudnosci w nauce")
+    low_support = profile_id in (
+        "adhd",
+        "dyskalkulia",
+        "trudności w nauce",
+        "trudnosci w nauce",
+        "trudności grafomotoryczne",
+        "trudnosci grafomotoryczne",
+    )
     topic = topic_id.casefold()
 
     if grade <= 3:

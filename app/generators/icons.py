@@ -35,6 +35,8 @@ COOKIE_DOT = "#5d4037"
 
 CANDY_PINK = "#f06292"
 CANDY_PURPLE = "#ab47bc"
+BALLOON_BLUE = "#64b5f6"
+BLOCK_ORANGE = "#ffb74d"
 
 PIZZA_TOPPING = "#ef5350"
 PIZZA_DOUGH = "#fff8e1"
@@ -180,6 +182,39 @@ def draw_candy(draw, cx: int, cy: int, size: int, color: str = CANDY_PINK) -> No
     )
 
 
+def draw_balloon(draw, cx: int, cy: int, size: int, color: str = BALLOON_BLUE) -> None:
+    """Balon z krótkim sznurkiem — czytelny obiekt do dodawania."""
+    r = max(4, size // 2)
+    draw.ellipse(
+        [cx - r, cy - r, cx + r, cy + r],
+        fill=color,
+        outline=OUTLINE,
+        width=1,
+    )
+    knot_y = cy + r
+    draw.polygon(
+        [(cx - r // 5, knot_y), (cx + r // 5, knot_y), (cx, knot_y + r // 4)],
+        fill=color,
+        outline=OUTLINE,
+    )
+    draw.line(
+        [(cx, knot_y + r // 4), (cx - r // 4, knot_y + r // 2), (cx, knot_y + r * 3 // 4)],
+        fill=OUTLINE,
+        width=1,
+    )
+
+
+def draw_block(draw, cx: int, cy: int, size: int, color: str = BLOCK_ORANGE) -> None:
+    """Klocek zabawka z małymi wypustkami."""
+    s = max(8, size)
+    x0, y0 = cx - s // 2, cy - s // 3
+    x1, y1 = cx + s // 2, cy + s // 3
+    draw.rounded_rectangle([x0, y0, x1, y1], radius=max(2, s // 8), fill=color, outline=OUTLINE, width=1)
+    nub_r = max(1, s // 10)
+    for nx in (cx - s // 4, cx + s // 4):
+        draw.ellipse([nx - nub_r, y0 - nub_r, nx + nub_r, y0 + nub_r], fill=color, outline=OUTLINE, width=1)
+
+
 def draw_pizza(
     draw,
     cx: int,
@@ -305,6 +340,8 @@ _ICONS: Dict[str, Callable] = {
     "cookie_bitten": lambda d, x, y, s: draw_cookie(d, x, y, s, bitten=True),
     "candy_pink": lambda d, x, y, s: draw_candy(d, x, y, s, color=CANDY_PINK),
     "candy_purple": lambda d, x, y, s: draw_candy(d, x, y, s, color=CANDY_PURPLE),
+    "balloon_blue": lambda d, x, y, s: draw_balloon(d, x, y, s, color=BALLOON_BLUE),
+    "block_orange": lambda d, x, y, s: draw_block(d, x, y, s, color=BLOCK_ORANGE),
 }
 
 
@@ -321,7 +358,7 @@ def draw_icon(draw, kind: str, cx: int, cy: int, size: int) -> None:
 # Tematy → para ikon do dwóch grup (left/right) + operator między nimi.
 # Operator przyjmuje wartości: "+", "−", "×", "÷". None oznacza brak operatora (np. mnożenie ma siatkę).
 TOPIC_THEMES: Dict[str, dict] = {
-    "dodawanie": {"left": "apple_red", "right": "apple_green", "op": "+"},
+    "dodawanie": {"left": "apple_red", "right": "balloon_blue", "op": "+"},
     "odejmowanie": {"left": "cookie", "right": "cookie_bitten", "op": "−"},
     "mnożenie": {"grid": "star_gold", "op": "×"},
     "dzielenie": {"left": "fish_blue", "right": "fish_orange", "op": "÷"},
