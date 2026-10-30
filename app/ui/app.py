@@ -23,11 +23,11 @@ import streamlit as st
 from app.domain.educational_strategy import available_templates
 from app.domain.profile_catalog import (
     default_profile_id,
+    profile_help_text,
     profile_ids_for_ui,
     profile_selectbox_labels,
     resolve_profile,
 )
-from app.domain.profile_pedagogy import teacher_hint_for_profile
 from app.domain.topic_catalog import (
     answer_key_expectation_pl,
     default_topic_label_for_grade,
@@ -165,7 +165,7 @@ with st.sidebar.form("worksheet_form"):
         index=_profile_ids.index(_default_pid) if _default_pid in _profile_ids else 0,
         format_func=lambda pid: _profile_labels.get(pid, pid),
     )
-    st.caption(teacher_hint_for_profile(student_profile))
+    st.caption(profile_help_text(student_profile))
     visual_template_id = st.selectbox(
         "Szablon wizualny",
         options=_template_ids,

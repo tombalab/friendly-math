@@ -53,3 +53,41 @@ def test_every_profile_has_ui_metadata():
         assert p.ui_label
         assert p.ui_summary
         assert p.illustration_mode in ("header", "per_task")
+
+
+def test_every_ui_profile_has_own_pedagogy_spec():
+    from app.domain.profile_pedagogy import get_pedagogy_spec
+
+    for pid in profile_ids_for_ui():
+        spec = get_pedagogy_spec(pid)
+        assert spec.profile_id == pid, f"{pid!r} spada do fallbacku pedagogiki"
+
+
+def test_help_text_consistent_between_catalog_and_pedagogy():
+    from app.domain.profile_catalog import profile_help_text
+    from app.domain.profile_pedagogy import teacher_hint_for_profile
+
+    for pid in profile_ids_for_ui():
+        assert profile_help_text(pid) == teacher_hint_for_profile(pid), pid
+
+
+def test_streamlit_profile_selectbox_matches_catalog():
+    from pathlib import Path
+
+    from streamlit.testing.v1 import AppTest
+
+    from app.domain.profile_catalog import profile_help_text, profile_selectbox_labels
+
+    app_path = Path(__file__).resolve().parents[1] / "app" / "ui" / "app.py"
+    at = AppTest.from_file(str(app_path), default_timeout=60).run()
+    assert not at.exception
+
+    selectbox = next(sb for sb in at.selectbox if sb.label == "Profil ucznia")
+    labels = profile_selectbox_labels()
+    assert selectbox.options == [labels[pid] for pid in profile_ids_for_ui()]
+    assert "Dysleksja" in selectbox.options
+    assert selectbox.value == default_profile_id()
+
+    selectbox.set_value("dysleksja").run()
+    assert not at.exception
+    assert profile_help_text("dysleksja") in [c.value for c in at.caption]

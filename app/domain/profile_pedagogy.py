@@ -122,7 +122,7 @@ _PROFILE_SPECS: dict[str, ProfilePedagogySpec] = {
     "dysleksja": ProfilePedagogySpec(
         profile_id="dysleksja",
         profile_group="dysleksja",
-        display_name="Dysleksia",
+        display_name="Dysleksja",
         goal_pl="Krótkie polecenia; poziom liczb jak w klasie.",
         task_shape="one_step_compact",
         max_steps_default=1,
@@ -185,7 +185,7 @@ _PROFILE_SPECS: dict[str, ProfilePedagogySpec] = {
             "preferuj wybór wyniku, zaznaczanie lub wpisanie pojedynczej liczby."
         ),
         prompt_negative="Bez przepisywania treści, długich odpowiedzi i kilku działań w jednym zadaniu.",
-        teacher_hint_pl="Duże pola odpowiedzi, mniej pisania, więcej zaznaczania/wyboru.",
+        teacher_hint_pl="Mniej pisania, duże pola odpowiedzi, więcej zaznaczania i wyboru.",
         max_icon_count=7,
     ),
     "zdolny": ProfilePedagogySpec(
