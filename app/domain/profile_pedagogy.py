@@ -337,6 +337,18 @@ def low_stimuli_boost_for_profile(profile_input: str | None) -> dict:
     }
 
 
+def plan_spacing_for_profile(profile_input: str | None) -> dict:
+    """Odstępy kart zadań w szablonie wizualnym (worksheet_plan) według profilu."""
+    group = get_pedagogy_spec(profile_input).profile_group
+    if group == "dyskalkulia":
+        return {"card_padding": 16, "section_gap": 22, "block_gap": 18, "answer_box_height": 44}
+    if group == "adhd":
+        return {"card_padding": 12, "section_gap": 18, "block_gap": 14, "answer_box_height": 34}
+    if group == "grafomotoryka":
+        return {"card_padding": 16, "section_gap": 22, "block_gap": 18, "answer_box_height": 54}
+    return {}
+
+
 def layout_overrides_for_pedagogy(profile_input: str | None) -> dict:
     """Dodatkowe/nadpisujące layout overrides z polityki profilu."""
     spec = get_pedagogy_spec(profile_input)

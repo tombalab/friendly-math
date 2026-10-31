@@ -4,9 +4,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from app.ai.layout_generator import generate_layout
+from app.ai.layout_generator import profile_layout_defaults
 from app.domain.profile_catalog import ResolvedProfile
-from app.domain.profile_pedagogy import layout_overrides_for_pedagogy, low_stimuli_boost_for_profile
+from app.domain.profile_pedagogy import (
+    layout_overrides_for_pedagogy,
+    low_stimuli_boost_for_profile,
+    plan_spacing_for_profile,
+)
 
 PDF_PRINT_DEFAULTS: dict[str, Any] = {
     "title_font_size": 22,
@@ -209,11 +213,8 @@ def resolve_worksheet_layout(
     values = dict(PDF_PRINT_DEFAULTS)
     source = "pdf_defaults"
 
-    profile_layout = generate_layout(
-        resolved_profile.profile_id,
-        str(grade),
-        number_of_tasks,
-    )
+    # Deterministycznie z metadanych profilu — bez wywołania OpenAI (P1.5, P1.2 offline).
+    profile_layout = profile_layout_defaults(resolved_profile.profile_id, str(grade))
     for key in _TYPOGRAPHY_KEYS:
         if key in profile_layout:
             values[key] = profile_layout[key]
@@ -240,13 +241,7 @@ def resolve_worksheet_layout(
                 "progress_markers": worksheet_plan.strategy.progress_markers,
             }
         )
-        group = worksheet_plan.strategy.profile_group
-        if group == "dyskalkulia":
-            values.update({"card_padding": 16, "section_gap": 22, "block_gap": 18, "answer_box_height": 44})
-        elif group == "adhd":
-            values.update({"card_padding": 12, "section_gap": 18, "block_gap": 14, "answer_box_height": 34})
-        elif group == "grafomotoryka":
-            values.update({"card_padding": 16, "section_gap": 22, "block_gap": 18, "answer_box_height": 54})
+        values.update(plan_spacing_for_profile(resolved_profile.profile_id))
         source = f"{source}+worksheet_plan"
 
     values = _apply_grade_readability(values, grade)

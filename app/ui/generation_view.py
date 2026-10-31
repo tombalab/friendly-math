@@ -52,8 +52,18 @@ def render_generation_result(
     else:
         st.caption("Podgląd niedostępny — zainstaluj PyMuPDF lub pobierz PDF.")
 
+    if result.needs_review_before_download:
+        st.warning(
+            "Karta ma uwagi krytyczne (patrz panel jakości). "
+            "Przejrzyj PDF przed wydrukiem."
+        )
+
     st.download_button(
-        label="⬇️ Pobierz PDF",
+        label=(
+            "⬇️ Pobierz PDF (do przejrzenia)"
+            if result.needs_review_before_download
+            else "⬇️ Pobierz PDF"
+        ),
         data=result.pdf_bytes,
         file_name="worksheet.pdf",
         mime="application/pdf",

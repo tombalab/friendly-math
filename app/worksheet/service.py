@@ -77,6 +77,7 @@ def generate_worksheet(
         EVENT_REQUEST_START,
         grade=request.grade,
         topic_label=request.topic_label,
+        topic_id=request.topic_id,
         profile_id=request.profile_id,
         number_of_tasks=request.number_of_tasks,
         include_illustration=request.include_illustration,
@@ -86,7 +87,7 @@ def generate_worksheet(
         has_worksheet_label=bool(request.worksheet_label),
     )
 
-    resolved_topic = resolve_topic(request.topic_label, request.grade)
+    resolved_topic = resolve_topic(request.topic_id or request.topic_label, request.grade)
     trace.emit(
         EVENT_TOPIC_RESOLVED,
         topic_id=resolved_topic.topic_id,

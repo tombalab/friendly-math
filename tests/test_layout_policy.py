@@ -118,3 +118,47 @@ def test_low_stimuli_boost_keys_present():
         resolve_profile("ADHD"), grade=3, number_of_tasks=4
     )
     assert layout.background_color == LOW_STIMULI_PDF_BOOST["background_color"]
+
+
+def test_layout_resolver_never_calls_openai(monkeypatch):
+    """P1.5 / P1.2: finalny layout jest deterministyczny i działa offline."""
+    import app.ai.layout_generator as lg
+
+    def _no_network():
+        raise AssertionError("resolve_worksheet_layout nie może wołać OpenAI")
+
+    monkeypatch.setattr(lg, "_get_client", _no_network)
+    for pid in ("standardowy", "zdolny", "dysleksja", "dyskalkulia", "ADHD"):
+        first = resolve_worksheet_layout(resolve_profile(pid), grade=4, number_of_tasks=6)
+        second = resolve_worksheet_layout(resolve_profile(pid), grade=4, number_of_tasks=6)
+        assert first == second, pid
+
+
+def test_low_stimuli_layout_for_support_profiles():
+    std = resolve_worksheet_layout(resolve_profile("standardowy"), grade=4, number_of_tasks=5)
+    for pid in ("dyskalkulia", "ADHD", "trudności w nauce"):
+        layout = resolve_worksheet_layout(resolve_profile(pid), grade=4, number_of_tasks=5)
+        assert layout.is_low_stimuli is True, pid
+        assert layout.task_font_size > std.task_font_size, pid
+        assert layout.margin >= std.margin, pid
+        assert layout.background_color == LOW_STIMULI_PDF_BOOST["background_color"], pid
+
+
+def test_plan_spacing_comes_from_profile_policy():
+    from app.domain.educational_strategy import build_worksheet_plan
+    from app.domain.profile_pedagogy import plan_spacing_for_profile
+    from app.domain.topic_catalog import resolve_topic
+
+    topic = resolve_topic("dodawanie do 20", 2)
+    for pid in ("dyskalkulia", "ADHD", "trudności grafomotoryczne"):
+        profile = resolve_profile(pid)
+        plan = build_worksheet_plan(
+            tasks=["Policz: 2 + 3 = ____"],
+            resolved_profile=profile,
+            resolved_topic=topic,
+            template_id=None,
+        )
+        layout = resolve_worksheet_layout(profile, grade=2, number_of_tasks=1, worksheet_plan=plan)
+        expected = plan_spacing_for_profile(pid)
+        assert expected, pid
+        assert layout.answer_box_height == expected["answer_box_height"], pid
