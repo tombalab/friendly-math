@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-_Brak zmian od v1.4.0._
+### Added
+- `CLAUDE.md` — kontekst projektu dla Claude Code: ograniczenia, uruchamianie, mapa kodu i proces wersjonowania
 
 ---
 
