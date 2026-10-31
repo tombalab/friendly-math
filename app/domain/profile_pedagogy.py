@@ -47,6 +47,8 @@ class ProfilePedagogySpec:
     prompt_negative: str
     teacher_hint_pl: str
     max_icon_count: int  # górny limit obiektów w ilustracji per zadanie
+    visual_max_denominator: int | None = None  # limit mianownika ułamka na ilustracji
+    visual_max_shape_side: int | None = None  # limit boku figury (obwody) na ilustracji
 
 
 _PROFILE_SPECS: dict[str, ProfilePedagogySpec] = {
@@ -95,6 +97,8 @@ _PROFILE_SPECS: dict[str, ProfilePedagogySpec] = {
         ),
         teacher_hint_pl="Krótkie, jednoetapowe zadania; ilustracja przy zadaniu (gdy włączona).",
         max_icon_count=6,
+        visual_max_denominator=4,
+        visual_max_shape_side=8,
     ),
     "dyskalkulia": ProfilePedagogySpec(
         profile_id="dyskalkulia",
@@ -118,6 +122,7 @@ _PROFILE_SPECS: dict[str, ProfilePedagogySpec] = {
         prompt_negative="Bez długich poleceń i zadań wieloetapowych.",
         teacher_hint_pl="Prostsze liczby, większe odstępy, ilustracja przy każdym zadaniu (gdy włączona).",
         max_icon_count=8,
+        visual_max_denominator=6,
     ),
     "dysleksja": ProfilePedagogySpec(
         profile_id="dysleksja",

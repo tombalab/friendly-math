@@ -307,6 +307,23 @@ FastAPI/Next.js/Supabase are no longer v2 scope. They become a later platform de
 
 **Domains touched:** Worksheet orchestration, PDF composition, Streamlit UX, reference quality evaluation.
 
+### P2.6 Move Remaining Profile Rules Into The Pedagogy Spec
+
+**Why it matters:** After P1.1 the visual and low-stimuli policy comes from profile metadata, but per-profile rules still live as branches in two places: validation thresholds in `app/validators/profile_policy.py` (raw profile ids) and teaching content in `app/domain/educational_strategy.py` (instructions, answer modes, answer lines by profile group). Adding or tuning a profile still means editing several modules.
+
+**Estimated effort:** M
+
+**Dependencies:** P1.1, P2.1.
+
+**Acceptance criteria:**
+
+- Validation thresholds (max task length, numeric caps, operations per task) are declared per profile in `ProfilePedagogySpec` or a sibling spec, not in `if pid == ...` branches.
+- `educational_strategy.py` reads instructions, answer modes, and answer line counts from profile data instead of branching on `profile_group`.
+- `app/validators/profile_policy.py` is removed from the allowlist in `tests/test_profile_id_guard.py`.
+- Existing validator and reference tests pass without changing generated criteria (snapshot comparison before/after).
+
+**Domains touched:** Student profiles PPP, validators, worksheet orchestration.
+
 ## P3: Future / Explicitly Deferred
 
 ### P3.1 Reconsider Multi-User Platform Only After Streamlit V2 Proves Value

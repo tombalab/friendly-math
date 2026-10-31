@@ -8,7 +8,6 @@ from unittest.mock import patch
 from app.domain.worksheet_contract import WorksheetRequest
 from app.worksheet.service import WorksheetService, generate_worksheet
 
-ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_unknown_topic_blocked_without_api_key():
@@ -82,7 +81,7 @@ def test_quality_summary_has_expected_keys():
 
 
 @patch("app.worksheet.service.generate_tasks")
-def test_service_success_path_mocked(mock_tasks):
+def test_service_success_path_mocked(mock_tasks, tmp_path):
     mock_tasks.return_value = {
         "tasks": ["Policz: 2 + 3 = ____", "Policz: 4 + 1 = ____"],
         "profile": "standardowy",
@@ -98,7 +97,7 @@ def test_service_success_path_mocked(mock_tasks):
         number_of_tasks=2,
         include_answers=True,
     )
-    svc = WorksheetService(output_dir=ROOT / "data" / "out")
+    svc = WorksheetService(output_dir=tmp_path / "out")
     result = svc.generate(req)
     assert result.success is True
     assert result.blocked is False

@@ -166,14 +166,10 @@ def _profile_safe_limits(profile: str, family: str) -> dict | None:
         limits["b_max"] = min(limits["b_max"], cap)
     elif family == "pieniądze":
         limits["coin_max"] = min(limits["coin_max"], cap)
-    if spec.profile_group == "dyskalkulia":
-        limits["den_max"] = min(limits.get("den_max", 6), 6)
-    elif spec.profile_group == "adhd":
-        limits["den_max"] = min(limits.get("den_max", 6), 4)
-        if family == "pieniądze":
-            limits["coin_max"] = min(limits.get("coin_max", 8), cap)
-        if family == "obwody":
-            limits["side_max"] = min(limits.get("side_max", 12), 8)
+    if spec.visual_max_denominator is not None:
+        limits["den_max"] = min(limits.get("den_max", 6), spec.visual_max_denominator)
+    if family == "obwody" and spec.visual_max_shape_side is not None:
+        limits["side_max"] = min(limits.get("side_max", 12), spec.visual_max_shape_side)
     return limits
 
 

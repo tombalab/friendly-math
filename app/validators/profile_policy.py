@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from app.domain.structured_criteria import StructuredQualityCriteria
+from app.generators.profiles.registry import get_profile
 
 # Wspólne frazy zadań tekstowych (mniej dekodowania przy profilach wspierających).
 _WORD_PROBLEM_PHRASES: tuple[str, ...] = (
@@ -173,14 +174,7 @@ def _counting_sequence_policy(profile_id: str, grade: int) -> StructuredQualityC
 
 def _numeric_caps_for_topic(topic_id: str, grade: int, profile_id: str) -> tuple[int, int]:
     """Zakresy walidacji zależne od tematu; profile PPP nadal mają ciaśniejsze limity."""
-    low_support = profile_id in (
-        "adhd",
-        "dyskalkulia",
-        "trudności w nauce",
-        "trudnosci w nauce",
-        "trudności grafomotoryczne",
-        "trudnosci grafomotoryczne",
-    )
+    low_support = get_profile(profile_id).is_low_stimuli
     topic = topic_id.casefold()
 
     if grade <= 3:
