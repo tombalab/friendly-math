@@ -4,9 +4,9 @@
 
 ---
 
-⚠️ **Status projektu: MVP v1.3.0**  
+⚠️ **Status projektu: MVP v1.4.0**  
   
-Aktualna wersja aplikacji to **funkcjonalne MVP v1.3.0**:
+Aktualna wersja aplikacji to **funkcjonalne MVP v1.4.0**:
  - działający interfejs Streamlit z zakładkami **Generuj / Historia / Recenzja**,
  - pełny flow: parametry → generacja zadań → walidacja profilu → ilustracje → layout → PDF,
  - profile PPP wpływające na treść zadań, walidację, ilustracje i układ PDF,
@@ -29,13 +29,14 @@ z opiniami i orzeczeniami PPP (np. dyskalkulia, ADHD, trudności w koncentracji)
 Aplikacja umożliwia szybkie generowanie **czytelnych, niskobodziecowych kart pracy (PDF)**,
 dostosowanych do indywidualnych potrzeb ucznia.
 
-## ✅ Co działa w wersji v1.3.0 (MVP)
+## ✅ Co działa w wersji v1.4.0 (MVP)
 
 - **Panel generowania**: klasa 1–8, temat, liczba zadań, profil ucznia, ilustracje, miejsce na obliczenia i odpowiedzi.
 - **Zakres tematów**: działania arytmetyczne, ułamki, równania, zadania tekstowe, pieniądze, czas, obwody, pomiary długości, procenty, potęgi i Pitagoras.
 - **Profile PPP**: standardowy, ADHD, dyskalkulia, dysleksja, trudności w nauce, trudności grafomotoryczne, zdolny (lista w UI pochodzi z `app/domain/profile_catalog.py`).
 - **Jakość profilu**: walidatory i fallbacki pilnują m.in. długości treści, zakresu liczb, liczby kroków i wzbogacenia zadań.
 - **Ilustracje**: deterministyczne ikony i sceny per zadanie lub w nagłówku, z raportem pokrycia i `skip_reason`.
+- **Layout PDF (v1.4)**: deterministyczny, wynika z profilu ucznia (bez zapytań do AI); szablony wizualne i strategia edukacyjna per profil.
 - **PDF quality v1.3**: zawijanie tekstu po realnej szerokości fontu, łamanie strony przed całym blokiem zadania, ostrzejsze PNG, mały header przy niskim pokryciu ilustracji.
 - **Historia i recenzja**: zapis lokalny wygenerowanych kart, filtrowanie historii, status jakości i pliki recenzji.
 - **Testy i audyty**: testy referencyjne, walidatory, smoke check oraz audyt fallbacków curriculum.
@@ -45,7 +46,7 @@ Po zmianie kodu **zrestartuj Streamlit**.
 
 ---
 
-## 🎯 Cel projektu (v1.3)
+## 🎯 Cel projektu (v1.4)
 
 - wspieranie uczniów z trudnościami w nauce matematyki,
 - ułatwienie pracy nauczycielom i terapeutom,
@@ -164,23 +165,33 @@ Uwaga: bez `OPENAI_API_KEY` w Secrets aplikacja uruchomi się, ale generowanie z
 
 ## Release / Git
 
-Z katalogu projektu:
+Wersjonowanie: [Semantic Versioning](https://semver.org/), historia zmian w `CHANGELOG.md`, każda wersja ma tag `vX.Y.Z` na `main`.
+
+- **patch** (1.4.1) — poprawki błędów,
+- **minor** (1.5.0) — nowe funkcje lub zmiany jakości PDF,
+- **major** (2.0.0) — zmiana platformy albo przepływu pracy nauczyciela.
+
+Na co dzień: zmiany na `dev`, każda dopisuje linijkę do `[Unreleased]` w `CHANGELOG.md`.
+
+Wydanie:
 
 ```bash
-git status
 python -m pytest tests/
-git add README.md CHANGELOG.md app/ tests/
-git commit -m "Release v1.3.0: PDF quality and profile-aware worksheets."
+# CHANGELOG: [Unreleased] -> [X.Y.Z] – data; APP_VERSION w app/ui/app.py; status w README
+git commit -am "Release vX.Y.Z: ..."
 git push origin dev
+git checkout main && git merge --no-ff dev -m "Merge branch 'dev' into main (vX.Y.Z)"
+git tag -a vX.Y.Z -m "vX.Y.Z"
+git push origin main --tags
 ```
 
-Główna gałąź deployu to `main`; prace rozwojowe są prowadzone na `dev`.
+Główna gałąź deployu to `main`; prace rozwojowe są prowadzone na `dev`. Dowolną wersję można odtworzyć przez `git checkout vX.Y.Z`.
 
 ---
 
 ## Project Status
 
-**v1.3.0 — PDF quality i profile-aware worksheets**
+**v1.4.0 — strategia edukacyjna, spójne profile PPP, deterministyczny layout PDF**
 
 The current focus is on validating:
 - pedagogical assumptions,

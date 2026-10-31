@@ -7,7 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+_Brak zmian od v1.4.0._
+
+---
+
+## [1.4.0] – 2026-10-31 – Strategia edukacyjna, spójne profile, deterministyczny layout
+
 ### Added
+- Silnik strategii edukacyjnej: `WorksheetPlan` z sekcjami i szablonami wizualnymi (`app/domain/educational_strategy.py`), wybór szablonu w sidebarze
+- Profil **trudności grafomotoryczne** (mniej pisania, duże pola odpowiedzi, więcej zaznaczania)
+- `WorksheetRequest.topic_id` — stabilny identyfikator tematu ma pierwszeństwo przed etykietą z UI
+- `WorksheetResult.needs_review_before_download` — PDF z uwagami krytycznymi jest oznaczony „do przejrzenia” przy przycisku pobierania
+- `profile_help_text()` w katalogu profili; limity ilustracji (`visual_max_denominator`, `visual_max_shape_side`) w `ProfilePedagogySpec`
+- Testy: spójność selectboxa Streamlit z katalogiem profili (AppTest), layout bez wywołań OpenAI, low-stimuli dla dyskalkulii/ADHD/trudności w nauce, test ochronny przeciw surowym id profili
+- `docs/prioritized-tasks.md`: zadanie P2.6 (pozostałe reguły profili do specyfikacji)
+
+### Changed
+- **Layout PDF jest deterministyczny** — wynika z metadanych profilu, bez zapytania do OpenAI. Profile standardowy, zdolny i dysleksja mają stałe rozmiary czcionek zamiast dobieranych przez AI; generacja karty jest tańsza i szybsza, testy działają offline
+- PDF: bogatsze, zależne od profilu układy i ilustracje
+- Podpowiedź pod wyborem profilu pochodzi z katalogu profili (jedno źródło tekstu dla UI i panelu jakości)
+- Odstępy kart zadań i limity ilustracji przeniesione z rozproszonych `if`-ów do polityki profilu; walidator korzysta z flagi `is_low_stimuli` zamiast własnej listy profili
+- `data/out/worksheet.pdf` nie jest już śledzony w git; testy serwisu zapisują PDF do katalogu tymczasowego
+
+### Fixed
+- Crash na Streamlit Cloud przy budowaniu `WorksheetRequest` z widgetów; Python 3.11 przypięty w `runtime.txt`
+- Literówka „Dysleksia” w nazwie profilu przekazywanej do promptu
+- README: brakujący profil „trudności grafomotoryczne” na listach profili
+
+---
+
+## [1.3.0] – 2026-06-03 – PDF quality i ilustracje profilowe
+
+### Added
+- `resolve_worksheet_layout(..., per_task_images_requested=True)` — ciaśniejszy układ przy ilustracjach per zadanie (max 2 linijki workspace)
+- Ostrzeżenie `images_low_coverage` i mały nagłówek, gdy pokrycie ilustracji per zadanie poniżej 50%
+- Historia: `images.per_task[]` z `skip_reason` per zadanie w `meta.json`
+- Test layoutu: `per_task_images_requested` → `workspace_lines <= 2`
+- Pedagogika profili PPP (`app/domain/profile_pedagogy.py`): zróżnicowane fallbacki, walidacja i ilustracje
 - Faza 4 (opcja B): blueprinty `exact` dla klas 7–8; nowe tematy UI `procenty`, `potęgi`, `pitagoras`; `docs/phase4-decision.md`
 - 3 karty wzorcowe dla kl. 7–8 (procenty, potęgi, Pitagoras)
 - Faza 3: blueprinty `exact` dla klas 4–6 w tematach `dodawanie`, `odejmowanie`, `mnożenie`, `dzielenie`, `ułamki`, `równania`
@@ -22,6 +58,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Dokumenty PP 2025/2026, `docs/teacher-review.md`, `docs/phase3-decision.md`, macierz w `docs/curriculum-matrix-plan.canvas.tsx`
 
 ### Changed
+- Pipeline karty: najpierw `_resolve_images`, potem layout (layout reaguje na tryb per-task)
+- PNG per zadanie renderowane w 960×220 (ostrzejsze po wstawieniu do PDF)
+- PDF: zawijanie tekstu po szerokości fontu (`_wrap_text_by_width`), łamanie strony przed całym blokiem zadania (tekst + grafika + workspace)
+- PDF: nagłówek ilustracji także przy trybie per-task (mniejszy), `preserveAspectRatio` na obrazkach
+- UI: stopka i sidebar `v1.3.0`
 - Baner MVP: osobny komunikat dla kl. 4–6 i rozszerzony zakres 7–8 (procenty, potęgi, Pitagoras)
 - Macierz PP: klasy 4–6 przestają raportować `downgraded`; 7–8 mają własne blueprinty zamiast downgrade z kl. 6
 - Walidatory profil×temat: limity zależne od tematu (mnożenie kl. 5, porównania, zadania tekstowe bez fałszywych `word_problem_load`)
@@ -29,24 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Temat **równania** (4–8): generator i fallback używają okienka ☐ zamiast `x`; pełny klucz odpowiedzi jak we wzorcach
 - Sidebar: temat i checkbox odpowiedzi poza formularzem — podpowiedzi reagują na wybór
 - Panel jakości: baner statusu OK/uwagi/błąd, osobna sekcja walidacji zadań
-- UI v1.2.0 w stopce, layout `wide`, checklista ograniczeń MVP
-
----
-
-## [1.3.0] – 2026-06-03 – PDF quality i ilustracje profilowe
-
-### Added
-- `resolve_worksheet_layout(..., per_task_images_requested=True)` — ciaśniejszy układ przy ilustracjach per zadanie (max 2 linijki workspace)
-- Ostrzeżenie `images_low_coverage` i mały nagłówek, gdy pokrycie ilustracji per zadanie poniżej 50%
-- Historia: `images.per_task[]` z `skip_reason` per zadanie w `meta.json`
-- Test layoutu: `per_task_images_requested` → `workspace_lines <= 2`
-
-### Changed
-- Pipeline karty: najpierw `_resolve_images`, potem layout (layout reaguje na tryb per-task)
-- PNG per zadanie renderowane w 960×220 (ostrzejsze po wstawieniu do PDF)
-- PDF: zawijanie tekstu po szerokości fontu (`_wrap_text_by_width`), łamanie strony przed całym blokiem zadania (tekst + grafika + workspace)
-- PDF: nagłówek ilustracji także przy trybie per-task (mniejszy), `preserveAspectRatio` na obrazkach
-- UI: stopka i sidebar `v1.3.0`
+- Layout `wide`, checklista ograniczeń MVP
 
 ---
 
