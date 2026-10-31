@@ -182,6 +182,11 @@ def _validate_layout(layout: dict, profile, grade: str) -> dict:
     return layout
 
 
+def profile_layout_defaults(profile: str, grade: str) -> dict:
+    """Deterministyczny layout profilu (bez API) — używany przez resolver layoutu (P1.5)."""
+    return _build_layout_from_profile(get_profile(profile), grade)
+
+
 def _get_default_layout(profile: str, grade: str) -> dict:
     """Wsteczna kompatybilność: zwraca domyślny layout dla profilu (bez AI)."""
     return _build_layout_from_profile(get_profile(profile), grade)

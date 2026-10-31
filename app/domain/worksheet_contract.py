@@ -40,6 +40,8 @@ class WorksheetRequest:
     optional_context: str | None = None
     worksheet_label: str | None = None
     visual_template_id: str | None = None
+    # Stabilny identyfikator tematu; gdy podany, ma pierwszeństwo przed topic_label.
+    topic_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -102,6 +104,11 @@ class WorksheetResult:
     @property
     def can_download_pdf(self) -> bool:
         return self.success and not self.blocked and bool(self.pdf_bytes)
+
+    @property
+    def needs_review_before_download(self) -> bool:
+        """PDF jest gotowy, ale są uwagi krytyczne — nauczyciel powinien go przejrzeć."""
+        return self.can_download_pdf and any(w.severity == "error" for w in self.warnings)
 
     def warnings_by_severity(self) -> dict[WarningSeverity, list[WorksheetWarning]]:
         grouped: dict[WarningSeverity, list[WorksheetWarning]] = {

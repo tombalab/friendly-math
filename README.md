@@ -33,7 +33,7 @@ dostosowanych do indywidualnych potrzeb ucznia.
 
 - **Panel generowania**: klasa 1–8, temat, liczba zadań, profil ucznia, ilustracje, miejsce na obliczenia i odpowiedzi.
 - **Zakres tematów**: działania arytmetyczne, ułamki, równania, zadania tekstowe, pieniądze, czas, obwody, pomiary długości, procenty, potęgi i Pitagoras.
-- **Profile PPP**: standardowy, ADHD, dyskalkulia, dysleksja, trudności w nauce, zdolny.
+- **Profile PPP**: standardowy, ADHD, dyskalkulia, dysleksja, trudności w nauce, trudności grafomotoryczne, zdolny (lista w UI pochodzi z `app/domain/profile_catalog.py`).
 - **Jakość profilu**: walidatory i fallbacki pilnują m.in. długości treści, zakresu liczb, liczby kroków i wzbogacenia zadań.
 - **Ilustracje**: deterministyczne ikony i sceny per zadanie lub w nagłówku, z raportem pokrycia i `skip_reason`.
 - **PDF quality v1.3**: zawijanie tekstu po realnej szerokości fontu, łamanie strony przed całym blokiem zadania, ostrzejsze PNG, mały header przy niskim pokryciu ilustracji.
@@ -77,6 +77,7 @@ Obsługiwane profile:
 - dyskalkulia,
 - dysleksja,
 - trudności w nauce,
+- trudności grafomotoryczne,
 - zdolny.
 
 Profile **nie przechowują danych osobowych** i służą wyłącznie
@@ -126,6 +127,7 @@ Profiles currently supported:
 - dyskalkulia
 - dysleksja
 - trudności w nauce
+- trudności grafomotoryczne
 - zdolny
 
 Profiles are implemented in domain catalogs and pedagogy specs, then consumed by

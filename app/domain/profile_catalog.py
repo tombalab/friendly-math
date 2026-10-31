@@ -49,6 +49,11 @@ def profile_selectbox_labels() -> dict[str, str]:
     return {pid: get_profile(pid).label_for_ui for pid in profile_ids_for_ui()}
 
 
+def profile_help_text(profile_input: str | None) -> str:
+    """Jednozdaniowa pomoc dla nauczyciela pod selectboxem (z katalogu, nie z UI)."""
+    return get_profile(profile_input).ui_summary
+
+
 def default_profile_id() -> str:
     return "standardowy"
 

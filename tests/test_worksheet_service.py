@@ -8,7 +8,6 @@ from unittest.mock import patch
 from app.domain.worksheet_contract import WorksheetRequest
 from app.worksheet.service import WorksheetService, generate_worksheet
 
-ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_unknown_topic_blocked_without_api_key():
@@ -82,7 +81,7 @@ def test_quality_summary_has_expected_keys():
 
 
 @patch("app.worksheet.service.generate_tasks")
-def test_service_success_path_mocked(mock_tasks):
+def test_service_success_path_mocked(mock_tasks, tmp_path):
     mock_tasks.return_value = {
         "tasks": ["Policz: 2 + 3 = ____", "Policz: 4 + 1 = ____"],
         "profile": "standardowy",
@@ -98,7 +97,7 @@ def test_service_success_path_mocked(mock_tasks):
         number_of_tasks=2,
         include_answers=True,
     )
-    svc = WorksheetService(output_dir=ROOT / "data" / "out")
+    svc = WorksheetService(output_dir=tmp_path / "out")
     result = svc.generate(req)
     assert result.success is True
     assert result.blocked is False
@@ -140,3 +139,45 @@ def test_service_saves_history_mocked(mock_tasks):
         entries = store.list_recent()
         assert len(entries) == 1
         assert entries[0].worksheet_label == "test-grupa"
+
+
+@patch("app.worksheet.service.generate_tasks")
+def test_topic_id_takes_precedence_over_label(mock_tasks):
+    mock_tasks.return_value = {"tasks": ["Policz: 2 + 3 = ____"]}
+    os.environ["OPENAI_API_KEY"] = "test-key"
+    req = WorksheetRequest(
+        grade=2,
+        topic_label="etykieta zmieniona w UI",
+        topic_id="dodawanie_do_20",
+        profile_id="standardowy",
+        number_of_tasks=1,
+    )
+    result = generate_worksheet(req)
+    assert result.blocked is False
+    assert result.resolved_topic.topic_id == "dodawanie_do_20"
+
+
+@patch("app.worksheet.service.generate_tasks")
+def test_download_marked_for_review_on_error_warnings(mock_tasks):
+    from dataclasses import replace
+
+    from app.domain.worksheet_contract import WorksheetWarning
+
+    mock_tasks.return_value = {"tasks": ["Policz: 2 + 3 = ____"]}
+    os.environ["OPENAI_API_KEY"] = "test-key"
+    req = WorksheetRequest(
+        grade=2,
+        topic_label="dodawanie do 20",
+        profile_id="standardowy",
+        number_of_tasks=1,
+    )
+    result = generate_worksheet(req)
+    assert result.can_download_pdf is True
+    assert result.needs_review_before_download is False
+
+    flagged = replace(
+        result,
+        warnings=[*result.warnings, WorksheetWarning("task_quality_x", "Błąd", "error")],
+    )
+    assert flagged.can_download_pdf is True
+    assert flagged.needs_review_before_download is True

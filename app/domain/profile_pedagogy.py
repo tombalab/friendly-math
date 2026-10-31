@@ -47,6 +47,8 @@ class ProfilePedagogySpec:
     prompt_negative: str
     teacher_hint_pl: str
     max_icon_count: int  # górny limit obiektów w ilustracji per zadanie
+    visual_max_denominator: int | None = None  # limit mianownika ułamka na ilustracji
+    visual_max_shape_side: int | None = None  # limit boku figury (obwody) na ilustracji
 
 
 _PROFILE_SPECS: dict[str, ProfilePedagogySpec] = {
@@ -95,6 +97,8 @@ _PROFILE_SPECS: dict[str, ProfilePedagogySpec] = {
         ),
         teacher_hint_pl="Krótkie, jednoetapowe zadania; ilustracja przy zadaniu (gdy włączona).",
         max_icon_count=6,
+        visual_max_denominator=4,
+        visual_max_shape_side=8,
     ),
     "dyskalkulia": ProfilePedagogySpec(
         profile_id="dyskalkulia",
@@ -118,11 +122,12 @@ _PROFILE_SPECS: dict[str, ProfilePedagogySpec] = {
         prompt_negative="Bez długich poleceń i zadań wieloetapowych.",
         teacher_hint_pl="Prostsze liczby, większe odstępy, ilustracja przy każdym zadaniu (gdy włączona).",
         max_icon_count=8,
+        visual_max_denominator=6,
     ),
     "dysleksja": ProfilePedagogySpec(
         profile_id="dysleksja",
         profile_group="dysleksja",
-        display_name="Dysleksia",
+        display_name="Dysleksja",
         goal_pl="Krótkie polecenia; poziom liczb jak w klasie.",
         task_shape="one_step_compact",
         max_steps_default=1,
@@ -185,7 +190,7 @@ _PROFILE_SPECS: dict[str, ProfilePedagogySpec] = {
             "preferuj wybór wyniku, zaznaczanie lub wpisanie pojedynczej liczby."
         ),
         prompt_negative="Bez przepisywania treści, długich odpowiedzi i kilku działań w jednym zadaniu.",
-        teacher_hint_pl="Duże pola odpowiedzi, mniej pisania, więcej zaznaczania/wyboru.",
+        teacher_hint_pl="Mniej pisania, duże pola odpowiedzi, więcej zaznaczania i wyboru.",
         max_icon_count=7,
     ),
     "zdolny": ProfilePedagogySpec(
@@ -335,6 +340,18 @@ def low_stimuli_boost_for_profile(profile_input: str | None) -> dict:
         "section_spacing": 24,
         "workspace_lines": 4,
     }
+
+
+def plan_spacing_for_profile(profile_input: str | None) -> dict:
+    """Odstępy kart zadań w szablonie wizualnym (worksheet_plan) według profilu."""
+    group = get_pedagogy_spec(profile_input).profile_group
+    if group == "dyskalkulia":
+        return {"card_padding": 16, "section_gap": 22, "block_gap": 18, "answer_box_height": 44}
+    if group == "adhd":
+        return {"card_padding": 12, "section_gap": 18, "block_gap": 14, "answer_box_height": 34}
+    if group == "grafomotoryka":
+        return {"card_padding": 16, "section_gap": 22, "block_gap": 18, "answer_box_height": 54}
+    return {}
 
 
 def layout_overrides_for_pedagogy(profile_input: str | None) -> dict:

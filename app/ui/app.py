@@ -16,21 +16,30 @@ from dotenv import load_dotenv
 load_dotenv()
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
+# Streamlit prepends this file's directory (app/ui). That folder contains
+# app.py, so `import app` loads this script instead of the package unless the
+# repository root is the first sys.path entry. The root is often already on
+# the path (as cwd), which must not leave app/ui in front.
+_root = str(ROOT_DIR)
+sys.path[:] = [p for p in sys.path if Path(p).resolve() != ROOT_DIR]
+sys.path.insert(0, _root)
+_shadowed_app = sys.modules.get("app")
+if _shadowed_app is not None and not hasattr(_shadowed_app, "__path__"):
+    del sys.modules["app"]
 
 import streamlit as st
 from app.domain.educational_strategy import available_templates
 from app.domain.profile_catalog import (
     default_profile_id,
+    profile_help_text,
     profile_ids_for_ui,
     profile_selectbox_labels,
     resolve_profile,
 )
-from app.domain.profile_pedagogy import teacher_hint_for_profile
 from app.domain.topic_catalog import (
     answer_key_expectation_pl,
     default_topic_label_for_grade,
+    resolve_topic,
     topic_labels_for_grade,
     upper_grades_mvp_caption_pl,
 )
@@ -65,6 +74,7 @@ def _build_worksheet_request(
     kwargs: dict = {
         "grade": int(grade),
         "topic_label": str(topic_label),
+        "topic_id": _topic_id_or_none(topic_label, int(grade)),
         "profile_id": str(profile_id),
         "number_of_tasks": int(number_of_tasks),
         "include_illustration": bool(include_illustration),
@@ -75,6 +85,11 @@ def _build_worksheet_request(
     if "visual_template_id" in WorksheetRequest.__dataclass_fields__:
         kwargs["visual_template_id"] = visual_template_id or None
     return WorksheetRequest(**kwargs)
+
+
+def _topic_id_or_none(topic_label: str, grade: int) -> str | None:
+    topic_id = resolve_topic(str(topic_label), grade).topic_id
+    return None if topic_id == "unknown" else topic_id
 
 
 def _pdf_bytes_to_images(pdf_bytes: bytes, dpi: int = 120) -> list[BytesIO]:
@@ -165,7 +180,7 @@ with st.sidebar.form("worksheet_form"):
         index=_profile_ids.index(_default_pid) if _default_pid in _profile_ids else 0,
         format_func=lambda pid: _profile_labels.get(pid, pid),
     )
-    st.caption(teacher_hint_for_profile(student_profile))
+    st.caption(profile_help_text(student_profile))
     visual_template_id = st.selectbox(
         "Szablon wizualny",
         options=_template_ids,
