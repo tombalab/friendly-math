@@ -160,9 +160,10 @@ if include_answers:
 _profile_ids = profile_ids_for_ui()
 _profile_labels = profile_selectbox_labels()
 _default_pid = default_profile_id()
-_template_labels = available_templates()
+# Pusty id = szablon dobrany automatycznie do klasy i profilu (Q4).
+_template_labels = {"": "Automatycznie (wg klasy i profilu)", **available_templates()}
 _template_ids = list(_template_labels.keys())
-_default_template = _template_ids[0] if _template_ids else "classic"
+_default_template = ""
 
 number_of_tasks = 5
 student_profile = _default_pid

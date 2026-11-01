@@ -71,11 +71,10 @@ def _string_width(text: str, font_name: str, size: float) -> float:
 
 def _draw_section_header(
     c, x: float, y: float, text: str, font_name: str, size: float,
-    width_to_underline: float, text_color: str,
+    width_to_underline: float, text_color: str, *, uppercase: bool = True,
 ) -> None:
-    """Nagłówek sekcji: UPPERCASE + bold + cienkie podkreślenie pod tekstem."""
-    upper = text.upper()
-    _draw_bold(c, x, y, upper, font_name, size)
+    """Nagłówek sekcji: bold + cienkie podkreślenie; wersaliki poza klasami 7–8."""
+    _draw_bold(c, x, y, text.upper() if uppercase else text, font_name, size)
     try:
         c.setStrokeColor(HexColor(text_color))
         c.setLineWidth(1.0)
@@ -143,12 +142,14 @@ def _draw_document_header(
     font_name: str,
     text_color: str,
     muted_color: str,
+    task_count: int = 0,
 ) -> float:
     """Nagłówek karty ucznia: tytuł, klasa i zakres, pole na imię i datę.
 
     Bez nazwy profilu i tekstów dla nauczyciela — te trafiają na stronę odpowiedzi (Q1).
     """
     header_h = 86 if plan else 78
+    band = plan.grade_band if plan else "early"
     accent = layout.get("accent_color", "#3f51b5")
     soft = layout.get("soft_color", "#f6f7fb")
     border = layout.get("border_color", "#DDDDDD")
@@ -159,8 +160,11 @@ def _draw_document_header(
     except Exception:
         pass
 
-    if plan:
+    # Klasy 1–3: znak i wzór szablonu; 4–6: sam znak; 7–8: bez dekoracji (Q4).
+    show_mark = bool(plan) and band != "upper" and plan.template.icon_kind != "none"
+    if plan and band == "early":
         _draw_template_pattern(c, x, y, width, header_h, plan.template.pattern, accent, border)
+    if show_mark:
         _draw_template_mark(
             c,
             x + 18,
@@ -190,7 +194,15 @@ def _draw_document_header(
     c.drawString(text_x, y - 44, f"Klasa {meta.grade}  |  {meta.topic_range}"[:90])
 
     _draw_name_date_fields(
-        c, text_x, y - header_h + 14, text_w, font_name, layout["metadata_font_size"], text_color, muted_color
+        c,
+        text_x,
+        y - header_h + 14,
+        text_w,
+        font_name,
+        layout["metadata_font_size"],
+        text_color,
+        muted_color,
+        score_total=task_count if band != "early" else 0,
     )
 
     try:
@@ -209,11 +221,15 @@ def _draw_name_date_fields(
     font_size: float,
     text_color: str,
     line_color: str,
+    *,
+    score_total: int = 0,
 ) -> None:
-    """Pole „Imię i nazwisko” i „Data” do wypełnienia ręcznie (nic nie zapisujemy)."""
+    """Pola „Imię i nazwisko”, „Data” i (kl. 4–8) „Wynik” do wypełnienia ręcznie (nic nie zapisujemy)."""
     name_label = "Imię i nazwisko:"
     date_label = "Data:"
-    date_line_w = 90
+    date_line_w = 70 if score_total else 90
+    score_label = f"Wynik:      / {score_total}" if score_total else ""
+    score_w = _string_width(score_label, font_name, font_size) + 14 if score_total else 0
     try:
         c.setFillColor(HexColor(text_color))
         c.setStrokeColor(HexColor(line_color))
@@ -223,10 +239,13 @@ def _draw_name_date_fields(
     c.setFont(font_name, font_size)
     c.drawString(x, y, name_label)
     name_start = x + _string_width(name_label, font_name, font_size) + 6
-    date_label_x = x + width - date_line_w - _string_width(date_label, font_name, font_size) - 6
+    right = x + width - score_w
+    date_label_x = right - date_line_w - _string_width(date_label, font_name, font_size) - 6
     c.line(name_start, y - 2, date_label_x - 16, y - 2)
     c.drawString(date_label_x, y, date_label)
-    c.line(x + width - date_line_w, y - 2, x + width, y - 2)
+    c.line(right - date_line_w, y - 2, right, y - 2)
+    if score_total:
+        c.drawRightString(x + width, y, score_label)
 
 
 def _draw_template_pattern(
@@ -461,6 +480,7 @@ def _draw_tasks_body(
             layout["section_font_size"],
             available_width,
             text_color,
+            uppercase=worksheet_plan.grade_band != "upper",
         )
         y -= layout["section_spacing"]
         if instruction_lines:
@@ -963,7 +983,9 @@ def build_worksheet_pdf_bytes(
     y = height - margin
     page_num = 1
 
-    # --- Nagłówek dokumentu: tytuł + profil + szablon wizualny ---
+    tasks_list = list(tasks)
+
+    # --- Nagłówek dokumentu: tytuł, klasa i zakres, pola ucznia ---
     y = _draw_document_header(
         c,
         meta=meta,
@@ -975,9 +997,9 @@ def build_worksheet_pdf_bytes(
         font_name=base_font,
         text_color=text_color,
         muted_color=muted_color,
+        task_count=len(tasks_list),
     )
 
-    tasks_list = list(tasks)
     has_task_images = bool(task_images) and len(task_images or []) == len(tasks_list)
 
     # --- Opcjonalna ilustracja u góry ---

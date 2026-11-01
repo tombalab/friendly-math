@@ -14,10 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Pieniądze: polskie monety 5 / 2 / 1 zł z nominałami; czas: tarcza z cyframi, bez wskazówek, gdy uczeń ma je narysować; ułamki: koło z zacieniowanymi częściami; obwody: prostokąt z opisanymi bokami
 - Usunięto ogólny obrazek w nagłówku (np. 3 + 2 przy innych zadaniach); profile standardowy, dysleksja i zdolny dostają jedną pomoc przy pierwszym zadaniu, które da się zilustrować
 - Przy opcjach wyboru luka po pytajniku nie daje już „? ?”
+- Szablony według klasy (Q4): kl. 1–3 z motywem i ikoną, kl. 4–6 spokojniejsze (bez wzoru w nagłówku), kl. 7–8 rzeczowy szablon „Szkolny” bez dekoracji i wersalików
+- Nazwy sekcji zależą od klasy: „Misje”, „Bonus” tylko w kl. 1–3; w kl. 7–8 „Część A/B/C” i samoocena „rozumiem / częściowo / potrzebuję pomocy”
+- Kl. 4–8: pole „Wynik: __ / N” w nagłówku; mniejsze tytuły i nagłówki sekcji, czcionka zadań nadal z profilu
+- Szablon w UI domyślnie „Automatycznie (wg klasy i profilu)” — wcześniej zawsze wysyłany był „Klasyczny”, więc dobór do profilu nie działał
 
 ### Added
 - `TaskVisual` i `task_visual_for()` (`app/generators/task_visuals.py`), renderer `app/pdf/visuals.py`, pole `WorksheetResult.task_visuals`
 - Test `tests/test_task_visuals.py`: rodzaje pomocy, monety, zegar, brak bitmap w PDF, pomoc tylko przy pasującym zadaniu
+- `grade_band()` i pole `WorksheetPlan.grade_band`; szablon `school`; test `tests/test_grade_bands.py`
 
 ---
 

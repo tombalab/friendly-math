@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.ai.layout_generator import profile_layout_defaults
+from app.domain.educational_strategy import grade_band
 from app.domain.profile_catalog import ResolvedProfile
 from app.domain.profile_pedagogy import (
     layout_overrides_for_pedagogy,
@@ -271,7 +272,16 @@ def resolve_worksheet_layout(
 
 
 def _apply_grade_readability(values: dict[str, Any], grade: int) -> dict[str, Any]:
-    if grade <= 3:
+    """Typografia pasma klas (Q4). Czcionka zadań zostaje z profilu — tu tylko tytuły."""
+    band = grade_band(grade)
+    if band == "early":
         values["task_font_size"] = max(int(values["task_font_size"]), 12)
         values["margin"] = max(int(values["margin"]), 55)
+    elif band == "middle":
+        values["title_font_size"] = min(int(values["title_font_size"]), 20)
+        values["section_font_size"] = min(int(values["section_font_size"]), 15)
+    else:
+        # Kl. 7–8: rzeczowy, mniejszy tytuł i nagłówki sekcji.
+        values["title_font_size"] = min(int(values["title_font_size"]), 18)
+        values["section_font_size"] = min(int(values["section_font_size"]), 13)
     return values

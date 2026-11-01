@@ -13,6 +13,16 @@ from app.generators.answers import compute_answer_key
 ActivityType = Literal["compute", "match", "color", "choice", "puzzle", "trace", "reflect"]
 AnswerMode = Literal["write", "large_write", "checkbox", "circle", "connect", "color"]
 Difficulty = Literal["warmup", "core", "challenge", "summary"]
+GradeBand = Literal["early", "middle", "upper"]
+
+
+def grade_band(grade: int) -> GradeBand:
+    """Pasmo klas (Q4): 1–3 wczesnoszkolne, 4–6 środkowe, 7–8 starsze."""
+    if grade <= 3:
+        return "early"
+    if grade <= 6:
+        return "middle"
+    return "upper"
 
 
 @dataclass(frozen=True)
@@ -82,10 +92,12 @@ class WorksheetPlan:
     strategy: StrategySpec
     visual_theme: VisualThemeSpec
     sections: tuple[WorksheetSection, ...]
+    grade_band: GradeBand = "early"
 
     def to_layout_json(self) -> dict:
         """Machine-readable expanded JSON schema used by PDF and diagnostics."""
         return {
+            "grade_band": self.grade_band,
             "template": self.template.__dict__,
             "strategy": {
                 "profile_id": self.strategy.profile_id,
@@ -188,6 +200,18 @@ _TEMPLATES: dict[str, WorksheetTemplate] = {
         "minimum bodźców i dużo oddechu",
         "none",
     ),
+    "school": WorksheetTemplate(
+        "school",
+        "Szkolny (kl. 7–8)",
+        "#37474f",
+        "#f5f7f8",
+        "#cfd8dc",
+        "Karta pracy",
+        "Friendly Math",
+        "none",
+        "rzeczowy układ bez dekoracji",
+        "none",
+    ),
 }
 
 
@@ -253,15 +277,27 @@ def available_templates() -> dict[str, str]:
     return {key: value.name_pl for key, value in _TEMPLATES.items()}
 
 
-def resolve_template(template_id: str | None, *, profile_group: str = "", topic_id: str = "") -> WorksheetTemplate:
+def resolve_template(
+    template_id: str | None,
+    *,
+    profile_group: str = "",
+    topic_id: str = "",
+    grade: int = 2,
+) -> WorksheetTemplate:
+    """Szablon wybrany przez nauczyciela albo automatyczny: najpierw klasa, potem profil (Q4).
+
+    Profil zmienia szablon klasy (np. spokojniejsze kolory), ale nie wprowadza
+    motywu przygody u starszych uczniów.
+    """
     if template_id and template_id in _TEMPLATES:
         return _TEMPLATES[template_id]
+    band = grade_band(grade)
+    if band == "upper":
+        return _TEMPLATES["school"]
     if profile_group == "dyskalkulia":
         return _TEMPLATES["friendly_minimal"]
-    if profile_group == "adhd":
+    if band == "early" and profile_group == "adhd":
         return _TEMPLATES["space" if topic_id == "czas" else "adventure"]
-    if profile_group == "grafomotoryka":
-        return _TEMPLATES["classic"]
     return _TEMPLATES["classic"]
 
 
@@ -279,10 +315,12 @@ def build_worksheet_plan(
 ) -> WorksheetPlan:
     pedagogy = get_pedagogy_spec(resolved_profile.profile_id)
     strategy = _strategy_for_profile(resolved_profile.profile_id)
+    band = grade_band(resolved_topic.grade)
     template = resolve_template(
         template_id,
         profile_group=pedagogy.profile_group,
         topic_id=resolved_topic.topic_id,
+        grade=resolved_topic.grade,
     )
     answer_key = compute_answer_key(tasks, topic_id=resolved_topic.topic_id, grade=resolved_topic.grade)
     answers = [item.value if item.status == "supported" else "" for item in answer_key.items]
@@ -297,8 +335,9 @@ def build_worksheet_plan(
         )
         for idx, task in enumerate(tasks)
     ]
-    sections = _sections_for_blocks(blocks, profile_group=pedagogy.profile_group)
+    sections = _sections_for_blocks(blocks, profile_group=pedagogy.profile_group, band=band)
     return WorksheetPlan(
+        grade_band=band,
         template=template,
         strategy=strategy,
         visual_theme=visual_theme_for_topic(resolved_topic),
@@ -460,32 +499,47 @@ def _choice_options(answer: str, idx: int) -> tuple[str, ...]:
     return tuple(str(o) for o in options)
 
 
-def _sections_for_blocks(blocks: list[WorksheetBlock], *, profile_group: str) -> tuple[WorksheetSection, ...]:
+def _section_titles(profile_group: str, band: GradeBand) -> tuple[str, str, str, str]:
+    """Tytuły sekcji A–D. Nazwy profilowe („Misje”, „Bonus”) tylko w klasach 1–3."""
+    if band == "upper":
+        return ("Część A. Rozgrzewka", "Część B. Zadania", "Część C. Zadanie rozszerzone", "Samoocena")
+    if band == "middle":
+        main = "B. Krok po kroku" if profile_group == "dyskalkulia" else "B. Zadania"
+        return ("A. Rozgrzewka", main, "C. Zadanie trudniejsze", "D. Jak mi poszło?")
+    if profile_group == "adhd":
+        main, special = "B. Misje krótkie", "C. Bonus: zmiana aktywności"
+    elif profile_group == "dyskalkulia":
+        main, special = "B. Krok po kroku", "C. Spokojne sprawdzenie"
+    elif profile_group == "grafomotoryka":
+        main, special = "B. Zaznacz odpowiedź", "C. Ostatnie zadanie"
+    else:
+        main, special = "B. Główne zadania", "C. Zadanie na koniec"
+    return ("A. Rozgrzewka", main, special, "D. Jak mi poszło?")
+
+
+def _self_check_options(band: GradeBand) -> tuple[str, ...]:
+    if band == "upper":
+        return ("rozumiem", "częściowo", "potrzebuję pomocy")
+    return ("łatwo", "średnio", "trudno")
+
+
+def _sections_for_blocks(
+    blocks: list[WorksheetBlock], *, profile_group: str, band: GradeBand = "early"
+) -> tuple[WorksheetSection, ...]:
     if not blocks:
         return ()
     n_warmup, n_special = _section_sizes(len(blocks))
     warmup = blocks[:n_warmup]
     special = blocks[len(blocks) - n_special:] if n_special else []
     middle = blocks[n_warmup:len(blocks) - n_special]
-    if profile_group == "adhd":
-        main_title = "B. Misje krótkie"
-        special_title = "C. Bonus: zmiana aktywności"
-    elif profile_group == "dyskalkulia":
-        main_title = "B. Krok po kroku"
-        special_title = "C. Spokojne sprawdzenie"
-    elif profile_group == "grafomotoryka":
-        main_title = "B. Zaznacz odpowiedź"
-        special_title = "C. Ostatnie zadanie"
-    else:
-        main_title = "B. Główne zadania"
-        special_title = "C. Zadanie na koniec"
+    warmup_title, main_title, special_title, self_check_title = _section_titles(profile_group, band)
 
     def section(section_id: str, title: str, purpose: str, items: list[WorksheetBlock]) -> WorksheetSection:
         instruction, blocks_out = _section_instruction(items, profile_group)
         return WorksheetSection(section_id, title, purpose, blocks_out, instruction_pl=instruction)
 
     sections: list[WorksheetSection] = [
-        section("A", "A. Rozgrzewka", "Łatwy start i wejście w temat.", warmup),
+        section("A", warmup_title, "Łatwy start i wejście w temat.", warmup),
     ]
     if middle:
         sections.append(section("B", main_title, "Główna praca nad tematem.", middle))
@@ -494,7 +548,7 @@ def _sections_for_blocks(blocks: list[WorksheetBlock], *, profile_group: str) ->
     sections.append(
         WorksheetSection(
             "D",
-            "D. Jak mi poszło?",
+            self_check_title,
             "Uczeń sam ocenia, jak mu poszło.",
             (
                 WorksheetBlock(
@@ -507,7 +561,7 @@ def _sections_for_blocks(blocks: list[WorksheetBlock], *, profile_group: str) ->
                     "summary",
                     "",
                     1,
-                    options=("łatwo", "średnio", "trudno"),
+                    options=_self_check_options(band),
                 ),
             ),
             spacing_after=0,
