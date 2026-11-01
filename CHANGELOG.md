@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+---
+
+## [1.5.0] – 2026-11-01 – Karta ucznia bez diagnozy, polecenia zgodne z zadaniem, siatka zadań
+
 ### Changed
 - Karta ucznia bez treści dla nauczyciela (Q1): nagłówek nie pokazuje nazwy profilu ani szablonu, usunięto ramkę „Jak pracujemy na tej karcie” i „Rolę grafiki”
 - Zadanie z luką „____” nie ma już osobnej ramki na odpowiedź; przy włączonych obliczeniach dostaje kropkowane linie
