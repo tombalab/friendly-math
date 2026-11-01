@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Karta ucznia bez treści dla nauczyciela (Q1): nagłówek nie pokazuje nazwy profilu ani szablonu, usunięto ramkę „Jak pracujemy na tej karcie” i „Rolę grafiki”
+- Zadanie z luką „____” nie ma już osobnej ramki na odpowiedź; przy włączonych obliczeniach dostaje kropkowane linie
+- Strona odpowiedzi oznaczona „dla nauczyciela”: profil, strategia i rola grafiki oraz treść każdego zadania obok odpowiedzi
+
 ### Added
+- Pole „Imię i nazwisko” i „Data” w nagłówku karty (do wypełnienia ręcznie, nic nie jest zapisywane)
+- Sekcja Q (jakość karty PDF) w `docs/prioritized-tasks.md` z punktami Q1–Q6 z analizy kart
+- Test `tests/test_pdf_student_page.py`: brak etykiety profilu na stronach ucznia, treść zadań w kluczu
 - `CLAUDE.md` — kontekst projektu dla Claude Code: ograniczenia, uruchamianie, mapa kodu i proces wersjonowania
 
 ---

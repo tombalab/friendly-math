@@ -324,6 +324,41 @@ FastAPI/Next.js/Supabase are no longer v2 scope. They become a later platform de
 
 **Domains touched:** Student profiles PPP, validators, worksheet orchestration.
 
+## Q: Jakość karty PDF (po analizie z 2026-11-01)
+
+Analiza 17 kart wyrenderowanych offline (wszystkie profile, klasy 1–8) w porównaniu z dobrymi kartami (K5 Learning, Twinkl PL, polskie karty wydawnicze, wytyczne BDA dla dysleksji, podejście CPA dla dyskalkulii, chunking dla ADHD). Każdy punkt to osobna sesja i osobna linijka w `CHANGELOG.md`; zmiany wyglądu PDF to podbicie wersji minor.
+
+### Q1 Karta ucznia bez treści dla nauczyciela
+
+**Why it matters:** Nagłówek drukował nazwę profilu („Dyskalkulia”), a ramka „Jak pracujemy na tej karcie” pokazywała wskazówki nauczyciela i „Rolę grafiki”. Uczeń i koledzy widzą diagnozę. Brakowało pola na imię i datę, zadanie z luką „____” miało drugie miejsce na odpowiedź, a klucz był samą kolumną liczb.
+
+**Acceptance criteria:**
+
+- Strony ucznia nie zawierają nazwy profilu, „Jak pracujemy”, „Rola grafiki” ani nazwy szablonu.
+- Nagłówek ma pole „Imię i nazwisko” i „Data” do wypełnienia ręcznie (nic nie jest zapisywane).
+- Zadanie z luką w treści nie ma osobnej ramki na odpowiedź; przy włączonych obliczeniach dostaje linie na obliczenia.
+- Strona odpowiedzi jest oznaczona jako strona nauczyciela, ma profil i strategię oraz treść każdego zadania obok odpowiedzi.
+
+### Q2 Gęstość karty
+
+**Acceptance criteria:** proste działania w zbitej siatce (2–3 kolumny); 8–12 prostych zadań mieści się na 1–2 stronach; nagłówek sekcji nie zostaje sam na dole strony.
+
+### Q3 Polecenia zgodne z treścią zadania
+
+**Acceptance criteria:** rodzaj aktywności wynika z treści zadania, nie z numeru; brak „Wybierz” bez opcji i „Połącz” bez par; jedno polecenie na sekcję; bez etykiet „Sukces” i „Zadanie”.
+
+### Q4 Szablony według klasy
+
+**Acceptance criteria:** osobny styl dla klas 1–3, 4–6 i 7–8; profil modyfikuje szablon klasy, a nie zastępuje go motywem.
+
+### Q5 Grafika wektorowa i pomoce dydaktyczne
+
+**Acceptance criteria:** ilustracje rysowane w PDF (ReportLab) zamiast bitmap PIL; ramka dziesiątkowa, oś liczbowa, monety z nominałami, zegar do uzupełnienia; jeden rodzaj obiektów w działaniu; ilustracja nagłówka zgodna z zadaniami.
+
+### Q6 Miara jakości karty
+
+**Acceptance criteria:** 5–6 „złotych” kart docelowych jako wzorzec i checklista; testy pilnują liczby stron i braku etykiety diagnozy na karcie ucznia.
+
 ## P3: Future / Explicitly Deferred
 
 ### P3.1 Reconsider Multi-User Platform Only After Streamlit V2 Proves Value

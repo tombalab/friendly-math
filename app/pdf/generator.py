@@ -142,8 +142,11 @@ def _draw_document_header(
     text_color: str,
     muted_color: str,
 ) -> float:
-    """Rysuje luźniejszy nagłówek karty z motywem szablonu."""
-    header_h = 86 if plan else 58
+    """Nagłówek karty ucznia: tytuł, klasa i zakres, pole na imię i datę.
+
+    Bez nazwy profilu i tekstów dla nauczyciela — te trafiają na stronę odpowiedzi (Q1).
+    """
+    header_h = 86 if plan else 78
     accent = layout.get("accent_color", "#3f51b5")
     soft = layout.get("soft_color", "#f6f7fb")
     border = layout.get("border_color", "#DDDDDD")
@@ -177,33 +180,51 @@ def _draw_document_header(
         pass
     _draw_bold(c, text_x, y - 24, meta.title, font_name, layout["title_font_size"])
 
-    if plan:
-        try:
-            c.setFillColor(HexColor(accent))
-        except Exception:
-            pass
-        c.setFont(font_name, 10)
-        c.drawString(text_x, y - 42, f"{plan.template.name_pl}: {plan.template.motif_label}"[:86])
-        try:
-            c.setFillColor(HexColor(muted_color))
-        except Exception:
-            pass
-        c.setFont(font_name, layout["metadata_font_size"])
-        meta_line = f"Klasa {meta.grade}  |  {meta.topic_range}  |  {meta.student_profile}"
-        _draw_wrapped_text(c, text_x, y - 58, meta_line, text_w, font_name, layout["metadata_font_size"], 13)
-    else:
-        try:
-            c.setFillColor(HexColor(muted_color))
-        except Exception:
-            pass
-        c.setFont(font_name, layout["metadata_font_size"])
-        c.drawString(text_x, y - 44, f"Klasa: {meta.grade}   |   Zakres: {meta.topic_range}   |   Profil: {meta.student_profile}")
+    try:
+        c.setFillColor(HexColor(muted_color))
+    except Exception:
+        pass
+    c.setFont(font_name, layout["metadata_font_size"])
+    c.drawString(text_x, y - 44, f"Klasa {meta.grade}  |  {meta.topic_range}"[:90])
+
+    _draw_name_date_fields(
+        c, text_x, y - header_h + 14, text_w, font_name, layout["metadata_font_size"], text_color, muted_color
+    )
 
     try:
         c.setFillColor(HexColor(text_color))
     except Exception:
         pass
-    return y - header_h - 18
+    return y - header_h - 30
+
+
+def _draw_name_date_fields(
+    c,
+    x: float,
+    y: float,
+    width: float,
+    font_name: str,
+    font_size: float,
+    text_color: str,
+    line_color: str,
+) -> None:
+    """Pole „Imię i nazwisko” i „Data” do wypełnienia ręcznie (nic nie zapisujemy)."""
+    name_label = "Imię i nazwisko:"
+    date_label = "Data:"
+    date_line_w = 90
+    try:
+        c.setFillColor(HexColor(text_color))
+        c.setStrokeColor(HexColor(line_color))
+        c.setLineWidth(0.7)
+    except Exception:
+        pass
+    c.setFont(font_name, font_size)
+    c.drawString(x, y, name_label)
+    name_start = x + _string_width(name_label, font_name, font_size) + 6
+    date_label_x = x + width - date_line_w - _string_width(date_label, font_name, font_size) - 6
+    c.line(name_start, y - 2, date_label_x - 16, y - 2)
+    c.drawString(date_label_x, y, date_label)
+    c.line(x + width - date_line_w, y - 2, x + width, y - 2)
 
 
 def _draw_template_pattern(
@@ -386,18 +407,6 @@ def _draw_tasks_body(
             bg_color=bg_color,
         )
 
-    y = _draw_strategy_intro(
-        c,
-        y,
-        margin,
-        available_width,
-        worksheet_plan,
-        layout,
-        base_font,
-        text_color,
-        muted_color,
-    )
-
     task_img_width_pt = available_width - 2 * int(layout.get("card_padding", 12))
     task_aspect = layout.get("task_image_aspect", 100 / 480)
     task_img_height_pt = max(54, int(task_img_width_pt * task_aspect))
@@ -452,60 +461,6 @@ def _draw_tasks_body(
     return y, page_num
 
 
-def _draw_strategy_intro(
-    c,
-    y: float,
-    margin: float,
-    available_width: float,
-    plan: WorksheetPlan,
-    layout: dict,
-    base_font: str,
-    text_color: str,
-    muted_color: str,
-) -> float:
-    pad = int(layout.get("card_padding", 12))
-    intro_h = 78
-    accent = layout.get("accent_color", "#3f51b5")
-    try:
-        c.setFillColor(HexColor(layout.get("soft_color", "#f6f7fb")))
-        c.setStrokeColor(HexColor(layout.get("border_color", "#DDDDDD")))
-        c.roundRect(margin, y - intro_h, available_width, intro_h, 8, fill=1, stroke=1)
-        c.setFillColor(HexColor(text_color))
-    except Exception:
-        pass
-    try:
-        c.setFillColor(HexColor(accent))
-    except Exception:
-        pass
-    _draw_bold(c, margin + pad, y - 18, "Jak pracujemy na tej karcie", base_font, 11)
-    try:
-        c.setFillColor(HexColor(text_color))
-    except Exception:
-        pass
-    _draw_wrapped_text(
-        c,
-        margin + pad,
-        y - 34,
-        plan.strategy.short_goal_pl,
-        available_width - 2 * pad,
-        base_font,
-        9,
-        12,
-        max_lines=2,
-    )
-    try:
-        c.setFillColor(HexColor("#5f6368"))
-    except Exception:
-        pass
-    c.setFont(base_font, 9)
-    c.drawString(margin + pad, y - 64, f"Rola grafiki: {plan.visual_theme.learning_role_pl}"[:112])
-    try:
-        c.setFillColor(HexColor(text_color))
-    except Exception:
-        pass
-    return y - intro_h - int(layout.get("section_gap", 18))
-
-
 def _estimate_plan_block_height(
     block: WorksheetBlock,
     available_width: float,
@@ -525,10 +480,7 @@ def _estimate_plan_block_height(
         font_size=layout["task_font_size"],
     )
     instruction_h = len(block.instructions) * 15 + (8 if block.instructions else 0)
-    answer_h = max(
-        int(layout.get("answer_box_height", 34)),
-        block.answer_box_lines * int(layout.get("workspace_line_gap", 18)),
-    )
+    answer_h = _answer_area_height(block, layout)
     image_block_h = image_h + 8 if has_image else 0
     return 44 + instruction_h + image_block_h + len(lines) * layout["line_spacing"] + answer_h + 2 * pad
 
@@ -640,6 +592,29 @@ def _draw_block_badge(c, x: float, y: float, width: float, text: str, font_name:
     c.drawCentredString(x + width / 2, y - 5, text[:14])
 
 
+_INLINE_BLANK_RE = re.compile(r"_{3,}|☐|\[\s*\]")
+
+
+def _has_inline_blank(task_text: str) -> bool:
+    """Zadanie ma już w treści miejsce na odpowiedź (np. „5 + 2 = ____”)."""
+    return bool(_INLINE_BLANK_RE.search(task_text))
+
+
+def _uses_inline_answer(block: WorksheetBlock) -> bool:
+    return block.answer_mode in ("write", "large_write") and _has_inline_blank(block.task_text)
+
+
+def _answer_area_height(block: WorksheetBlock, layout: dict) -> int:
+    if _uses_inline_answer(block):
+        # Odpowiedź wpisuje się w lukę; zostają tylko linie na obliczenia (jeśli włączone).
+        lines = int(layout.get("workspace_lines", 0))
+        return lines * int(layout.get("workspace_line_gap", 18)) if lines > 0 else 0
+    return max(
+        int(layout.get("answer_box_height", 34)),
+        block.answer_box_lines * int(layout.get("workspace_line_gap", 18)),
+    )
+
+
 def _draw_answer_area(
     c,
     x: float,
@@ -650,7 +625,20 @@ def _draw_answer_area(
     muted_color: str,
     base_font: str,
 ) -> None:
-    h = max(int(layout.get("answer_box_height", 34)), block.answer_box_lines * int(layout.get("workspace_line_gap", 18)))
+    if _uses_inline_answer(block):
+        lines = int(layout.get("workspace_lines", 0))
+        if lines > 0:
+            _draw_workspace_lines(
+                c,
+                x_start=x,
+                x_end=x + width,
+                y_top=y - 10,
+                n_lines=lines,
+                gap=int(layout.get("workspace_line_gap", 18)),
+                color=muted_color,
+            )
+        return
+    h = _answer_area_height(block, layout)
     try:
         c.setStrokeColor(HexColor(muted_color))
         c.setLineWidth(0.7)
@@ -780,6 +768,16 @@ def _draw_legacy_task_list(
             )
         y -= task_spacing
     return y, page_num
+
+
+def _teacher_notes(plan: Optional[WorksheetPlan]) -> list[str]:
+    """Teksty dla nauczyciela — tylko na stronie odpowiedzi, nigdy na karcie ucznia (Q1)."""
+    if plan is None:
+        return []
+    notes = [f"Strategia: {plan.strategy.short_goal_pl}"]
+    if plan.visual_theme.learning_role_pl:
+        notes.append(f"Rola grafiki: {plan.visual_theme.learning_role_pl}")
+    return notes
 
 
 # --------------------------------------------------------------------
@@ -926,7 +924,7 @@ def build_worksheet_pdf_bytes(
             pass
 
         y_ans = height - margin
-        _draw_bold(c, margin, y_ans, "Karta odpowiedzi", base_font, L["title_font_size"])
+        _draw_bold(c, margin, y_ans, "Karta odpowiedzi — dla nauczyciela", base_font, L["title_font_size"])
         y_ans -= L["title_spacing"]
 
         try:
@@ -935,12 +933,22 @@ def build_worksheet_pdf_bytes(
             pass
         c.setFont(base_font, L["metadata_font_size"])
         c.drawString(margin, y_ans,
-                     f"Klasa: {meta.grade}   |   Zakres: {meta.topic_range}")
+                     f"Klasa: {meta.grade}   |   Zakres: {meta.topic_range}   |   Profil: {meta.student_profile}"[:110])
+        y_ans -= L["metadata_spacing"]
+        teacher_notes = _teacher_notes(worksheet_plan)
+        c.setFont(base_font, max(9, L["metadata_font_size"] - 1))
+        for note in teacher_notes:
+            for line in _wrap_text_by_width(
+                note, max_width=section_w, font_name=base_font,
+                font_size=max(9, L["metadata_font_size"] - 1),
+            ):
+                c.drawString(margin, y_ans, line)
+                y_ans -= 14
+        y_ans -= 14
         try:
             c.setFillColor(HexColor(text_color))
         except Exception:
             pass
-        y_ans -= L["metadata_spacing"]
 
         _draw_section_header(c, margin, y_ans, "Odpowiedzi",
                              base_font, L["section_font_size"],
@@ -960,8 +968,16 @@ def build_worksheet_pdf_bytes(
                 pass
             y_ans -= L["metadata_spacing"]
 
-        for i, ans in enumerate(answer_lines, start=1):
-            if y_ans < margin + 40:
+        key_font = min(L["answer_font_size"], 13)
+        key_line = key_font + 5
+        for i, (task_text, ans) in enumerate(zip(tasks_list, answer_lines), start=1):
+            prefix = f"{i}."
+            prefix_w = _string_width(prefix, base_font, key_font) + 6
+            task_lines = _wrap_text_by_width(
+                task_text, max_width=section_w - prefix_w, font_name=base_font, font_size=key_font,
+            )
+            entry_h = (len(task_lines) + 1) * key_line + 8
+            if y_ans - entry_h < margin + 40:
                 _draw_footer(c, width, margin, page_num, base_font, text_color)
                 c.showPage()
                 page_num += 1
@@ -972,12 +988,25 @@ def build_worksheet_pdf_bytes(
                     pass
                 y_ans = height - margin
 
-            prefix = f"{i}."
-            _draw_bold(c, margin, y_ans, prefix, base_font, L["answer_font_size"])
-            prefix_w = _string_width(prefix, base_font, L["answer_font_size"]) + 6
-            _draw_task_content(c, margin + prefix_w, y_ans, str(ans),
-                               base_font, L["answer_font_size"])
-            y_ans -= line_spacing
+            _draw_bold(c, margin, y_ans, prefix, base_font, key_font)
+            try:
+                c.setFillColor(HexColor(muted_color))
+            except Exception:
+                pass
+            for line in task_lines:
+                _draw_task_content(c, margin + prefix_w, y_ans, line, base_font, key_font)
+                y_ans -= key_line
+            try:
+                c.setFillColor(HexColor(text_color))
+            except Exception:
+                pass
+            label = "Odpowiedź: "
+            _draw_bold(c, margin + prefix_w, y_ans, label, base_font, key_font)
+            _draw_task_content(
+                c, margin + prefix_w + _string_width(label, base_font, key_font) + 4, y_ans,
+                str(ans), base_font, key_font,
+            )
+            y_ans -= key_line + 8
         _draw_footer(c, width, margin, page_num, base_font, text_color)
         c.showPage()
 
