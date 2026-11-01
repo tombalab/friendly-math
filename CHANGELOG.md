@@ -7,7 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-_Brak zmian od v1.4.0._
+---
+
+## [1.5.0] – 2026-11-01 – Karta ucznia bez diagnozy, polecenia zgodne z zadaniem, siatka zadań
+
+### Changed
+- Karta ucznia bez treści dla nauczyciela (Q1): nagłówek nie pokazuje nazwy profilu ani szablonu, usunięto ramkę „Jak pracujemy na tej karcie” i „Rolę grafiki”
+- Zadanie z luką „____” nie ma już osobnej ramki na odpowiedź; przy włączonych obliczeniach dostaje kropkowane linie
+- Strona odpowiedzi oznaczona „dla nauczyciela”: profil, strategia i rola grafiki oraz treść każdego zadania obok odpowiedzi
+- Polecenia zgodne z treścią zadania (Q3): aktywność wynika z sekcji, nie z numeru zadania; jedno polecenie pod nagłówkiem sekcji
+- „Wybierz”, „Otocz” i „Pokoloruj” pokazują trzy opcje liczbowe (poprawna + dwa dystraktory z klucza odpowiedzi); bez znanej odpowiedzi zadanie wraca do wpisania wyniku
+- Usunięto „Połącz linią” bez par, puste kółka bez opcji oraz plakietki „Zadanie”, „Sukces”, „1 krok”; ADHD zachowuje licznik postępu
+- Sekcja „Podsumowanie sukcesu” zastąpiona samooceną „Jak mi poszło?” (łatwo / średnio / trudno)
+- Nagłówek sekcji przechodzi na nową stronę razem z pierwszym zadaniem (bez nagłówków-sierot)
+- Gęstość karty (Q2): zadania w siatce 1–3 kolumn zamiast dużych kart z paskiem; 8 prostych działań mieści się na 2 stronach ucznia (wcześniej 3–5)
+- Liczba kolumn wynika z treści: zadania tekstowe zostają w jednej kolumnie, 3 kolumny tylko dla zadań w jednej linii; profile niskobodźcowe najwyżej 2 kolumny (`max_columns` w `ResolvedWorksheetLayout`)
+- Rozgrzewka i zadanie na koniec mają po 2 zadania przy kartach od 6 zadań
+
+### Added
+- Pole „Imię i nazwisko” i „Data” w nagłówku karty (do wypełnienia ręcznie, nic nie jest zapisywane)
+- Sekcja Q (jakość karty PDF) w `docs/prioritized-tasks.md` z punktami Q1–Q6 z analizy kart
+- Test `tests/test_pdf_student_page.py`: brak etykiety profilu na stronach ucznia, treść zadań w kluczu
+- Test `tests/test_pdf_density.py`: limit 2 stron ucznia dla 8 prostych zadań, wybór kolumn
+- `CLAUDE.md` — kontekst projektu dla Claude Code: ograniczenia, uruchamianie, mapa kodu i proces wersjonowania
 
 ---
 

@@ -42,6 +42,7 @@ PDF_PRINT_DEFAULTS: dict[str, Any] = {
     "template_id": "classic",
     "progress_markers": False,
     "visual_cue_style": "label",
+    "max_columns": 3,
 }
 
 LOW_STIMULI_PDF_BOOST: dict[str, Any] = {
@@ -126,6 +127,7 @@ class ResolvedWorksheetLayout:
     template_id: str
     progress_markers: bool
     visual_cue_style: str
+    max_columns: int
     is_low_stimuli: bool
     source: str
 
@@ -160,6 +162,7 @@ class ResolvedWorksheetLayout:
             "template_id": self.template_id,
             "progress_markers": self.progress_markers,
             "visual_cue_style": self.visual_cue_style,
+            "max_columns": self.max_columns,
         }
 
     @classmethod
@@ -196,6 +199,7 @@ class ResolvedWorksheetLayout:
             template_id=str(values.get("template_id", "classic")),
             progress_markers=bool(values.get("progress_markers", False)),
             visual_cue_style=str(values.get("visual_cue_style", "label")),
+            max_columns=int(values.get("max_columns", 3)),
             is_low_stimuli=is_low_stimuli,
             source=source,
         )
@@ -229,6 +233,8 @@ def resolve_worksheet_layout(
 
     if resolved_profile.is_low_stimuli:
         values.update(low_stimuli_boost_for_profile(resolved_profile.profile_id))
+        # Mniej zadań w rzędzie dla profili wspierających (Q2): najwyżej dwie kolumny.
+        values["max_columns"] = 2
         source = "low_stimuli_boost"
 
     if worksheet_plan is not None:
