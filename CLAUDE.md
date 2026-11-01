@@ -9,7 +9,7 @@ Aplikacja Streamlit dla nauczyciela i terapeuty: generuje polskie karty pracy z 
 - Zostań przy Streamlit i Pythonie. Nie dodawaj FastAPI, Next.js, Supabase, czatu, głosu ani kont użytkowników.
 - Nie przebudowuj architektury „dla porządku”. Jedna sesja = jeden punkt z `docs/prioritized-tasks.md`.
 - Nie zapisuj danych osobowych uczniów. Etykieta karty to organizacja (np. „grupa A”), nie imię i nazwisko.
-- Domyślne ilustracje są deterministyczne (`app/generators/images.py`, `icons.py`). Generowanie obrazów przez model zostaw eksperymentem, nie ścieżką produktową.
+- Domyślne ilustracje są deterministyczne i wektorowe: opis pomocy w `app/generators/task_visuals.py`, rysowanie w PDF w `app/pdf/visuals.py`. Bitmapy PIL (`images.py`, `icons.py`) zostają dla limitów profilu i testów, nie trafiają do PDF. Generowanie obrazów przez model zostaw eksperymentem, nie ścieżką produktową.
 - Teksty dla nauczyciela i treść kart są po polsku, z polskimi znakami. Identyfikatory w kodzie (`topic_id`, `profile_id`) zostają stabilne i po angielsku lub w snake_case.
 - Nie commituj `.env`, `data/out/`, `data/history/`, `data/preview/`.
 - Gałąź robocza to `dev`. `main` jest pod deploy na Streamlit Cloud. Nie pushuj, dopóki użytkownik o to nie poprosi.
@@ -50,7 +50,7 @@ Pipeline karty siedzi poza UI. Streamlit tylko zbiera formularz i pokazuje wynik
 5. Profile PPP: `app/domain/profile_catalog.py`, `app/domain/profile_pedagogy.py`, klasy w `app/generators/profiles/`.
 6. Zadania: `app/ai/text_generator.py`, fallbacki w `app/ai/fallback_tasks.py` i `app/ai/profile_fallback_banks.py`. Prompty: `app/backend/prompts/`.
 7. Walidacja profilu: `app/validators/`.
-8. Odpowiedzi: `app/generators/answers.py`. Ilustracje: `app/generators/images.py`, `icons.py`. Layout: `app/domain/worksheet_layout.py`, `app/ai/layout_generator.py`.
+8. Odpowiedzi: `app/generators/answers.py`. Pomoce wizualne: `app/generators/task_visuals.py` → `app/pdf/visuals.py` (limity w `images.py`). Layout: `app/domain/worksheet_layout.py`, `app/ai/layout_generator.py`.
 9. PDF: `app/pdf/generator.py`, `app/pdf/fonts.py`.
 10. Historia lokalna: `app/history/store.py` → `data/history/<request_id>/`. Ostatni PDF: `data/out/worksheet.pdf`.
 11. Wzorce jakości: `data/reference_worksheets/*.json`.

@@ -13,6 +13,8 @@ from reportlab.pdfbase import pdfmetrics  # pyright: ignore[reportMissingModuleS
 from reportlab.pdfgen import canvas  # pyright: ignore[reportMissingModuleSource]
 
 from app.generators.answers import AnswerKeyResult
+from app.generators.task_visuals import TaskVisual
+from app.pdf.visuals import draw_task_visual, visual_height
 from app.pdf.fonts import register_polish_font
 from app.domain.educational_strategy import WorksheetBlock, WorksheetPlan
 from app.domain.worksheet_layout import PDF_PRINT_DEFAULTS, ResolvedWorksheetLayout
@@ -354,6 +356,7 @@ def _draw_tasks_body(
     task_images: Optional[list],
     has_task_images: bool,
     worksheet_plan: Optional[WorksheetPlan],
+    task_visuals: Optional[list] = None,
     base_font: str,
     text_color: str,
     muted_color: str,
@@ -419,6 +422,11 @@ def _draw_tasks_body(
             and task_images[block.task_index]
         )
 
+    def visual_of(block: WorksheetBlock) -> Optional[TaskVisual]:
+        if block.task_index is None or not task_visuals or block.task_index >= len(task_visuals):
+            return None
+        return task_visuals[block.task_index]
+
     for section in worksheet_plan.sections:
         instruction_lines = (
             _wrap_text_by_width(
@@ -434,7 +442,10 @@ def _draw_tasks_body(
         cell_w = (available_width - (columns - 1) * col_gap) / columns
         rows = [section.blocks[i:i + columns] for i in range(0, len(section.blocks), columns)]
         row_heights = [
-            max(_grid_cell_height(b, cell_w, layout, base_font, has_image=has_image(b)) for b in row)
+            max(
+                _grid_cell_height(b, cell_w, layout, base_font, has_image=has_image(b), visual=visual_of(b))
+                for b in row
+            )
             for row in rows
         ]
 
@@ -477,6 +488,7 @@ def _draw_tasks_body(
                     text_color=text_color,
                     muted_color=muted_color,
                     image=task_images[block.task_index] if has_image(block) else None,
+                    visual=visual_of(block),
                 )
             y -= row_h + row_gap
         y -= section.spacing_after
@@ -553,6 +565,7 @@ def _grid_cell_height(
     base_font: str,
     *,
     has_image: bool,
+    visual: Optional[TaskVisual] = None,
 ) -> float:
     pad = _cell_padding(layout)
     inner_w = cell_w - 2 * pad
@@ -560,7 +573,10 @@ def _grid_cell_height(
     prefix_w = _string_width("99.", base_font, size) + 2
     lines = _wrap_text_by_width(block.task_text, max_width=inner_w - prefix_w, font_name=base_font, font_size=size)
     instruction_h = len(block.instructions) * 13 + (4 if block.instructions else 0)
-    image_h = _cell_image_height(inner_w, layout) + 6 if has_image else 0
+    if visual is not None:
+        image_h = visual_height(visual, inner_w) + 8
+    else:
+        image_h = _cell_image_height(inner_w, layout) + 6 if has_image else 0
     text_h = size + max(0, len(lines) - 1) * layout["line_spacing"]
     return pad + instruction_h + image_h + text_h + 6 + _answer_area_height(block, layout) + pad
 
@@ -578,6 +594,7 @@ def _draw_grid_cell(
     text_color: str,
     muted_color: str,
     image: Optional[bytes],
+    visual: Optional[TaskVisual] = None,
 ) -> None:
     """Jedno zadanie w komórce siatki: cienka ramka, akcent szablonu z lewej, bez paska z etykietą."""
     pad = _cell_padding(layout)
@@ -613,7 +630,10 @@ def _draw_grid_cell(
             c.drawString(x + pad, cur + 3, instruction)
         cur -= 4
 
-    if image:
+    if visual is not None:
+        draw_task_visual(c, visual, x + pad, cur, inner_w, base_font)
+        cur -= visual_height(visual, inner_w) + 8
+    elif image:
         img_h = _cell_image_height(inner_w, layout)
         try:
             c.drawImage(
@@ -891,6 +911,7 @@ def build_worksheet_pdf_bytes(
     answer_key: Optional[AnswerKeyResult] = None,
     include_workspace: bool = True,
     worksheet_plan: Optional[WorksheetPlan] = None,
+    task_visuals: Optional[list] = None,
 ) -> PdfBuildResult:
     """
     Czytelna karta pracy A4 z większą czcionką, emulowanym pogrubieniem,
@@ -904,6 +925,8 @@ def build_worksheet_pdf_bytes(
     - answers: lista tekstów odpowiedzi (legacy); jeśli podana bez `answer_key`,
       dodajemy stronę „ODPOWIEDZI".
     - include_workspace: czy rysować kropkowane linijki na obliczenia (default True).
+    - task_visuals: wektorowe pomoce per zadanie (`TaskVisual` lub None) — mają
+      pierwszeństwo przed `task_images` (Q5).
     """
     if isinstance(layout, ResolvedWorksheetLayout):
         L = layout.to_pdf_dict()
@@ -991,6 +1014,7 @@ def build_worksheet_pdf_bytes(
         task_images=task_images,
         has_task_images=has_task_images,
         worksheet_plan=worksheet_plan,
+        task_visuals=task_visuals,
         base_font=base_font,
         text_color=text_color,
         muted_color=muted_color,

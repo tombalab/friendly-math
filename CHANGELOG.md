@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Pomoce wizualne rysowane wektorowo w PDF zamiast bitmap PIL (Q5): ostre przy druku, jeden rodzaj obiektów w działaniu
+- Dodawanie i odejmowanie do 20: ramka dziesiątkowa (dwa kolory składników, przy odejmowaniu przekreślone kropki); gdy kropek byłoby za dużo dla profilu — oś liczbowa 0–20 z zaznaczonym tylko startem
+- Mnożenie: układ kropek; dzielenie: kropki i puste talerze do rozdzielenia (rysunek nie zdradza wyniku)
+- Pieniądze: polskie monety 5 / 2 / 1 zł z nominałami; czas: tarcza z cyframi, bez wskazówek, gdy uczeń ma je narysować; ułamki: koło z zacieniowanymi częściami; obwody: prostokąt z opisanymi bokami
+- Usunięto ogólny obrazek w nagłówku (np. 3 + 2 przy innych zadaniach); profile standardowy, dysleksja i zdolny dostają jedną pomoc przy pierwszym zadaniu, które da się zilustrować
+- Przy opcjach wyboru luka po pytajniku nie daje już „? ?”
+
+### Added
+- `TaskVisual` i `task_visual_for()` (`app/generators/task_visuals.py`), renderer `app/pdf/visuals.py`, pole `WorksheetResult.task_visuals`
+- Test `tests/test_task_visuals.py`: rodzaje pomocy, monety, zegar, brak bitmap w PDF, pomoc tylko przy pasującym zadaniu
+
 ---
 
 ## [1.5.0] – 2026-11-01 – Karta ucznia bez diagnozy, polecenia zgodne z zadaniem, siatka zadań

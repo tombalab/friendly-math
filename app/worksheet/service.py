@@ -18,10 +18,8 @@ from app.domain.worksheet_contract import (
     warning_from_dict,
 )
 from app.generators.answers import compute_answer_key
-from app.generators.images import (
-    generate_worksheet_image,
-    generate_worksheet_images_for_tasks_with_diagnostics,
-)
+from app.generators.images import _skip_reason_for_task
+from app.generators.task_visuals import TaskVisual, task_visuals_for
 from app.validators.profile_enforcement import enforce_tasks_for_profile
 from app.observability.events import (
     EVENT_ANSWER_COVERAGE,
@@ -256,7 +254,7 @@ def generate_worksheet(
             )
         )
 
-    header_image, task_images, image_coverage = _resolve_images(
+    header_image, task_images, image_coverage, task_visuals = _resolve_images(
         request, tasks, resolved_topic, resolved_profile, warnings
     )
     if image_coverage is not None:
@@ -365,6 +363,7 @@ def generate_worksheet(
         answer_key=answer_key,
         include_workspace=request.include_workspace,
         worksheet_plan=worksheet_plan,
+        task_visuals=task_visuals,
     )
 
     for pw in pdf_result.warnings:
@@ -435,6 +434,7 @@ def generate_worksheet(
         answer_key=answer_key,
         header_image=header_image,
         task_images=task_images,
+        task_visuals=task_visuals,
         image_coverage=image_coverage,
         pdf_bytes=pdf_bytes,
         saved_pdf_path=saved_path,
@@ -501,7 +501,13 @@ def _resolve_images(
     resolved_topic,
     resolved_profile,
     warnings: list[WorksheetWarning],
-) -> tuple[bytes | None, list[bytes] | None, ImageCoverageSummary]:
+) -> tuple[bytes | None, list[bytes] | None, ImageCoverageSummary, list[TaskVisual | None] | None]:
+    """Pomoce wizualne do zadań (Q5): wektorowe, wynikające z treści konkretnego zadania.
+
+    Profile `per_task` dostają pomoc przy każdym zadaniu, które da się uczciwie pokazać.
+    Profile `header` dostają jedną pomoc przy pierwszym takim zadaniu — zamiast
+    ogólnego obrazka w nagłówku, który nie pasował do zadań.
+    """
     if not request.include_illustration:
         return None, None, ImageCoverageSummary(
             mode="disabled",
@@ -509,7 +515,7 @@ def _resolve_images(
             rendered_count=0,
             total_slots=0,
             detail_pl="wyłączone w formularzu",
-        )
+        ), None
 
     if resolved_topic.capabilities.skip_images:
         return None, None, ImageCoverageSummary(
@@ -518,98 +524,20 @@ def _resolve_images(
             rendered_count=0,
             total_slots=len(tasks),
             detail_pl="temat bez ilustracji (np. równania algebraiczne)",
-        )
-
-    per_task = resolved_profile.illustration_mode == "per_task"
-    if per_task:
-        try:
-            img_result = generate_worksheet_images_for_tasks_with_diagnostics(
-                tasks=tasks,
-                topic=resolved_topic.blueprint_key,
-                profile=resolved_profile.profile_id,
-                size=(960, 220),
-                grade=request.grade,
-            )
-            images = img_result.image_bytes_list
-            per_task_entries = tuple(
-                TaskImageCoverageEntry(
-                    task_index=s.task_index,
-                    rendered=s.rendered,
-                    skip_reason=s.skip_reason,
-                )
-                for s in img_result.slots
-            )
-        except Exception as exc:
-            warnings.append(
-                WorksheetWarning(
-                    "images_per_task_failed",
-                    f"Grafiki per zadanie niedostępne ({exc}).",
-                    "warning",
-                )
-            )
-            return None, None, ImageCoverageSummary(
-                mode="unavailable",
-                requested=True,
-                rendered_count=0,
-                total_slots=len(tasks),
-                detail_pl="błąd generatora ilustracji per zadanie",
-            )
-        rendered = sum(1 for img in images if img)
-        skipped_n = len(tasks) - rendered
-        coverage_ratio = rendered / len(tasks) if tasks else 1.0
-        header: bytes | None = None
-        if coverage_ratio < 0.5:
-            warnings.append(
-                WorksheetWarning(
-                    "images_low_coverage",
-                    (
-                        "Mniej niż połowa zadań ma ilustrację per zadanie — "
-                        "dodano małą ilustrację w nagłówku."
-                    ),
-                    "warning",
-                )
-            )
-            try:
-                header = generate_worksheet_image(
-                    topic=resolved_topic.blueprint_key,
-                    profile=resolved_profile.profile_id,
-                    size=(320, 150),
-                    grade=request.grade,
-                )
-            except Exception as exc:
-                warnings.append(
-                    WorksheetWarning(
-                        "images_low_coverage_header_failed",
-                        f"Nie udało się dodać ilustracji nagłówka ({exc}).",
-                        "warning",
-                    )
-                )
-        detail = (
-            f"{rendered}/{len(tasks)} zadań z ilustracją"
-            + (f"; {skipped_n} pominięto (liczby poza zakresem profilu)" if skipped_n else "")
-        )
-        if header:
-            detail += "; dodano mały nagłówek"
-        return header if header else None, images, ImageCoverageSummary(
-            mode="per_task",
-            requested=True,
-            rendered_count=rendered,
-            total_slots=len(tasks),
-            detail_pl=detail,
-            per_task=per_task_entries,
-        )
+        ), None
 
     try:
-        header = generate_worksheet_image(
-            topic=resolved_topic.blueprint_key,
-            profile=resolved_profile.profile_id,
+        visuals = task_visuals_for(
+            tasks,
+            resolved_topic.blueprint_key,
+            resolved_profile.profile_id,
             grade=request.grade,
         )
     except Exception as exc:
         warnings.append(
             WorksheetWarning(
-                "images_header_failed",
-                f"Grafika nagłówka niedostępna ({exc}).",
+                "images_per_task_failed",
+                f"Pomoce wizualne niedostępne ({exc}).",
                 "warning",
             )
         )
@@ -617,15 +545,59 @@ def _resolve_images(
             mode="unavailable",
             requested=True,
             rendered_count=0,
-            total_slots=1,
-            detail_pl="błąd ilustracji nagłówka",
-        )
+            total_slots=len(tasks),
+            detail_pl="błąd generatora pomocy wizualnych",
+        ), None
 
-    rendered = 1 if header else 0
-    return header if header else None, None, ImageCoverageSummary(
-        mode="header",
+    per_task = resolved_profile.illustration_mode == "per_task"
+    if not per_task:
+        first = next((i for i, v in enumerate(visuals) if v is not None), None)
+        header_visuals: list[TaskVisual | None] = [None] * len(tasks)
+        if first is not None:
+            header_visuals[first] = visuals[first]
+            detail = f"pomoc wizualna przy zadaniu {first + 1} ({visuals[first].label_pl})"
+        else:
+            detail = "żadnego zadania nie da się uczciwie zilustrować"
+        return None, None, ImageCoverageSummary(
+            mode="header",
+            requested=True,
+            rendered_count=1 if first is not None else 0,
+            total_slots=1,
+            detail_pl=detail,
+        ), header_visuals
+
+    skip_reasons = [
+        _skip_reason_for_task(t, resolved_topic.blueprint_key, resolved_profile.profile_id) for t in tasks
+    ]
+    per_task_entries = tuple(
+        TaskImageCoverageEntry(
+            task_index=i,
+            rendered=v is not None,
+            skip_reason=None if v is not None else (skip_reasons[i] or "poza bezpiecznym zakresem"),
+        )
+        for i, v in enumerate(visuals)
+    )
+    rendered = sum(1 for v in visuals if v is not None)
+    skipped_n = len(tasks) - rendered
+    if tasks and rendered / len(tasks) < 0.5:
+        warnings.append(
+            WorksheetWarning(
+                "images_low_coverage",
+                "Mniej niż połowa zadań ma pomoc wizualną — liczby są poza bezpiecznym zakresem profilu.",
+                "warning",
+            )
+        )
+    kinds = sorted({v.label_pl for v in visuals if v is not None})
+    detail = f"{rendered}/{len(tasks)} zadań z pomocą wizualną"
+    if kinds:
+        detail += f" ({', '.join(kinds)})"
+    if skipped_n:
+        detail += f"; {skipped_n} pominięto (liczby poza zakresem profilu)"
+    return None, None, ImageCoverageSummary(
+        mode="per_task",
         requested=True,
         rendered_count=rendered,
-        total_slots=1,
-        detail_pl="1 ilustracja u góry karty" if rendered else "brak ilustracji nagłówka",
-    )
+        total_slots=len(tasks),
+        detail_pl=detail,
+        per_task=per_task_entries,
+    ), visuals

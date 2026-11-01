@@ -393,7 +393,7 @@ def _block_for_task(
     if activity in ("choice", "color") and not options:
         activity = "compute"
     answer_mode = _answer_mode_for_activity(activity, profile_group, strategy.preferred_answer_modes)
-    task_text = _INLINE_BLANK_RE.sub("?", task) if options else task
+    task_text = _blank_to_question(task) if options else task
     difficulty: Difficulty = "warmup" if section_id == "A" else "challenge" if section_id == "C" else "core"
     return WorksheetBlock(
         block_id=f"task-{idx + 1}",
@@ -408,6 +408,12 @@ def _block_for_task(
         progress_label=f"{idx + 1}/{total}" if strategy.progress_markers else "",
         options=options,
     )
+
+
+def _blank_to_question(task: str) -> str:
+    """Przy opcjach luka „____” zmienia się w „?”; luka tuż po pytajniku znika („12? ____” → „12?”)."""
+    text = re.sub(r"\?\s*_{3,}", "?", task)
+    return _INLINE_BLANK_RE.sub("?", text)
 
 
 def _section_sizes(total: int) -> tuple[int, int]:
