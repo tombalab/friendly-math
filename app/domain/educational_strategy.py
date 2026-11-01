@@ -410,10 +410,23 @@ def _block_for_task(
     )
 
 
+def _section_sizes(total: int) -> tuple[int, int]:
+    """Liczba zadań w rozgrzewce (A) i w zadaniu na koniec (C).
+
+    Przy dłuższych kartach po dwa, żeby wypełnić rząd siatki (Q2).
+    """
+    if total >= 6:
+        return 2, 2
+    if total > 2:
+        return 1, 1
+    return 1, 0
+
+
 def _section_id_for(idx: int, total: int) -> str:
-    if idx == 0:
+    warmup, special = _section_sizes(total)
+    if idx < warmup:
         return "A"
-    if total > 2 and idx == total - 1:
+    if special and idx >= total - special:
         return "C"
     return "B"
 
@@ -444,9 +457,10 @@ def _choice_options(answer: str, idx: int) -> tuple[str, ...]:
 def _sections_for_blocks(blocks: list[WorksheetBlock], *, profile_group: str) -> tuple[WorksheetSection, ...]:
     if not blocks:
         return ()
-    warmup = blocks[:1]
-    special = blocks[-1:] if len(blocks) > 2 else []
-    middle = blocks[1:-1] if special else blocks[1:]
+    n_warmup, n_special = _section_sizes(len(blocks))
+    warmup = blocks[:n_warmup]
+    special = blocks[len(blocks) - n_special:] if n_special else []
+    middle = blocks[n_warmup:len(blocks) - n_special]
     if profile_group == "adhd":
         main_title = "B. Misje krótkie"
         special_title = "C. Bonus: zmiana aktywności"
