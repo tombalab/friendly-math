@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Karta ucznia bez treści dla nauczyciela (Q1): nagłówek nie pokazuje nazwy profilu ani szablonu, usunięto ramkę „Jak pracujemy na tej karcie” i „Rolę grafiki”
 - Zadanie z luką „____” nie ma już osobnej ramki na odpowiedź; przy włączonych obliczeniach dostaje kropkowane linie
 - Strona odpowiedzi oznaczona „dla nauczyciela”: profil, strategia i rola grafiki oraz treść każdego zadania obok odpowiedzi
+- Polecenia zgodne z treścią zadania (Q3): aktywność wynika z sekcji, nie z numeru zadania; jedno polecenie pod nagłówkiem sekcji
+- „Wybierz”, „Otocz” i „Pokoloruj” pokazują trzy opcje liczbowe (poprawna + dwa dystraktory z klucza odpowiedzi); bez znanej odpowiedzi zadanie wraca do wpisania wyniku
+- Usunięto „Połącz linią” bez par, puste kółka bez opcji oraz plakietki „Zadanie”, „Sukces”, „1 krok”; ADHD zachowuje licznik postępu
+- Sekcja „Podsumowanie sukcesu” zastąpiona samooceną „Jak mi poszło?” (łatwo / średnio / trudno)
+- Nagłówek sekcji przechodzi na nową stronę razem z pierwszym zadaniem (bez nagłówków-sierot)
 
 ### Added
 - Pole „Imię i nazwisko” i „Data” w nagłówku karty (do wypełnienia ręcznie, nic nie jest zapisywane)

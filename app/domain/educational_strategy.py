@@ -1,12 +1,14 @@
 """Profile-first worksheet strategy and expanded layout schema."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import re
+from dataclasses import dataclass, field, replace
 from typing import Literal
 
 from app.domain.profile_catalog import ResolvedProfile
 from app.domain.profile_pedagogy import get_pedagogy_spec
 from app.domain.topic_catalog import ResolvedTopic, visual_family_for_topic
+from app.generators.answers import compute_answer_key
 
 ActivityType = Literal["compute", "match", "color", "choice", "puzzle", "trace", "reflect"]
 AnswerMode = Literal["write", "large_write", "checkbox", "circle", "connect", "color"]
@@ -61,6 +63,7 @@ class WorksheetBlock:
     answer_box_lines: int
     progress_label: str = ""
     instructions: tuple[str, ...] = ()
+    options: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -70,6 +73,7 @@ class WorksheetSection:
     purpose_pl: str
     blocks: tuple[WorksheetBlock, ...]
     spacing_after: int = 16
+    instruction_pl: str = ""
 
 
 @dataclass(frozen=True)
@@ -99,6 +103,7 @@ class WorksheetPlan:
                     "title": s.title,
                     "purpose_pl": s.purpose_pl,
                     "spacing_after": s.spacing_after,
+                    "instruction_pl": s.instruction_pl,
                     "blocks": [
                         {
                             "block_id": b.block_id,
@@ -112,6 +117,7 @@ class WorksheetPlan:
                             "answer_box_lines": b.answer_box_lines,
                             "progress_label": b.progress_label,
                             "instructions": list(b.instructions),
+                            "options": list(b.options),
                         }
                         for b in s.blocks
                     ],
@@ -278,6 +284,8 @@ def build_worksheet_plan(
         profile_group=pedagogy.profile_group,
         topic_id=resolved_topic.topic_id,
     )
+    answer_key = compute_answer_key(tasks, topic_id=resolved_topic.topic_id, grade=resolved_topic.grade)
+    answers = [item.value if item.status == "supported" else "" for item in answer_key.items]
     blocks = [
         _block_for_task(
             task,
@@ -285,6 +293,7 @@ def build_worksheet_plan(
             profile_group=pedagogy.profile_group,
             strategy=strategy,
             total=len(tasks),
+            answer=answers[idx] if idx < len(answers) else "",
         )
         for idx, task in enumerate(tasks)
     ]
@@ -360,6 +369,10 @@ def _strategy_for_profile(profile_id: str) -> StrategySpec:
     )
 
 
+_INLINE_BLANK_RE = re.compile(r"_{3,}")
+_INTEGER_RE = re.compile(r"^-?\d+$")
+
+
 def _block_for_task(
     task: str,
     idx: int,
@@ -367,25 +380,65 @@ def _block_for_task(
     profile_group: str,
     strategy: StrategySpec,
     total: int,
+    answer: str = "",
 ) -> WorksheetBlock:
-    activity = _activity_for_index(idx, profile_group, strategy.allowed_activity_types)
+    """Aktywność wynika z sekcji i z treści zadania (Q3), nie z numeru zadania.
+
+    Wybór i kolorowanie są możliwe tylko wtedy, gdy znamy odpowiedź liczbową
+    i możemy pokazać opcje. W przeciwnym razie uczeń liczy i wpisuje wynik.
+    """
+    section_id = _section_id_for(idx, total)
+    activity = _activity_for_section(section_id, profile_group)
+    options = _choice_options(answer, idx) if activity in ("choice", "color") else ()
+    if activity in ("choice", "color") and not options:
+        activity = "compute"
     answer_mode = _answer_mode_for_activity(activity, profile_group, strategy.preferred_answer_modes)
-    difficulty: Difficulty = "warmup" if idx == 0 else "challenge" if idx == total - 1 and total > 2 else "core"
-    title = _activity_title(activity)
-    instructions = _instructions_for(profile_group, activity)
+    task_text = _INLINE_BLANK_RE.sub("?", task) if options else task
+    difficulty: Difficulty = "warmup" if section_id == "A" else "challenge" if section_id == "C" else "core"
     return WorksheetBlock(
         block_id=f"task-{idx + 1}",
         task_index=idx,
-        title=title,
-        task_text=task,
+        title=_activity_title(activity),
+        task_text=task_text,
         activity_type=activity,
         answer_mode=answer_mode,
         difficulty=difficulty,
         visual_cue=_cue_for(activity, profile_group),
         answer_box_lines=_answer_lines_for(answer_mode, profile_group),
         progress_label=f"{idx + 1}/{total}" if strategy.progress_markers else "",
-        instructions=instructions,
+        options=options,
     )
+
+
+def _section_id_for(idx: int, total: int) -> str:
+    if idx == 0:
+        return "A"
+    if total > 2 and idx == total - 1:
+        return "C"
+    return "B"
+
+
+def _activity_for_section(section_id: str, profile_group: str) -> ActivityType:
+    """Jedna aktywność na sekcję — spójny sposób odpowiadania w obrębie sekcji."""
+    if profile_group == "adhd":
+        # Zmiana aktywności między sekcjami, nie między sąsiednimi zadaniami.
+        return {"A": "compute", "B": "choice", "C": "color"}[section_id]  # type: ignore[return-value]
+    if profile_group == "grafomotoryka":
+        return "choice"
+    return "compute"
+
+
+def _choice_options(answer: str, idx: int) -> tuple[str, ...]:
+    """Trzy opcje: poprawna i dwa bliskie dystraktory, kolejność zależna od numeru zadania."""
+    value = answer.strip()
+    if not _INTEGER_RE.match(value):
+        return ()
+    n = int(value)
+    distractors = [n + 1, n - 1] if n >= 1 else [n + 1, n + 2]
+    options = [n, *distractors]
+    shift = idx % 3
+    options = options[shift:] + options[:shift]
+    return tuple(str(o) for o in options)
 
 
 def _sections_for_blocks(blocks: list[WorksheetBlock], *, profile_group: str) -> tuple[WorksheetSection, ...]:
@@ -401,36 +454,40 @@ def _sections_for_blocks(blocks: list[WorksheetBlock], *, profile_group: str) ->
         main_title = "B. Krok po kroku"
         special_title = "C. Spokojne sprawdzenie"
     elif profile_group == "grafomotoryka":
-        main_title = "B. Zaznacz albo połącz"
-        special_title = "C. Jedna odpowiedź"
+        main_title = "B. Zaznacz odpowiedź"
+        special_title = "C. Ostatnie zadanie"
     else:
         main_title = "B. Główne zadania"
-        special_title = "C. Zadanie specjalne"
+        special_title = "C. Zadanie na koniec"
+
+    def section(section_id: str, title: str, purpose: str, items: list[WorksheetBlock]) -> WorksheetSection:
+        instruction, blocks_out = _section_instruction(items, profile_group)
+        return WorksheetSection(section_id, title, purpose, blocks_out, instruction_pl=instruction)
 
     sections: list[WorksheetSection] = [
-        WorksheetSection("A", "A. Rozgrzewka", "Łatwy start i wejście w temat.", tuple(warmup)),
+        section("A", "A. Rozgrzewka", "Łatwy start i wejście w temat.", warmup),
     ]
     if middle:
-        sections.append(WorksheetSection("B", main_title, "Główna praca nad tematem.", tuple(middle)))
+        sections.append(section("B", main_title, "Główna praca nad tematem.", middle))
     if special:
-        sections.append(WorksheetSection("C", special_title, "Krótka aktywność końcowa.", tuple(special)))
+        sections.append(section("C", special_title, "Krótka aktywność końcowa.", special))
     sections.append(
         WorksheetSection(
             "D",
-            "D. Podsumowanie sukcesu",
-            "Uczeń zaznacza, co już umie.",
+            "D. Jak mi poszło?",
+            "Uczeń sam ocenia, jak mu poszło.",
             (
                 WorksheetBlock(
-                    "success",
+                    "self-check",
                     None,
-                    "Mój sukces",
-                    "Zaznacz: dziś umiem trochę więcej.",
+                    "Moja ocena",
+                    "Zaznacz jedną kratkę.",
                     "reflect",
                     "checkbox",
                     "summary",
-                    "Sukces",
+                    "",
                     1,
-                    instructions=("Uśmiechnij się do jednego dobrze zrobionego zadania.",),
+                    options=("łatwo", "średnio", "trudno"),
                 ),
             ),
             spacing_after=0,
@@ -439,16 +496,33 @@ def _sections_for_blocks(blocks: list[WorksheetBlock], *, profile_group: str) ->
     return tuple(sections)
 
 
-def _activity_for_index(idx: int, profile_group: str, allowed: tuple[ActivityType, ...]) -> ActivityType:
-    if profile_group == "adhd":
-        cycle: tuple[ActivityType, ...] = ("compute", "match", "color", "puzzle")
-    elif profile_group == "grafomotoryka":
-        cycle = ("choice", "match", "compute")
-    elif profile_group == "dyskalkulia":
-        cycle = ("compute", "choice", "compute")
-    else:
-        cycle = allowed
-    return cycle[idx % len(cycle)]
+def _section_instruction(
+    blocks: list[WorksheetBlock], profile_group: str
+) -> tuple[str, tuple[WorksheetBlock, ...]]:
+    """Jedno polecenie dla sekcji, gdy na wszystkie zadania odpowiada się tak samo.
+
+    Gdy sekcja jest mieszana (np. część zadań bez znanej odpowiedzi), polecenie
+    trafia do każdego zadania osobno.
+    """
+    instructions = [_instruction_for(b, profile_group) for b in blocks]
+    if len(set(instructions)) == 1:
+        return instructions[0], tuple(blocks)
+    return "", tuple(replace(b, instructions=(instr,)) for b, instr in zip(blocks, instructions))
+
+
+def _instruction_for(block: WorksheetBlock, profile_group: str) -> str:
+    if block.activity_type == "choice":
+        if block.answer_mode == "checkbox":
+            return "Zaznacz X w kratce przy dobrej odpowiedzi."
+        return "Otocz kółkiem dobrą odpowiedź."
+    if block.activity_type == "color":
+        return "Pokoloruj kółko z dobrą odpowiedzią."
+    has_blank = bool(_INLINE_BLANK_RE.search(block.task_text))
+    if profile_group == "dyskalkulia":
+        if has_blank:
+            return "Policz spokojnie, krok po kroku. Wpisz wynik w lukę."
+        return "Policz spokojnie, krok po kroku. Zapisz wynik w ramce."
+    return "Oblicz i wpisz wynik w lukę." if has_blank else "Rozwiąż i zapisz odpowiedź w ramce."
 
 
 def _answer_mode_for_activity(
@@ -457,11 +531,9 @@ def _answer_mode_for_activity(
     preferred: tuple[AnswerMode, ...],
 ) -> AnswerMode:
     if profile_group == "grafomotoryka":
-        return {"choice": "checkbox", "match": "connect"}.get(activity, "large_write")  # type: ignore[return-value]
+        return "checkbox" if activity == "choice" else "large_write"
     if activity == "color":
         return "color"
-    if activity == "match":
-        return "connect"
     if activity == "choice":
         return "circle"
     return preferred[0]
@@ -475,36 +547,15 @@ def _answer_lines_for(answer_mode: AnswerMode, profile_group: str) -> int:
     return 1
 
 
-def _instructions_for(profile_group: str, activity: ActivityType) -> tuple[str, ...]:
-    if profile_group == "dyskalkulia":
-        return ("Popatrz na obrazek.", "Policz spokojnie.", "Wpisz wynik.")
-    if profile_group == "adhd":
-        labels = {
-            "compute": ("Cel: policz.",),
-            "match": ("Połącz pasujące elementy.",),
-            "color": ("Pokoloruj odpowiedź.",),
-            "puzzle": ("Rozwiąż zagadkę.",),
-        }
-        return labels.get(activity, ("Zrób jedno zadanie.",))
-    if profile_group == "grafomotoryka":
-        labels = {
-            "choice": ("Zaznacz odpowiedź.",),
-            "match": ("Połącz linią.",),
-            "compute": ("Wpisz jedną liczbę.",),
-        }
-        return labels.get(activity, ("Odpowiedz krótko.",))
-    return ()
-
-
 def _activity_title(activity: ActivityType) -> str:
     return {
-        "compute": "Policz",
+        "compute": "Oblicz",
         "match": "Dopasuj",
-        "color": "Koloruj",
-        "choice": "Wybierz",
+        "color": "Pokoloruj",
+        "choice": "Wybierz odpowiedź",
         "puzzle": "Zagadka",
         "trace": "Po śladzie",
-        "reflect": "Sukces",
+        "reflect": "Moja ocena",
     }[activity]
 
 

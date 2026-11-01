@@ -411,9 +411,37 @@ def _draw_tasks_body(
     task_aspect = layout.get("task_image_aspect", 100 / 480)
     task_img_height_pt = max(54, int(task_img_width_pt * task_aspect))
 
+    def block_height(block: WorksheetBlock) -> float:
+        return _estimate_plan_block_height(
+            block,
+            available_width,
+            task_img_height_pt,
+            has_image=bool(
+                has_task_images
+                and block.task_index is not None
+                and task_images
+                and task_images[block.task_index]
+            ),
+            layout=layout,
+            base_font=base_font,
+        )
+
+    instruction_size = max(11, int(layout["task_font_size"]) - 2)
     for section in worksheet_plan.sections:
-        section_h = layout["section_spacing"] + 6
-        y, page_num = new_page_if_needed(y, section_h)
+        instruction_lines = (
+            _wrap_text_by_width(
+                section.instruction_pl,
+                max_width=available_width,
+                font_name=base_font,
+                font_size=instruction_size,
+            )
+            if section.instruction_pl
+            else []
+        )
+        section_h = layout["section_spacing"] + 6 + len(instruction_lines) * (instruction_size + 5)
+        first_block_h = block_height(section.blocks[0]) if section.blocks else 0
+        # Nagłówek sekcji przenosimy razem z pierwszym zadaniem (bez sierot na dole strony).
+        y, page_num = new_page_if_needed(y, section_h + first_block_h)
         _draw_section_header(
             c,
             margin,
@@ -425,21 +453,18 @@ def _draw_tasks_body(
             text_color,
         )
         y -= layout["section_spacing"]
+        if instruction_lines:
+            try:
+                c.setFillColor(HexColor(text_color))
+            except Exception:
+                pass
+            for line in instruction_lines:
+                _draw_bold(c, margin, y, line, base_font, instruction_size)
+                y -= instruction_size + 5
+            y -= 6
 
         for block in section.blocks:
-            block_h = _estimate_plan_block_height(
-                block,
-                available_width,
-                task_img_height_pt,
-                has_image=bool(
-                    has_task_images
-                    and block.task_index is not None
-                    and task_images
-                    and task_images[block.task_index]
-                ),
-                layout=layout,
-                base_font=base_font,
-            )
+            block_h = block_height(block)
             y, page_num = new_page_if_needed(y, block_h)
             y = _draw_plan_block(
                 c,
@@ -482,7 +507,7 @@ def _estimate_plan_block_height(
     instruction_h = len(block.instructions) * 15 + (8 if block.instructions else 0)
     answer_h = _answer_area_height(block, layout)
     image_block_h = image_h + 8 if has_image else 0
-    return 44 + instruction_h + image_block_h + len(lines) * layout["line_spacing"] + answer_h + 2 * pad
+    return 34 + int(layout["task_font_size"]) + instruction_h + image_block_h + len(lines) * layout["line_spacing"] + answer_h + 2 * pad
 
 
 def _draw_plan_block(
@@ -520,14 +545,14 @@ def _draw_plan_block(
         pass
     header = block.title
     _draw_bold(c, x + pad, y - 20, header, base_font, 11)
-    badge = block.progress_label or block.visual_cue
+    badge = block.progress_label
     if badge:
         _draw_block_badge(c, x + available_width - pad - 72, y - 22, 72, badge, base_font)
     try:
         c.setFillColor(HexColor(text_color))
     except Exception:
         pass
-    y_curr = y - 42
+    y_curr = y - 34 - int(layout["task_font_size"])
 
     if block.instructions:
         try:
@@ -560,7 +585,7 @@ def _draw_plan_block(
         except Exception:
             pass
 
-    prefix = f"{(block.task_index or 0) + 1}." if block.task_index is not None else "✓"
+    prefix = f"{(block.task_index or 0) + 1}." if block.task_index is not None else ""
     prefix_w = _string_width(prefix, base_font, layout["task_font_size"]) + 6
     lines = _wrap_text_by_width(
         block.task_text,
@@ -605,6 +630,8 @@ def _uses_inline_answer(block: WorksheetBlock) -> bool:
 
 
 def _answer_area_height(block: WorksheetBlock, layout: dict) -> int:
+    if block.options:
+        return int(layout.get("task_font_size", 14)) + 26
     if _uses_inline_answer(block):
         # Odpowiedź wpisuje się w lukę; zostają tylko linie na obliczenia (jeśli włączone).
         lines = int(layout.get("workspace_lines", 0))
@@ -638,6 +665,9 @@ def _draw_answer_area(
                 color=muted_color,
             )
         return
+    if block.options:
+        _draw_answer_options(c, x, y, width, block, layout, base_font)
+        return
     h = _answer_area_height(block, layout)
     try:
         c.setStrokeColor(HexColor(muted_color))
@@ -660,6 +690,42 @@ def _draw_answer_area(
             c.circle(x + 18 + i * 58, y - 16, 10, fill=0, stroke=1)
         return
     c.roundRect(x, y - h, width, h, 6, fill=0, stroke=1)
+
+
+def _draw_answer_options(
+    c,
+    x: float,
+    y: float,
+    width: float,
+    block: WorksheetBlock,
+    layout: dict,
+    base_font: str,
+) -> None:
+    """Opcje odpowiedzi: kratka do zaznaczenia (checkbox) albo liczba do otoczenia lub pokolorowania."""
+    size = int(layout.get("task_font_size", 14))
+    slot_w = min(140.0, width / max(1, len(block.options)))
+    cy = y - size - 6
+    try:
+        c.setStrokeColor(HexColor("#5f6368"))
+        c.setFillColor(HexColor("#000000"))
+        c.setLineWidth(0.9)
+    except Exception:
+        pass
+    for i, option in enumerate(block.options):
+        ox = x + 8 + i * slot_w
+        if block.answer_mode == "checkbox":
+            box = size + 4
+            c.rect(ox, cy - 4, box, box, fill=0, stroke=1)
+            c.setFont(base_font, size)
+            c.drawString(ox + box + 8, cy, option)
+        elif block.answer_mode == "color":
+            radius = size * 0.95 + 4
+            c.circle(ox + radius, cy + size * 0.35, radius, fill=0, stroke=1)
+            c.setFont(base_font, size)
+            c.drawCentredString(ox + radius, cy, option)
+        else:
+            c.setFont(base_font, size)
+            c.drawString(ox + 8, cy, option)
 
 
 def _draw_legacy_task_list(

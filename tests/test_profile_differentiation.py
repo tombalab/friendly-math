@@ -172,20 +172,54 @@ def test_dyskalkulia_plan_has_micro_steps_and_large_write():
     )
     blocks = [b for s in plan.sections for b in s.blocks if b.task_index is not None]
     assert blocks
-    assert all("Popatrz na obrazek." in b.instructions for b in blocks)
-    assert all(b.answer_mode in ("large_write", "circle") for b in blocks)
+    task_sections = [s for s in plan.sections if any(b.task_index is not None for b in s.blocks)]
+    assert all("krok po kroku" in s.instruction_pl for s in task_sections)
+    assert all(b.answer_mode == "large_write" for b in blocks)
 
 
-def test_grafomotoryka_profile_prefers_marking_and_connecting():
+def test_grafomotoryka_profile_prefers_marking_over_writing():
     topic = resolve_topic("dodawanie do 20", 1)
     plan = build_worksheet_plan(
-        tasks=["Policz: 2 + 3 = ____", "Policz: 4 + 1 = ____", "Policz: 5 + 2 = ____"],
+        tasks=["Policz: 2 + 3 = ____", "Policz: 4 + 1 = ____", "Ile kredek ma Ola?"],
         resolved_profile=resolve_profile("trudności grafomotoryczne"),
         resolved_topic=topic,
     )
     blocks = [b for s in plan.sections for b in s.blocks if b.task_index is not None]
-    assert {b.answer_mode for b in blocks} >= {"checkbox", "connect", "large_write"}
+    marked = [b for b in blocks if b.answer_mode == "checkbox"]
+    assert len(marked) == 2
+    assert "5" in marked[0].options and "5" in marked[1].options
+    # Bez znanej odpowiedzi nie da się zaznaczać — duże pole na wpisanie.
+    assert blocks[2].answer_mode == "large_write" and not blocks[2].options
     assert all(b.answer_box_lines >= 2 for b in blocks)
+
+
+def test_choice_blocks_always_have_options_and_one_answer_place():
+    topic = resolve_topic("dodawanie do 20", 1)
+    for profile in ("ADHD", "trudności grafomotoryczne", "dyskalkulia", "standardowy", "zdolny"):
+        plan = build_worksheet_plan(
+            tasks=["Policz: 2 + 3 = ____", "Policz: 4 + 1 = ____", "Ile kredek ma Ola?", "Policz: 5 + 2 = ____"],
+            resolved_profile=resolve_profile(profile),
+            resolved_topic=topic,
+        )
+        for section in plan.sections:
+            for b in section.blocks:
+                assert b.answer_mode != "connect", profile
+                if b.activity_type in ("choice", "color"):
+                    assert len(b.options) == 3, (profile, b.task_text)
+                    assert "____" not in b.task_text, "luka i opcje to dwa miejsca na odpowiedź"
+                # Polecenie jest raz: przy sekcji albo przy zadaniu.
+                assert not (section.instruction_pl and b.instructions), profile
+
+
+def test_activity_follows_section_not_task_number():
+    topic = resolve_topic("dodawanie do 20", 1)
+    tasks = [f"Policz: {a} + 1 = ____" for a in range(1, 9)]
+    plan = build_worksheet_plan(tasks=tasks, resolved_profile=resolve_profile("standardowy"), resolved_topic=topic)
+    for section in plan.sections:
+        task_blocks = [b for b in section.blocks if b.task_index is not None]
+        if task_blocks:
+            assert {b.activity_type for b in task_blocks} == {"compute"}
+            assert section.instruction_pl == "Oblicz i wpisz wynik w lukę."
 
 
 def test_visual_prompt_maps_topic_to_learning_role():
