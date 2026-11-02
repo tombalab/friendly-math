@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+---
+
+## [1.7.0] – 2026-11-02 – Złote karty i checklista jakości
+
 ### Added
 - Złote karty (Q6): 6 wzorców z polem `golden` (kl. 1–8; ADHD, dyskalkulia, dysleksja, standardowy) — liczba stron ucznia, szablon i pomoce wizualne
 - `app/review/golden.py` i test `tests/test_golden_worksheets.py`: pełny pipeline offline, brak etykiety diagnozy na karcie ucznia, limit stron, każde zadanie na karcie, brak strony bez zadań
