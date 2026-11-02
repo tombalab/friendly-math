@@ -4,9 +4,9 @@
 
 ---
 
-⚠️ **Status projektu: MVP v1.5.0**  
+⚠️ **Status projektu: MVP v1.6.0**  
   
-Aktualna wersja aplikacji to **funkcjonalne MVP v1.5.0**:
+Aktualna wersja aplikacji to **funkcjonalne MVP v1.6.0**:
  - działający interfejs Streamlit z zakładkami **Generuj / Historia / Recenzja**,
  - pełny flow: parametry → generacja zadań → walidacja profilu → ilustracje → layout → PDF,
  - profile PPP wpływające na treść zadań, walidację, ilustracje i układ PDF,
@@ -29,13 +29,14 @@ z opiniami i orzeczeniami PPP (np. dyskalkulia, ADHD, trudności w koncentracji)
 Aplikacja umożliwia szybkie generowanie **czytelnych, niskobodziecowych kart pracy (PDF)**,
 dostosowanych do indywidualnych potrzeb ucznia.
 
-## ✅ Co działa w wersji v1.5.0 (MVP)
+## ✅ Co działa w wersji v1.6.0 (MVP)
 
 - **Panel generowania**: klasa 1–8, temat, liczba zadań, profil ucznia, ilustracje, miejsce na obliczenia i odpowiedzi.
 - **Zakres tematów**: działania arytmetyczne, ułamki, równania, zadania tekstowe, pieniądze, czas, obwody, pomiary długości, procenty, potęgi i Pitagoras.
 - **Profile PPP**: standardowy, ADHD, dyskalkulia, dysleksja, trudności w nauce, trudności grafomotoryczne, zdolny (lista w UI pochodzi z `app/domain/profile_catalog.py`).
 - **Jakość profilu**: walidatory i fallbacki pilnują m.in. długości treści, zakresu liczb, liczby kroków i wzbogacenia zadań.
-- **Ilustracje**: deterministyczne ikony i sceny per zadanie lub w nagłówku, z raportem pokrycia i `skip_reason`.
+- **Pomoce wizualne (v1.6)**: wektorowe, zgodne z liczbami z zadania — ramka dziesiątkowa, oś liczbowa, układ kropek, talerze, monety 5/2/1 zł, zegar, ułamek, prostokąt; raport pokrycia i `skip_reason`.
+- **Szablony według klasy (v1.6)**: kl. 1–3 z motywem, kl. 4–6 spokojniejsze z polem „Wynik”, kl. 7–8 rzeczowy szablon „Szkolny”; profil zmienia czcionkę i odstępy.
 - **Karta ucznia (v1.5)**: bez nazwy profilu i tekstów dla nauczyciela, pole na imię i datę, polecenia zgodne z treścią zadania, siatka 1–3 kolumn (8 prostych zadań na 2 stronach), klucz odpowiedzi z treścią zadań.
 - **Layout PDF (v1.4)**: deterministyczny, wynika z profilu ucznia (bez zapytań do AI); szablony wizualne i strategia edukacyjna per profil.
 - **PDF quality v1.3**: zawijanie tekstu po realnej szerokości fontu, łamanie strony przed całym blokiem zadania, ostrzejsze PNG, mały header przy niskim pokryciu ilustracji.
@@ -192,7 +193,7 @@ Główna gałąź deployu to `main`; prace rozwojowe są prowadzone na `dev`. Do
 
 ## Project Status
 
-**v1.5.0 — karta ucznia bez diagnozy, polecenia zgodne z zadaniem, siatka zadań**
+**v1.6.0 — pomoce wizualne wektorowo, szablony według klasy**
 
 The current focus is on validating:
 - pedagogical assumptions,

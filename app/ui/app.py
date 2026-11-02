@@ -55,7 +55,7 @@ HISTORY_DIR = default_history_dir(ROOT_DIR)
 OUT_DIR = ROOT_DIR / "data" / "out"
 _history_store = history_store_for_root(ROOT_DIR)
 
-APP_VERSION = "1.5.0"
+APP_VERSION = "1.6.0"
 
 
 def _build_worksheet_request(
@@ -160,9 +160,10 @@ if include_answers:
 _profile_ids = profile_ids_for_ui()
 _profile_labels = profile_selectbox_labels()
 _default_pid = default_profile_id()
-_template_labels = available_templates()
+# Pusty id = szablon dobrany automatycznie do klasy i profilu (Q4).
+_template_labels = {"": "Automatycznie (wg klasy i profilu)", **available_templates()}
 _template_ids = list(_template_labels.keys())
-_default_template = _template_ids[0] if _template_ids else "classic"
+_default_template = ""
 
 number_of_tasks = 5
 student_profile = _default_pid

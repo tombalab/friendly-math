@@ -89,6 +89,7 @@ class WorksheetResult:
     answer_key: AnswerKeyResult | None = None
     header_image: bytes | None = None
     task_images: list[bytes] | None = None
+    task_visuals: list | None = None  # list[TaskVisual | None] — wektorowe pomoce (Q5)
     image_coverage: ImageCoverageSummary | None = None
     pdf_bytes: bytes | None = None
     saved_pdf_path: Path | None = None

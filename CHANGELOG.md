@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.6.0] – 2026-11-02 – Pomoce wizualne wektorowo, szablony według klasy
+
+### Changed
+- Pomoce wizualne rysowane wektorowo w PDF zamiast bitmap PIL (Q5): ostre przy druku, jeden rodzaj obiektów w działaniu
+- Dodawanie i odejmowanie do 20: ramka dziesiątkowa (dwa kolory składników, przy odejmowaniu przekreślone kropki); gdy kropek byłoby za dużo dla profilu — oś liczbowa 0–20 z zaznaczonym tylko startem
+- Mnożenie: układ kropek; dzielenie: kropki i puste talerze do rozdzielenia (rysunek nie zdradza wyniku)
+- Pieniądze: polskie monety 5 / 2 / 1 zł z nominałami; czas: tarcza z cyframi, bez wskazówek, gdy uczeń ma je narysować; ułamki: koło z zacieniowanymi częściami; obwody: prostokąt z opisanymi bokami
+- Usunięto ogólny obrazek w nagłówku (np. 3 + 2 przy innych zadaniach); profile standardowy, dysleksja i zdolny dostają jedną pomoc przy pierwszym zadaniu, które da się zilustrować
+- Przy opcjach wyboru luka po pytajniku nie daje już „? ?”
+- Szablony według klasy (Q4): kl. 1–3 z motywem i ikoną, kl. 4–6 spokojniejsze (bez wzoru w nagłówku), kl. 7–8 rzeczowy szablon „Szkolny” bez dekoracji i wersalików
+- Nazwy sekcji zależą od klasy: „Misje”, „Bonus” tylko w kl. 1–3; w kl. 7–8 „Część A/B/C” i samoocena „rozumiem / częściowo / potrzebuję pomocy”
+- Kl. 4–8: pole „Wynik: __ / N” w nagłówku; mniejsze tytuły i nagłówki sekcji, czcionka zadań nadal z profilu
+- Szablon w UI domyślnie „Automatycznie (wg klasy i profilu)” — wcześniej zawsze wysyłany był „Klasyczny”, więc dobór do profilu nie działał
+
+### Added
+- `TaskVisual` i `task_visual_for()` (`app/generators/task_visuals.py`), renderer `app/pdf/visuals.py`, pole `WorksheetResult.task_visuals`
+- Test `tests/test_task_visuals.py`: rodzaje pomocy, monety, zegar, brak bitmap w PDF, pomoc tylko przy pasującym zadaniu
+- `grade_band()` i pole `WorksheetPlan.grade_band`; szablon `school`; test `tests/test_grade_bands.py`
+
+---
+
 ## [1.5.0] – 2026-11-01 – Karta ucznia bez diagnozy, polecenia zgodne z zadaniem, siatka zadań
 
 ### Changed
