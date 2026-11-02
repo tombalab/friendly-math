@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+---
+
+## [1.6.0] – 2026-11-02 – Pomoce wizualne wektorowo, szablony według klasy
+
 ### Changed
 - Pomoce wizualne rysowane wektorowo w PDF zamiast bitmap PIL (Q5): ostre przy druku, jeden rodzaj obiektów w działaniu
 - Dodawanie i odejmowanie do 20: ramka dziesiątkowa (dwa kolory składników, przy odejmowaniu przekreślone kropki); gdy kropek byłoby za dużo dla profilu — oś liczbowa 0–20 z zaznaczonym tylko startem

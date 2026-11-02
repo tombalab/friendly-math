@@ -55,7 +55,7 @@ HISTORY_DIR = default_history_dir(ROOT_DIR)
 OUT_DIR = ROOT_DIR / "data" / "out"
 _history_store = history_store_for_root(ROOT_DIR)
 
-APP_VERSION = "1.5.0"
+APP_VERSION = "1.6.0"
 
 
 def _build_worksheet_request(

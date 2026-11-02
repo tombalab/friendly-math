@@ -1,6 +1,6 @@
 # Friendly Math — kontekst dla Claude Code
 
-Aplikacja Streamlit dla nauczyciela i terapeuty: generuje polskie karty pracy z matematyki (PDF A4) dla klas 1–8, z profilami PPP (ADHD, dyskalkulia, dysleksja i inne). Wersja bieżąca to MVP v1.5.0. Produkt zostaje na Streamlit, dopóki jakość kart nie jest wiarygodna.
+Aplikacja Streamlit dla nauczyciela i terapeuty: generuje polskie karty pracy z matematyki (PDF A4) dla klas 1–8, z profilami PPP (ADHD, dyskalkulia, dysleksja i inne). Wersja bieżąca to MVP v1.6.0. Produkt zostaje na Streamlit, dopóki jakość kart nie jest wiarygodna.
 
 Źródło prawdy to kod i testy. `docs/architecture-and-domain.md` i część `docs/domains/` opisują starszy stan (UI jako orkiestrator, brak historii). Przy sprzeczności trzymaj się kodu.
 
