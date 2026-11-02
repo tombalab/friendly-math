@@ -492,7 +492,7 @@ def _choice_options(answer: str, idx: int) -> tuple[str, ...]:
     if not _INTEGER_RE.match(value):
         return ()
     n = int(value)
-    distractors = [n + 1, n - 1] if n >= 1 else [n + 1, n + 2]
+    distractors = [n + 1, n - 1] if n >= 2 else [n + 1, n + 2]
     options = [n, *distractors]
     shift = idx % 3
     options = options[shift:] + options[:shift]

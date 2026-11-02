@@ -26,5 +26,11 @@
     "max_task_length": 85,
     "forbidden_phrases": ["Ania", "Marek", "kupił"],
     "max_word_problem_sentences": 2
+  },
+  "golden": {
+    "max_student_pages": 2,
+    "template": "space",
+    "visual_kinds": ["clock", "clock", "clock", "clock"],
+    "why": "Kl. 1, ADHD: motyw kosmosu, zegar przy każdym zadaniu, licznik postępu, zmiana aktywności między sekcjami."
   }
 }

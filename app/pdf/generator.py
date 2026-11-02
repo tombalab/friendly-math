@@ -16,7 +16,7 @@ from app.generators.answers import AnswerKeyResult
 from app.generators.task_visuals import TaskVisual
 from app.pdf.visuals import draw_task_visual, visual_height
 from app.pdf.fonts import register_polish_font
-from app.domain.educational_strategy import WorksheetBlock, WorksheetPlan
+from app.domain.educational_strategy import WorksheetBlock, WorksheetPlan, WorksheetSection
 from app.domain.worksheet_layout import PDF_PRINT_DEFAULTS, ResolvedWorksheetLayout
 
 
@@ -447,6 +447,14 @@ def _draw_tasks_body(
         return task_visuals[block.task_index]
 
     for section in worksheet_plan.sections:
+        if _is_self_check(section):
+            row_h = _self_check_height(section, available_width, layout, base_font)
+            y, page_num = new_page_if_needed(y, row_h)
+            _draw_self_check_row(
+                c, margin, y, available_width, section, layout, base_font, text_color
+            )
+            y -= row_h + section.spacing_after
+            continue
         instruction_lines = (
             _wrap_text_by_width(
                 section.instruction_pl,
@@ -514,6 +522,72 @@ def _draw_tasks_body(
         y -= section.spacing_after
 
     return y, page_num
+
+
+def _is_self_check(section: WorksheetSection) -> bool:
+    return bool(section.blocks) and all(b.difficulty == "summary" and b.options for b in section.blocks)
+
+
+def _self_check_layout(
+    section: WorksheetSection, width: float, layout: dict, base_font: str
+) -> tuple[float, list[float], bool]:
+    """Szerokość tytułu, szerokości opcji i czy tytuł z kratkami mieści się w jednym wierszu."""
+    size = int(layout["task_font_size"])
+    pad = _cell_padding(layout)
+    title_w = _string_width(section.title, base_font, size) + 2
+    option_ws = [size + 4 + 8 + _string_width(o, base_font, size) + 22 for o in section.blocks[0].options]
+    one_line = title_w + 20 + sum(option_ws) <= width - 2 * pad
+    return title_w, option_ws, one_line
+
+
+def _self_check_height(section: WorksheetSection, width: float, layout: dict, base_font: str) -> float:
+    size = int(layout["task_font_size"])
+    _, _, one_line = _self_check_layout(section, width, layout, base_font)
+    return 2 * _cell_padding(layout) + size + 6 + (0 if one_line else size + 12)
+
+
+def _draw_self_check_row(
+    c,
+    x: float,
+    y: float,
+    width: float,
+    section: WorksheetSection,
+    layout: dict,
+    base_font: str,
+    text_color: str,
+) -> None:
+    """Samoocena w jednym wierszu: „Jak mi poszło?” i kratki, bez osobnej sekcji z kartą (Q6)."""
+    size = int(layout["task_font_size"])
+    pad = _cell_padding(layout)
+    height = _self_check_height(section, width, layout, base_font)
+    title_w, option_ws, one_line = _self_check_layout(section, width, layout, base_font)
+    try:
+        c.setFillColor(HexColor("#FFFFFF"))
+        c.setStrokeColor(HexColor(layout.get("border_color", "#DDDDDD")))
+        c.setLineWidth(0.8)
+        c.roundRect(x, y - height, width, height, 6, fill=1, stroke=1)
+        c.setFillColor(HexColor(text_color))
+    except Exception:
+        pass
+    baseline = y - pad - size
+    _draw_bold(c, x + pad, baseline, section.title, base_font, size)
+    if one_line:
+        ox = x + pad + title_w + 20
+    else:
+        ox = x + pad
+        baseline -= size + 12
+    try:
+        c.setStrokeColor(HexColor("#5f6368"))
+        c.setFillColor(HexColor("#000000"))
+        c.setLineWidth(0.9)
+    except Exception:
+        pass
+    box = size + 4
+    c.setFont(base_font, size)
+    for option, option_w in zip(section.blocks[0].options, option_ws):
+        c.rect(ox, baseline - 4, box, box, fill=0, stroke=1)
+        c.drawString(ox + box + 8, baseline, option)
+        ox += option_w
 
 
 def _max_lines_for_columns(columns: int) -> int:

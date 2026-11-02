@@ -4,9 +4,9 @@
 
 ---
 
-⚠️ **Status projektu: MVP v1.6.0**  
+⚠️ **Status projektu: MVP v1.7.0**  
   
-Aktualna wersja aplikacji to **funkcjonalne MVP v1.6.0**:
+Aktualna wersja aplikacji to **funkcjonalne MVP v1.7.0**:
  - działający interfejs Streamlit z zakładkami **Generuj / Historia / Recenzja**,
  - pełny flow: parametry → generacja zadań → walidacja profilu → ilustracje → layout → PDF,
  - profile PPP wpływające na treść zadań, walidację, ilustracje i układ PDF,
@@ -29,7 +29,7 @@ z opiniami i orzeczeniami PPP (np. dyskalkulia, ADHD, trudności w koncentracji)
 Aplikacja umożliwia szybkie generowanie **czytelnych, niskobodziecowych kart pracy (PDF)**,
 dostosowanych do indywidualnych potrzeb ucznia.
 
-## ✅ Co działa w wersji v1.6.0 (MVP)
+## ✅ Co działa w wersji v1.7.0 (MVP)
 
 - **Panel generowania**: klasa 1–8, temat, liczba zadań, profil ucznia, ilustracje, miejsce na obliczenia i odpowiedzi.
 - **Zakres tematów**: działania arytmetyczne, ułamki, równania, zadania tekstowe, pieniądze, czas, obwody, pomiary długości, procenty, potęgi i Pitagoras.
@@ -41,6 +41,7 @@ dostosowanych do indywidualnych potrzeb ucznia.
 - **Layout PDF (v1.4)**: deterministyczny, wynika z profilu ucznia (bez zapytań do AI); szablony wizualne i strategia edukacyjna per profil.
 - **PDF quality v1.3**: zawijanie tekstu po realnej szerokości fontu, łamanie strony przed całym blokiem zadania, ostrzejsze PNG, mały header przy niskim pokryciu ilustracji.
 - **Historia i recenzja**: zapis lokalny wygenerowanych kart, filtrowanie historii, status jakości i pliki recenzji.
+- **Miara jakości (v1.7)**: 6 złotych kart (`golden` we wzorcach) sprawdzanych offline — strony ucznia, brak etykiety diagnozy, szablon, pomoce; checklista w `docs/quality-checklist.md`.
 - **Testy i audyty**: testy referencyjne, walidatory, smoke check oraz audyt fallbacków curriculum.
 
 Karty referencyjne: `data/reference_worksheets/`.  
@@ -193,7 +194,7 @@ Główna gałąź deployu to `main`; prace rozwojowe są prowadzone na `dev`. Do
 
 ## Project Status
 
-**v1.6.0 — pomoce wizualne wektorowo, szablony według klasy**
+**v1.7.0 — złote karty i checklista jakości**
 
 The current focus is on validating:
 - pedagogical assumptions,

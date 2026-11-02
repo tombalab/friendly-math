@@ -35,5 +35,11 @@
     "require_format_prefix": "Policz:",
     "require_format_consistent": true,
     "max_word_problem_sentences": 1
+  },
+  "golden": {
+    "max_student_pages": 2,
+    "template": "classic",
+    "visual_kinds": ["sharing", null, null, null, null, null, null],
+    "why": "Kl. 3, standard: siatka zadań, jedna pomoc (talerze) przy pierwszym zadaniu, które da się zilustrować."
   }
 }
