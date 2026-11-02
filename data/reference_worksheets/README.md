@@ -84,6 +84,12 @@ Bez tych przykładów nie da się sensownie oceniać jakości generowanych kart
 | `8_dzielenie_dyskalkulia.json` | 8 | dzielenie | dyskalkulia |
 | `8_rownania_standardowy.json` | 8 | równania | standardowy |
 
+## Złote karty (Q6)
+
+Sześć plików ma pole `golden` — to wzorce docelowe całej karty (liczba stron ucznia,
+szablon, pomoce wizualne). Sprawdza je `tests/test_golden_worksheets.py`, podgląd:
+`python scripts/render_golden.py`. Checklista: `docs/quality-checklist.md`.
+
 ## Jak dodać nową kartę
 
 1. Skopiuj jeden z istniejących plików.

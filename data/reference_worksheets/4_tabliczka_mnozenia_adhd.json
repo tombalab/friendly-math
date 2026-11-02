@@ -34,5 +34,11 @@
     "require_format_prefix": "Policz:",
     "require_format_consistent": true,
     "max_word_problem_sentences": 1
+  },
+  "golden": {
+    "max_student_pages": 1,
+    "template": "classic",
+    "visual_kinds": [null, null, null, null, null, null],
+    "why": "Kl. 4, ADHD: bez motywu przygody, pole „Wynik”, opcje wyboru zamiast samego wpisywania, całość na jednej stronie."
   }
 }

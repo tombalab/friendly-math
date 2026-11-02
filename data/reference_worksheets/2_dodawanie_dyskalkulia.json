@@ -36,5 +36,11 @@
     "require_format_prefix": "Policz:",
     "require_format_consistent": true,
     "max_word_problem_sentences": 1
+  },
+  "golden": {
+    "max_student_pages": 2,
+    "template": "friendly_minimal",
+    "visual_kinds": ["ten_frame", "ten_frame", "ten_frame", "ten_frame", "ten_frame", "ten_frame", "number_line", "ten_frame"],
+    "why": "Kl. 2, dyskalkulia: spokojny szablon, ramka dziesiątkowa przy każdym zadaniu, oś liczbowa gdy kropek za dużo."
   }
 }

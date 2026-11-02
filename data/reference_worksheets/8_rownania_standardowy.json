@@ -34,5 +34,11 @@
     "require_format_prefix": "Rozwiąż:",
     "require_format_consistent": true,
     "max_word_problem_sentences": 1
+  },
+  "golden": {
+    "max_student_pages": 1,
+    "template": "school",
+    "visual_kinds": [],
+    "why": "Kl. 8, standard: rzeczowy szablon „Szkolny”, „Część A/B/C”, samoocena „rozumiem / częściowo / potrzebuję pomocy”."
   }
 }

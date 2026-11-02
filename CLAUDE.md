@@ -53,7 +53,7 @@ Pipeline karty siedzi poza UI. Streamlit tylko zbiera formularz i pokazuje wynik
 8. Odpowiedzi: `app/generators/answers.py`. Pomoce wizualne: `app/generators/task_visuals.py` → `app/pdf/visuals.py` (limity w `images.py`). Layout: `app/domain/worksheet_layout.py`, `app/ai/layout_generator.py`.
 9. PDF: `app/pdf/generator.py`, `app/pdf/fonts.py`.
 10. Historia lokalna: `app/history/store.py` → `data/history/<request_id>/`. Ostatni PDF: `data/out/worksheet.pdf`.
-11. Wzorce jakości: `data/reference_worksheets/*.json`.
+11. Wzorce jakości: `data/reference_worksheets/*.json`; złote karty (pole `golden`) sprawdza `app/review/golden.py`, checklista w `docs/quality-checklist.md`.
 
 Gdy temat, klasa albo profil nie da się uczciwie obsłużyć, zatrzymaj generację albo zwróć wyraźne ostrzeżenie w `WorksheetResult`. Nie podstawiaj cicho zadań z innego tematu i nie drukuj „—” w kluczu odpowiedzi bez wyjaśnienia.
 

@@ -359,6 +359,8 @@ Analiza 17 kart wyrenderowanych offline (wszystkie profile, klasy 1–8) w poró
 
 **Acceptance criteria:** 5–6 „złotych” kart docelowych jako wzorzec i checklista; testy pilnują liczby stron i braku etykiety diagnozy na karcie ucznia.
 
+**Status:** zrobione — pole `golden` w 6 wzorcach, `tests/test_golden_worksheets.py`, `docs/quality-checklist.md`.
+
 ## P3: Future / Explicitly Deferred
 
 ### P3.1 Reconsider Multi-User Platform Only After Streamlit V2 Proves Value
